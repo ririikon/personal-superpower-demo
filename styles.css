@@ -1,49 +1,132 @@
-/* Personal SuperPower – tokenit ja komponentit. Tumma teema on oletus,
-   vaalea saadaan attribuutilla <html data-theme="light">. */
+/* Personal SuperPower – tokenit ja komponentit. Värimaailma Sporttimekka Gymin
+   (sporttimekkagym.fi) paletista: sininen #26548F, viininpunainen #763146, kulta #C8A42A,
+   slate #1E293B.
+
+   Teema: vaalea on perusta. Tumma tulee käyttöön, kun <html data-theme="dark"> on asetettu
+   (käyttäjän valinta) tai kun data-theme puuttuu ja laite pyytää tummaa (automaattinen).
+   data-theme="light" pakottaa vaalean. Tumman teeman tokenit ovat siksi kahdessa lohkossa
+   (attribuutti ja media query): PIDÄ NE SAMOINA.
+
+   Kontrastit (WCAG 2.x), vaalea / tumma:
+   text-dim: surface 5.64, bg 5.15, surface-2 4.79 / surface 6.39, surface-2 5.37
+   accent-täyttö + valkoinen teksti: 7.64 / 5.15; accent-ink: surface 7.64, bg 6.98 / surface 7.84, surface-2 6.60
+   cta + valkoinen: 9.14 / 6.44; score-ink: surface 5.86, bg 5.35, surface-2 4.98 / surface 6.60, surface-2 5.55
+   warn: surface 6.48, bg 5.92 / surface 5.67, surface-2 4.77; fatigue + valkoinen: 6.48 / 4.84
+   hero: valkoinen 7.64, hero-dim 5.96, kultaotsikko 3.20 (iso teksti, raja 3:1) */
 
 :root {
-  --bg: #181a26;
-  --surface: #23253a;
-  --surface-2: #2d3049;
-  --text: #f4f5fb;
-  --text-dim: #9b9eb8;
-  --line: rgba(255, 255, 255, 0.08);
-  /* Kontrastit (WCAG 2.x) laskettu: ks. tehtävän 6 raportti. */
-  --accent: #d81f48;        /* täyttö; valkoinen teksti päällä 4.99:1 */
-  --accent-ink: #ff7a93;    /* korostusvärinen teksti; bg 6.96, surface 6.05, accent-soft 5.26 */
-  --accent-soft: rgba(240, 50, 90, 0.16);
-  --ok: #2e7d64;            /* valkoinen teksti päällä 4.96:1 */
-  --score: #8ee8c8;
-  --warn: #f5b841;
-  --pull: #33c6d0;
-  --legs: #d6c27e;
+  --bg: #f2f5f7;
+  --surface: #ffffff;
+  --surface-2: #e8edf3;
+  --text: #1e293b;
+  --text-dim: #5a6880;
+  --line: rgba(30, 41, 59, 0.1);
+  --accent: #26548f;        /* täyttö; valkoinen teksti päällä 7.64:1 */
+  --accent-ink: #26548f;    /* korostusvärinen teksti */
+  --accent-soft: rgba(38, 84, 143, 0.1);
+  --cta: #763146;           /* ensisijainen toimintopainike (pill), valkoinen teksti 9.14:1 */
+  --ok: #1e7a4f;            /* valkoinen teksti päällä 5.31:1 */
+  --score: #c8a42a;         /* kulta: mittarin palkit, ennätykset (täyttö, ei tekstiksi vaalealle) */
+  --score-ink: #7a6210;     /* kultainen teksti vaalealla pohjalla */
+  --score-track: #1e293b;   /* tumma palkkitausta, jolla kulta erottuu (6.13:1) */
+  --on-score: #1e293b;      /* teksti ja ikonit kultaisella pohjalla */
+  --warn: #c00000;          /* huomio */
+  --fatigue: #c00000;       /* väsynyt lihas (täyttö), valkoinen teksti 6.48:1 */
+  --push: #26548f;          /* työnnöt */
+  --pull: #a07f14;          /* vedot: tummennettu kulta, valkoisella 3.79:1, --bg:llä 3.46:1 (grafiikka ≥ 3:1) */
+  --legs: #763146;          /* jalat */
+  --hero: #26548f;          /* sivuston hero: sininen tausta */
+  --hero-title: #c8a42a;    /* kultainen otsikko herossa */
+  --hero-dim: #dce4ee;      /* toissijainen teksti herossa */
+  --bm-muscle: #c3ccd8;     /* kehokartta: lepäävä lihas */
+  --bm-base: #dde3ea;       /* kehokartta: siluetti */
+  --bm-base-sm: #d3dae3;
+  --bm-muscle-sm: #b6c0ce;
+  --hex-ink: #ffffff;       /* merkkipaalun ikoni värillisellä kuusikulmiolla */
+  --backdrop: rgba(14, 22, 38, 0.55);
   --radius: 16px;
 
   --on-accent: #ffffff;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow: 0 10px 30px rgba(30, 41, 59, 0.14);
+  --shadow-sm: 0 1px 4px rgba(30, 41, 59, 0.12);
   --nav-h: 64px;
   --safe-b: env(safe-area-inset-bottom, 0px);
-  --font: "Inter", "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+
+/* Tumma teema 1/2: käyttäjän valinta. Sama sisältö kuin lohkossa 2/2. */
+:root[data-theme="dark"] {
+  --bg: #0e1626;
+  --surface: #172338;
+  --surface-2: #21304a;
+  --text: #f2f5f7;
+  --text-dim: #9aa6b8;
+  --line: rgba(255, 255, 255, 0.09);
+  --accent: #3a6fb0;
+  --accent-ink: #93baeb;
+  --accent-soft: rgba(127, 168, 222, 0.14);
+  --cta: #9b3f5c;
+  --ok: #1e7a4f;
+  --score: #c8a42a;
+  --score-ink: #c8a42a;
+  --score-track: #2c3e5c;
+  --on-score: #1e293b;
+  --warn: #ff6b6b;
+  --fatigue: #d0393f;
+  --push: #5b8fd6;
+  --pull: #c8a42a;
+  --legs: #d97a99;
+  --hero: #26548f;
+  --hero-title: #c8a42a;
+  --hero-dim: #dce4ee;
+  --bm-muscle: #3d4f6b;
+  --bm-base: #2a3a55;
+  --bm-base-sm: #31425e;
+  --bm-muscle-sm: #3d4f6b;
+  --hex-ink: #ffffff;
+  --backdrop: rgba(5, 9, 16, 0.65);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.3);
   color-scheme: dark;
 }
 
-[data-theme="light"] {
-  --bg: #f3f4f8;
-  --surface: #ffffff;
-  --surface-2: #eceef5;
-  --text: #161827;
-  --text-dim: #646882;
-  --line: rgba(22, 24, 39, 0.09);
-  --accent: #e0244c;        /* valkoinen teksti päällä 4.64:1 */
-  --accent-ink: #c41a3f;    /* bg 5.36, surface 5.89, accent-soft 4.55 */
-  --accent-soft: rgba(224, 36, 76, 0.11);
-  --ok: #2e7d64;
-  --score: #1a8461;
-  --warn: #9a6a0c;
-  --pull: #137d85;
-  --legs: #86742f;
-  --shadow: 0 10px 30px rgba(22, 24, 39, 0.14);
-  color-scheme: light;
+/* Tumma teema 2/2: automaattinen (ei valintaa, laite pyytää tummaa). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1626;
+    --surface: #172338;
+    --surface-2: #21304a;
+    --text: #f2f5f7;
+    --text-dim: #9aa6b8;
+    --line: rgba(255, 255, 255, 0.09);
+    --accent: #3a6fb0;
+    --accent-ink: #93baeb;
+    --accent-soft: rgba(127, 168, 222, 0.14);
+    --cta: #9b3f5c;
+    --ok: #1e7a4f;
+    --score: #c8a42a;
+    --score-ink: #c8a42a;
+    --score-track: #2c3e5c;
+    --on-score: #1e293b;
+    --warn: #ff6b6b;
+    --fatigue: #d0393f;
+    --push: #5b8fd6;
+    --pull: #c8a42a;
+    --legs: #d97a99;
+    --hero: #26548f;
+    --hero-title: #c8a42a;
+    --hero-dim: #dce4ee;
+    --bm-muscle: #3d4f6b;
+    --bm-base: #2a3a55;
+    --bm-base-sm: #31425e;
+    --bm-muscle-sm: #3d4f6b;
+    --hex-ink: #ffffff;
+    --backdrop: rgba(5, 9, 16, 0.65);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.3);
+    color-scheme: dark;
+  }
 }
 
 /* ---------------------------------------------------------------- Perusta */
@@ -159,12 +242,12 @@ body.no-nav #view { padding-bottom: calc(40px + var(--safe-b)); }
   margin-bottom: 6px;
 }
 
-/* Tavoite-tyylinen pääasetus: vihreä kortti */
+/* Tavoite-tyylinen pääasetus: sininen kortti */
 .card-goal {
-  background: var(--ok);
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
-.card-goal .muted, .card-goal .row-value, .card-goal .chevron { color: #ffffff; opacity: 1; }
+.card-goal .muted, .card-goal .row-value, .card-goal .chevron { color: var(--on-accent); opacity: 1; }
 
 /* Selitelaatikko: sävytetty korostustausta */
 .note {
@@ -247,7 +330,7 @@ a.row:active, button.row:active { background: var(--surface-2); }
   width: 27px;
   height: 27px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--on-accent);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s ease;
 }
@@ -285,10 +368,8 @@ a.row:active, button.row:active { background: var(--surface-2); }
 .segmented-option[aria-checked="true"] {
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
-
-[data-theme="light"] .segmented-option[aria-checked="true"] { box-shadow: 0 1px 4px rgba(22, 24, 39, 0.12); }
 
 /* ------------------------------------------------------------------ Sirut */
 
@@ -348,10 +429,12 @@ a.row:active, button.row:active { background: var(--surface-2); }
   text-align: center;
 }
 
+/* Ensisijainen toiminto: viininpunainen pill kuten Sporttimekan sivuston painikkeet */
 .btn-primary {
   width: 100%;
   min-height: 54px;
-  background: var(--accent);
+  border-radius: 999px;
+  background: var(--cta);
   color: var(--on-accent);
   font-size: 17px;
   letter-spacing: 0.01em;
@@ -400,7 +483,7 @@ a.row:active, button.row:active { background: var(--surface-2); }
 .sheet-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 9, 16, 0.6);
+  background: var(--backdrop);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -480,8 +563,6 @@ a.row:active, button.row:active { background: var(--surface-2); }
 
 .hex-track { stroke-opacity: 0.2; }
 
-[data-theme="light"] .hex-track { stroke-opacity: 0.18; }
-
 .hex-center {
   position: absolute;
   inset: 0;
@@ -509,14 +590,14 @@ a.row:active, button.row:active { background: var(--surface-2); }
   max-width: calc(100vw - 32px);
   padding: 0 22px 0 18px;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--cta);
   color: var(--on-accent);
   font-size: 17px;
   font-weight: 800;
   font-style: italic;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  box-shadow: 0 10px 28px rgba(240, 50, 90, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--cta) 40%, transparent), 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .fab[hidden] { display: none; }
@@ -623,7 +704,7 @@ body.no-nav .tabbar { display: none; }
 }
 .t8-pill[hidden] { display: none; }
 .t8-pill-accent { background: var(--accent-soft); color: var(--accent-ink); }
-.t8-pill-ok { background: color-mix(in srgb, var(--score) 18%, transparent); color: var(--score); }
+.t8-pill-ok { background: color-mix(in srgb, var(--score) 18%, transparent); color: var(--score-ink); }
 .t8-pill-warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
 
 .t8-back {
@@ -694,16 +775,23 @@ body.no-nav .tabbar { display: none; }
 .t8-memory-tulossa { background: var(--surface-2); }
 .t8-memory-date { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 
-/* ---- Koti: tämän päivän treeni */
+/* ---- Koti: tämän päivän treeni. Sporttimekan hero: sininen tausta, kultainen otsikko. */
 .t8-hero {
   position: relative;
   overflow: hidden;
   padding: 20px 18px 18px;
-  background:
-    radial-gradient(120% 80% at 100% 0%, var(--accent-soft), transparent 60%),
-    var(--surface);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--hero);
+  color: var(--on-accent);
 }
+.t8-hero .t8-eyebrow-accent,
+.t8-hero .t8-hero-meta,
+.t8-hero .t8-today-sets { color: var(--hero-dim); }
+.t8-hero .t8-hero-title { color: var(--hero-title); text-transform: uppercase; letter-spacing: 0; }
+.t8-hero .t8-pill-ok { background: var(--score); color: var(--on-score); }
+.t8-hero .t8-today-plan { background: rgba(255, 255, 255, 0.14); color: var(--on-accent); }
+.t8-hero .t8-today-item + .t8-today-item { border-top-color: rgba(255, 255, 255, 0.2); }
+.t8-hero .t8-today-num { background: rgba(255, 255, 255, 0.16); color: var(--on-accent); }
+.t8-hero .t8-dot-sep { opacity: 1; }
 .t8-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .t8-hero-title { font-size: 40px; line-height: 1.05; font-weight: 800; font-style: italic; letter-spacing: -0.02em; margin: 8px 0 6px; }
 .t8-hero-meta { display: flex; flex-wrap: wrap; gap: 6px; color: var(--text-dim); font-size: 14.5px; font-weight: 600; }
@@ -759,7 +847,7 @@ body.no-nav .tabbar { display: none; }
 .t8-week-day.is-today .t8-week-wd { color: var(--accent-ink); }
 .t8-week-mark { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 22px; width: 100%; }
 .t8-week-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-ink); }
-.t8-week-dot-tuotu { background: var(--pull); }
+.t8-week-dot-tuotu { background: var(--score-ink); }
 .t8-week-dot-plan { background: transparent; box-shadow: inset 0 0 0 1.5px var(--text-dim); }
 .t8-week-tag {
   max-width: 100%;
@@ -774,7 +862,7 @@ body.no-nav .tabbar { display: none; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.t8-week-tag-laji { background: color-mix(in srgb, var(--pull) 20%, transparent); color: var(--pull); }
+.t8-week-tag-laji { background: color-mix(in srgb, var(--pull) 20%, transparent); color: var(--score-ink); }
 
 /* ---- Koti: viikkotavoite */
 .t8-goal-card { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
@@ -882,7 +970,7 @@ body.no-nav .tabbar { display: none; }
 .t8-group-sub { color: var(--text-dim); font-size: 14.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .t8-group-left { flex: 0 0 auto; color: var(--text-dim); font-size: 14px; font-weight: 600; }
 .t8-group-left b { color: var(--text); font-size: 19px; font-weight: 800; font-style: italic; margin-right: 2px; }
-.t8-group-left.is-done { color: var(--score); font-weight: 800; }
+.t8-group-left.is-done { color: var(--score-ink); font-weight: 800; }
 .t8-group-chev { flex: 0 0 auto; color: var(--text-dim); transition: transform 0.2s ease; }
 .t8-group.is-open .t8-group-chev { transform: rotate(180deg); }
 .t8-group-rows { padding: 2px 16px 14px; border-top: 1px solid var(--line); }
@@ -893,7 +981,7 @@ body.no-nav .tabbar { display: none; }
 .t8-muscle-name { flex: 1 1 auto; min-width: 0; font-weight: 600; }
 .t8-muscle-val { color: var(--text-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
 .t8-muscle-left { flex: 0 0 auto; min-width: 74px; text-align: right; font-size: 14px; font-weight: 700; }
-.t8-muscle-left.is-done { color: var(--score); }
+.t8-muscle-left.is-done { color: var(--score-ink); }
 .t8-bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .t8-bar-fill { display: block; height: 100%; border-radius: 999px; }
 
@@ -1101,7 +1189,7 @@ body.no-nav .tabbar { display: none; }
   border-radius: 50%;
   background: var(--accent);
   color: var(--on-accent);
-  box-shadow: 0 8px 24px rgba(240, 50, 90, 0.35);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
   margin-bottom: 6px;
 }
 .t8-ex-play svg { margin-left: 3px; }
@@ -1158,7 +1246,7 @@ body.no-nav .tabbar { display: none; }
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-.tr-num.is-done { background: var(--ok); color: #ffffff; }
+.tr-num.is-done { background: var(--ok); color: var(--on-accent); }
 
 .tr-show {
   flex: 0 0 auto;
@@ -1186,7 +1274,7 @@ body.no-nav .tabbar { display: none; }
   padding: 14px 16px 12px;
   background: linear-gradient(to bottom, transparent, var(--bg) 40%);
 }
-.tr-start-btn { box-shadow: 0 10px 28px rgba(240, 50, 90, 0.35); }
+.tr-start-btn { box-shadow: 0 10px 28px color-mix(in srgb, var(--cta) 35%, transparent); }
 
 /* Käynnissä: yläpalkki */
 .tr-top {
@@ -1219,6 +1307,41 @@ body.no-nav .tabbar { display: none; }
   letter-spacing: -0.02em;
 }
 .tr-stop { min-height: 44px; padding: 10px 18px; color: var(--accent-ink); }
+/* Palautusajastimen kytkin (kello); pois päältä himmennetty ja yliviivattu */
+.tr-timer-btn {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.tr-timer-btn .tr-timer-gap { stroke: var(--surface-2); }
+.tr-timer-btn:not(.is-off) .tr-timer-gap,
+.tr-timer-btn:not(.is-off) .tr-timer-slash { display: none; }
+.tr-timer-btn.is-off { color: var(--text-dim); }
+.tr-timer-btn.is-off svg { opacity: 0.7; }
+/* Kertaluonteinen vihje kellon alla */
+.tr-hint {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 12px;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
 
 /* Liikekortit */
 .tr-list { display: flex; flex-direction: column; gap: 10px; }
@@ -1271,7 +1394,7 @@ body.no-nav .tabbar { display: none; }
 .tr-set-no { flex: 0 0 26px; color: var(--text-dim); font-weight: 800; font-size: 14px; }
 .tr-set-main { flex: 1 1 auto; min-width: 0; font-weight: 700; }
 .tr-set-rir { flex: 0 0 auto; color: var(--text-dim); font-size: 14px; }
-.tr-set-ok { flex: 0 0 auto; color: var(--score); font-weight: 800; }
+.tr-set-ok { flex: 0 0 auto; color: var(--score-ink); font-weight: 800; }
 
 /* Ehdotuskortti */
 .tr-sugg {
@@ -1307,7 +1430,7 @@ body.no-nav .tabbar { display: none; }
   border-color: transparent;
 }
 .tr-sugg-state { font-size: 14.5px; font-weight: 600; min-width: 0; }
-.tr-sugg.is-accepted .tr-sugg-state { color: var(--score); }
+.tr-sugg.is-accepted .tr-sugg-state { color: var(--score-ink); }
 .tr-sugg.is-skipped .tr-sugg-state { color: var(--text-dim); }
 .tr-ai-note, .yv-ai-note { margin: 6px 4px 0; font-size: 12.5px; color: var(--text-dim); font-style: italic; }
 
@@ -1380,12 +1503,46 @@ body.no-nav .tabbar { display: none; }
 .tr-rest-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
 .tr-rest-time { font-size: 26px; font-weight: 800; font-style: italic; font-variant-numeric: tabular-nums; }
 .tr-rest-btn { min-height: 48px; padding: 8px 14px; background: var(--surface); }
+/* Tauko ohi: ilmoituspalkki välähtää kerran ja poistuu 4 s kuluttua tai napautuksesta */
+.tr-rest.is-done .tr-rest-track { background: var(--ok); }
+.tr-rest-done {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+.tr-rest.is-flash { animation: tr-rest-flash 0.9s ease-out 1; }
+@keyframes tr-rest-flash {
+  0% { box-shadow: 0 0 0 4px var(--accent-ink), var(--shadow); }
+  100% { box-shadow: 0 0 0 4px transparent, var(--shadow); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-rest.is-flash { animation: none; }
+}
 
 .tr-confirm-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .tr-confirm-actions .btn { width: 100%; }
 
 /* Yhteenveto */
 .yv-title { margin-top: 6px; }
+/* Otsikkoalue Sporttimekan heron tapaan: sininen tausta, kultainen otsikko */
+.yv-hero {
+  margin: 4px 0 16px;
+  padding: 18px 18px 20px;
+  border-radius: var(--radius);
+  background: var(--hero);
+  color: var(--on-accent);
+}
+.yv-hero .yv-overline { margin: 0; color: var(--hero-dim); }
+.yv-hero .yv-title { margin: 6px 0 0; color: var(--hero-title); text-transform: uppercase; letter-spacing: 0; overflow-wrap: anywhere; }
 .yv-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .yv-stat {
   display: flex;
@@ -1409,7 +1566,7 @@ body.no-nav .tabbar { display: none; }
 .yv-card.is-attention { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
 .yv-card.is-next { border-left-color: var(--pull); }
 .yv-card-title { font-size: 18px; font-weight: 800; font-style: italic; margin-bottom: 4px; }
-.yv-card.is-progress .yv-card-title { color: var(--score); }
+.yv-card.is-progress .yv-card-title { color: var(--score-ink); }
 .yv-card.is-attention .yv-card-title { color: var(--accent-ink); }
 .yv-card-text { margin: 0; font-size: 15.5px; }
 .yv-card-why { margin-top: 10px; }
@@ -1431,7 +1588,7 @@ body.no-nav .tabbar { display: none; }
   height: 26px;
   border-radius: 50%;
   background: var(--surface-2);
-  color: var(--score);
+  color: var(--score-ink);
   font-weight: 800;
 }
 .yv-calm-text { flex: 1 1 auto; min-width: 0; }
@@ -1455,8 +1612,8 @@ body.no-nav .tabbar { display: none; }
 .sec-head .section-title { margin: 0; }
 .meter { display: block; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .meter > span { display: block; height: 100%; border-radius: inherit; background: var(--score); }
-.meter > span.is-fatigued { background: var(--accent); }
-.meter > span.is-recovering { background: var(--accent); opacity: 0.5; }
+.meter > span.is-fatigued { background: var(--fatigue); }
+.meter > span.is-recovering { background: var(--fatigue); opacity: 0.5; }
 .meter > span.is-recovered { background: var(--score); }
 .meter-sm { width: 84px; height: 5px; }
 .chip.chip-static { cursor: default; background: var(--surface-2); border-color: transparent; color: var(--text); font-weight: 600; }
@@ -1468,9 +1625,8 @@ body.no-nav .tabbar { display: none; }
   width: 22px;
   height: 22px;
   border-radius: 7px;
-  background: rgba(245, 184, 65, 0.16);
-  background: color-mix(in srgb, var(--warn) 18%, transparent);
-  color: var(--warn);
+  background: color-mix(in srgb, var(--score) 22%, transparent);
+  color: var(--score-ink);
 }
 .trend-badge.is-flat { background: var(--surface-2); color: var(--text-dim); }
 
@@ -1508,7 +1664,7 @@ body.no-nav .tabbar { display: none; }
 }
 .ts-scale { align-self: flex-end; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
 .ts-gauge { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; padding: 0 5px; }
-.ts-bar { display: block; height: 34px; border-radius: 8px; background: var(--surface-2); transform: skewX(-15deg); overflow: hidden; }
+.ts-bar { display: block; height: 34px; border-radius: 8px; background: var(--score-track); transform: skewX(-15deg); overflow: hidden; }
 .ts-fill { display: block; height: 100%; border-radius: 8px; background: var(--score); }
 .ts-gauge.is-locked { opacity: 0.55; margin-top: 14px; }
 .ts-sub { margin: 12px 0 0; }
@@ -1579,7 +1735,7 @@ body.no-nav .tabbar { display: none; }
 .cmp-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .card .cmp-name { font-size: 17px; font-weight: 700; font-style: normal; margin: 0; min-width: 0; }
 .cmp-delta { flex: 0 0 auto; font-size: 12.5px; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
-.cmp-delta.is-up { color: var(--score); }
+.cmp-delta.is-up { color: var(--score-ink); }
 .cmp-delta.is-down { color: var(--warn); }
 .cmp-big { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 6px 0 6px; }
 .cmp-num { font-size: 46px; line-height: 1; font-weight: 900; font-style: italic; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
@@ -1588,7 +1744,7 @@ body.no-nav .tabbar { display: none; }
 .cmp-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 5; }
 .cmp-line { fill: none; stroke: var(--text); stroke-opacity: 0.85; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .cmp-dot { fill: var(--text-dim); stroke: var(--surface); stroke-width: 2; }
-.cmp-dot.is-last { fill: var(--score); }
+.cmp-dot.is-last { fill: var(--score-ink); }
 .cmp-axis { fill: var(--text-dim); font-size: 11px; font-family: var(--font); }
 .cmp-foot { margin: 8px 0 0; }
 .cmp-card.is-empty .cmp-num { color: var(--text-dim); }
@@ -1616,9 +1772,9 @@ body.no-nav .tabbar { display: none; }
 }
 .bw-add:active { filter: brightness(0.92); }
 .bw-chart { display: block; width: 100%; height: 56px; margin-top: 12px; }
-.bw-line { fill: none; stroke: var(--score); stroke-width: 2.2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.bw-area { fill: var(--score); fill-opacity: 0.12; stroke: none; }
-.bw-dot { fill: var(--score); stroke: var(--surface); stroke-width: 2; }
+.bw-line { fill: none; stroke: var(--score-ink); stroke-width: 2.2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.bw-area { fill: var(--score); fill-opacity: 0.16; stroke: none; }
+.bw-dot { fill: var(--score-ink); stroke: var(--surface); stroke-width: 2; }
 .bw-label { display: block; margin: 16px 0 6px; font-size: 14px; font-weight: 700; }
 .bw-field { position: relative; }
 .bw-input {
@@ -1658,9 +1814,8 @@ body.no-nav .tabbar { display: none; }
   place-items: center;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: rgba(245, 184, 65, 0.16);
-  background: color-mix(in srgb, var(--warn) 18%, transparent);
-  color: var(--warn);
+  background: color-mix(in srgb, var(--score) 22%, transparent);
+  color: var(--score-ink);
 }
 .rec-icon { width: 34px; height: 34px; }
 .tl-trophy { width: 26px; height: 26px; }
@@ -1692,18 +1847,17 @@ body.no-nav .tabbar { display: none; }
 .rcv-map { display: flex; justify-content: center; padding: 14px 0 6px; }
 .rcv-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; color: var(--text-dim); margin: 4px 0 12px; }
 .rcv-legend-item { display: inline-flex; align-items: center; gap: 6px; }
-.rcv-dot { display: inline-block; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--bm-muscle, #4b4f6b); }
-.rcv-dot.is-fatigued { background: var(--accent); }
-.rcv-dot.is-recovering { background: var(--accent); opacity: 0.5; }
-.rcv-dot.is-recovered { background: #4b4f6b; }
-[data-theme="light"] .rcv-dot.is-recovered { background: #c4c7d6; }
+.rcv-dot { display: inline-block; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--bm-muscle); }
+.rcv-dot.is-fatigued { background: var(--fatigue); }
+.rcv-dot.is-recovering { background: var(--fatigue); opacity: 0.5; }
+.rcv-dot.is-recovered { background: var(--bm-muscle); }
 .rcv-info { min-height: 96px; padding-top: 12px; border-top: 1px solid var(--line); }
 .rcv-hint { margin: 8px 0 0; text-align: center; }
 .rcv-info-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .card .rcv-info-title { margin: 0; font-size: 22px; }
 .rcv-pill { flex: 0 0 auto; padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: var(--surface-2); color: var(--text-dim); }
-.rcv-pill.is-fatigued { background: var(--accent); color: var(--on-accent); }
-.rcv-pill.is-recovering { background: var(--accent-soft); color: var(--accent-ink); }
+.rcv-pill.is-fatigued { background: var(--fatigue); color: var(--on-accent); }
+.rcv-pill.is-recovering { background: color-mix(in srgb, var(--fatigue) 14%, transparent); color: var(--warn); }
 .rcv-info-row { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 8px; }
 .rcv-info-pros { font-size: 34px; line-height: 1; font-weight: 900; font-style: italic; font-variant-numeric: tabular-nums; }
 .rcv-meter { margin-bottom: 10px; }
@@ -1711,22 +1865,20 @@ body.no-nav .tabbar { display: none; }
 .rcv-pros { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* Kehokartta */
-.bodymap { --bm-muscle: #4b4f6b; --bm-base: #33364f; display: block; overflow: visible; }
-[data-theme="light"] .bodymap { --bm-muscle: #c4c7d6; --bm-base: #dfe1ea; }
+.bodymap { display: block; overflow: visible; }
 .bodymap-iso { width: auto; height: min(340px, 44vh); max-width: 100%; }
 .bodymap-pieni { width: auto; height: 52px; }
 .bm-base ellipse, .bm-base path { fill: var(--bm-base); }
 .bm-muscle path { fill: var(--bm-muscle); transition: fill 0.25s ease; }
-.bm-muscle.is-fatigued path, .bm-muscle.is-hit path { fill: var(--accent); }
-.bm-muscle.is-recovering path { fill: var(--accent); fill-opacity: 0.45; }
+.bm-muscle.is-fatigued path, .bm-muscle.is-hit path { fill: var(--fatigue); }
+.bm-muscle.is-recovering path { fill: var(--fatigue); fill-opacity: 0.45; }
 .bm-muscle.is-idle path, .bm-muscle.is-recovered path { fill: var(--bm-muscle); }
 .bm-muscle[role="button"] { cursor: pointer; outline: none; }
 .bm-muscle.is-selected path, .bm-muscle[role="button"]:focus-visible path { stroke: var(--text); stroke-width: 2.5; }
 @media (hover: hover) {
   .bm-muscle[role="button"]:hover path { filter: brightness(1.15); }
 }
-.tl-icon .bodymap-pieni { --bm-base: #3b3e59; }
-[data-theme="light"] .tl-icon .bodymap-pieni { --bm-base: #d3d6e2; --bm-muscle: #b9bdcf; }
+.tl-icon .bodymap-pieni { --bm-base: var(--bm-base-sm); --bm-muscle: var(--bm-muscle-sm); }
 
 /* Historia: otsikko ja yhteenveto */
 .hist-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 18px; }
@@ -1763,8 +1915,7 @@ body.no-nav .tabbar { display: none; }
 .hist-stat-value small { font-size: 15px; font-weight: 600; font-style: normal; letter-spacing: 0; color: var(--text-dim); }
 .hist-stat-value.is-empty { font-size: 17px; font-weight: 600; font-style: normal; color: var(--text-dim); }
 .hist-badges { display: flex; gap: 4px; }
-.hex-badge { --hex-ink: #151724; flex: 0 0 auto; overflow: visible; }
-[data-theme="light"] .hex-badge { --hex-ink: #ffffff; }
+.hex-badge { flex: 0 0 auto; overflow: visible; }
 .hex-badge-bg { stroke-width: 2.5; }
 .hex-badge-ink { stroke: var(--hex-ink); }
 .ms-row .hex-badge { width: 36px; height: 36px; }
@@ -1817,7 +1968,7 @@ body.no-nav .tabbar { display: none; }
 .cal-day.has-workout:active, .cal-cell.has-workout:active { background: var(--surface-2); }
 .cal-day.is-today, .cal-cell.is-today { background: var(--accent); color: var(--on-accent); }
 .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
-.has-workout .cal-dot { background: var(--score); }
+.has-workout .cal-dot { background: var(--score-ink); }
 .is-today .cal-dot { background: transparent; }
 .is-today.has-workout .cal-dot { background: var(--on-accent); }
 .cal-month-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 8px; }
@@ -1877,7 +2028,7 @@ body.no-nav .tabbar { display: none; }
   border-radius: 12px;
   background: var(--surface-2);
 }
-.tl-icon.is-import { color: var(--pull); }
+.tl-icon.is-import { color: var(--score-ink); }
 .tl-link-badge {
   position: absolute;
   right: -5px;
@@ -1889,7 +2040,7 @@ body.no-nav .tabbar { display: none; }
   border-radius: 50%;
   border: 2px solid var(--surface);
   background: var(--pull);
-  color: var(--surface);
+  color: var(--on-score);
 }
 .tl-body { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-width: 0; }
 .tl-title { font-size: 18px; line-height: 1.2; font-weight: 800; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1900,7 +2051,7 @@ body.no-nav .tabbar { display: none; }
 .tl-foot { display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 12px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text-dim); }
 .tl-ex { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl-import { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; color: var(--text); font-size: 13.5px; font-weight: 600; }
-.tl-import .ico { color: var(--pull); }
+.tl-import .ico { color: var(--score-ink); }
 .tl-import .why-btn { margin-left: auto; font-size: 13px; }
 .tl-records {
   display: flex;
@@ -1908,11 +2059,11 @@ body.no-nav .tabbar { display: none; }
   gap: 10px;
   padding: 10px 14px;
   border-top: 1px solid var(--line);
-  color: var(--warn);
+  color: var(--score-ink);
   font-size: 14.5px;
   font-weight: 700;
 }
-.tl-records .chevron { margin-left: auto; color: var(--warn); }
+.tl-records .chevron { margin-left: auto; color: var(--score-ink); }
 .tl-records:active, .tl-card:active .tl-main { background: var(--surface-2); }
 .tl-more { width: 100%; margin-top: 2px; }
 .tl-more[hidden] { display: none; }
@@ -2047,11 +2198,11 @@ body.no-nav .tabbar { display: none; }
 }
 .prof-hero-text p { margin: 4px 0 0; }
 
-.prof-goal { background: var(--ok); color: #ffffff; }
+.prof-goal { background: var(--accent); color: var(--on-accent); }
 .prof-goal .row { min-height: 64px; font-size: 19px; }
 .prof-goal .row-title { font-weight: 800; }
 .prof-goal .row-value,
-.prof-goal .chevron { color: #ffffff; opacity: 1; font-weight: 600; }
+.prof-goal .chevron { color: var(--on-accent); opacity: 1; font-weight: 600; }
 .prof-goal .row:active { background: rgba(0, 0, 0, 0.14); }
 .prof-goal-hint { margin: 8px 4px 0; }
 
@@ -2061,6 +2212,9 @@ body.no-nav .tabbar { display: none; }
 .prof-row .toggle[disabled] { opacity: 0.45; cursor: not-allowed; }
 .prof-seg { flex: 0 0 auto; width: 148px; }
 .prof-seg .segmented-option { min-height: 32px; padding: 4px 8px; font-size: 14px; }
+.prof-row.is-stacked { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 12px; padding-bottom: 12px; }
+.prof-row.is-stacked .prof-seg { width: 100%; }
+.prof-row.is-stacked .segmented-option { flex: 1 1 auto; }
 
 .row.is-soon .row-title { color: var(--text-dim); opacity: 0.75; }
 .is-soon .soon-badge {
@@ -2331,8 +2485,8 @@ body:has(.chat-composer):has(#fab:not([hidden])) #view { padding-bottom: calc(va
   color: var(--text-dim);
 }
 .plan-treeni .plan-day-icon { background: var(--accent-soft); color: var(--accent-ink); }
-.plan-laji .plan-day-icon { background: color-mix(in srgb, var(--score) 18%, transparent); color: var(--score); }
-.plan-matka .plan-day-icon { background: color-mix(in srgb, var(--pull) 18%, transparent); color: var(--pull); }
+.plan-laji .plan-day-icon { background: color-mix(in srgb, var(--score) 18%, transparent); color: var(--score-ink); }
+.plan-matka .plan-day-icon { background: color-mix(in srgb, var(--legs) 16%, transparent); color: var(--legs); }
 .plan-day-date { padding-top: 4px; white-space: nowrap;color: var(--text-dim); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .plan-day-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 3px; }
 .plan-day-title { font-size: 15.5px; font-weight: 700; }
@@ -2359,7 +2513,7 @@ body:has(.chat-composer):has(#fab:not([hidden])) #view { padding-bottom: calc(va
   font-weight: 700;
   text-align: center;
 }
-.plan-status.is-ok { background: color-mix(in srgb, var(--ok) 24%, transparent); color: var(--score); }
+.plan-status.is-ok { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--text); }
 .plan-card.is-hylatty .plan-days,
 .plan-card.is-hylatty .plan-factor,
 .plan-card.is-hylatty .plan-why { opacity: 0.55; }

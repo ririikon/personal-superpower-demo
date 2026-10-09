@@ -547,4 +547,8 @@ export const OLETUSPROFIILI = {
   kehonpaino: 80,
   yksikko: 'kg',
   viikonAlku: 'maanantai',
+  // Palautusajastin on valinnainen. Kesto: 'tavoite' (liikkeen tavoitteen palautusS) tai 60/90/120/180 s.
+  // Vanhasta tilasta kentät voivat puuttua: lue aina oletuksella (?? false / ?? 'tavoite').
+  palautusajastin: false,
+  palautusKesto: 'tavoite',
 };

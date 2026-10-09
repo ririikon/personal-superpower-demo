@@ -13,7 +13,7 @@ function lisaa(root, ...osat) {
 }
 
 const RYHMA_NIMI = { tyonnot: 'Työnnöt', vedot: 'Vedot', jalat: 'Jalat' };
-const RYHMA_VARI = { tyonnot: 'var(--accent)', vedot: 'var(--pull)', jalat: 'var(--legs)' };
+const RYHMA_VARI = { tyonnot: 'var(--push)', vedot: 'var(--pull)', jalat: 'var(--legs)' };
 const iso = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const pv = (pvm) => `${Number(pvm.slice(8, 10))}.${Number(pvm.slice(5, 7))}.`;
 const desimaali = (n) => String(n).replace('.', ',');

@@ -13,7 +13,7 @@ import { bodyMap, PUOLET } from './bodymap.js';
 const KG_LB = 2.20462;
 
 const RYHMA_NIMET = { tyonnot: 'Työnnöt', vedot: 'Vedot', jalat: 'Jalat' };
-const RYHMA_VARIT = { tyonnot: 'var(--accent)', vedot: 'var(--pull)', jalat: 'var(--legs)' };
+const RYHMA_VARIT = { tyonnot: 'var(--push)', vedot: 'var(--pull)', jalat: 'var(--legs)' };
 const TILA_NIMET = { väsynyt: 'Väsynyt', palautumassa: 'Palautumassa', palautunut: 'Palautunut' };
 const TILA_LUOKKA = { väsynyt: 'is-fatigued', palautumassa: 'is-recovering', palautunut: 'is-recovered' };
 const VIIKKOJA_KAAVIOSSA = 12;

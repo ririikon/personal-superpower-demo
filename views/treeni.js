@@ -5,8 +5,8 @@ import { getState, update } from '../store.js';
 import { tanaanPvm } from '../seed.js';
 import { LIIKKEET, liike as haeLiike } from '../data.js';
 import { suggestNextSet, recovery, round25, onTyosarja } from '../engine.js';
-import { el, sectionTitle, sheet, whyButton, formatWeight } from './ui.js';
-import { parseSet } from './treeni-input.js';
+import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js';
+import { parseSet, palautusKestoS } from './treeni-input.js';
 import { rakennaPaiva, liikkeenKerrat, onKehonpaino, LAMMITTELY, LAMMITTELY_PALAUTUS_S } from './paiva.js';
 
 export const omaPaivitys = true;
@@ -15,6 +15,8 @@ const KG_LB = 2.20462;
 // Yli 4 h sitten aloitettu treeni on jäänyt auki (demon oletus); kesto tuntemattomana 60 min.
 export const KESKEN_RAJA_MS = 4 * 60 * 60 * 1000;
 const OLETUSKESTO_S = 60 * 60;
+const ILMOITUS_MS = 4000; // "Tauko ohi" -palkki näkyy näin kauan (tai napautukseen asti)
+const VIHJE_MS = 6000;    // ajastinvihje näkyy näin kauan (tai napautukseen asti)
 const RIR_VALINNAT = [0, 1, 2, 3, 4];
 const SYY_NIMET = {
   'double-progression': 'Kaksoisprogressio',
@@ -97,6 +99,34 @@ function avaaLiike(liike) {
     .catch(() => {});
 }
 
+// Palautusajastin on valinnainen (profiili.palautusajastin, oletus pois). Vanhasta tilasta
+// kenttä voi puuttua, joten se luetaan aina oletuksella.
+function ajastinPaalla(state) {
+  return (state && state.profiili && state.profiili.palautusajastin) ?? false;
+}
+
+// Sekuntikello; pois päältä kuvake yliviivataan (viivan alla taustavärinen rako).
+function ajastinKuvake() {
+  const viiva = { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+  return svgEl('svg', { viewBox: '0 0 24 24', width: 24, height: 24, 'aria-hidden': 'true' },
+    svgEl('circle', { ...viiva, cx: 12, cy: 13.5, r: 7.5, stroke: 'currentColor', 'stroke-width': 2 }),
+    svgEl('path', { ...viiva, d: 'M12 9.5v4l2.5 1.5M10 2.5h4M12 2.5V6M18.5 5.5l1.5 1.5', stroke: 'currentColor', 'stroke-width': 2 }),
+    svgEl('path', { ...viiva, class: 'tr-timer-gap', d: 'M4 4l16 16', 'stroke-width': 5 }),
+    svgEl('path', { ...viiva, class: 'tr-timer-slash', d: 'M4 4l16 16', stroke: 'currentColor', 'stroke-width': 2 }));
+}
+
+// Värinä tauon päättyessä, jos laite tukee sitä. Chrome sallii värinän vasta käyttäjän
+// vuorovaikutuksen jälkeen, joten ilman sitä ei yritetä (vältetään konsolivaroitus).
+function varise() {
+  try {
+    if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+    navigator.vibrate?.([200, 100, 200]);
+  } catch {
+    // ei tuettu
+  }
+}
+
 function naytaLiikeNappi(liike) {
   return el('button', {
     class: 'tr-show', type: 'button', 'aria-label': `Näytä liike: ${liike ? liike.nimi : ''}`,
@@ -110,6 +140,13 @@ function naytaLiikeNappi(liike) {
 export function render(root) {
   let lopetetaan = false;
   let konteksti = { id: null };
+  // Tauon päättymisilmoitus: { asti, valahti } tai null. Ei tallenneta: ilmoitus annetaan kerran,
+  // koska palautusLoppuu nollataan samalla (uudelleenlataus ei näytä sitä uudestaan).
+  let ilmoitus = null;
+  // palautusLoppuu-arvo, jonka tämä näkymä on nähnyt käynnissä. Jos tauko päättyi näkymän ollessa
+  // poissa (esim. uudelleenlataus), ilmoitus annetaan hiljaa ilman värinää.
+  let nahtyKaynnissa = null;
+  let vihjeAsti = 0; // ajastinvihjeen näkyvyys (aikaleima, ms)
 
   // Treenin aikainen laskentakonteksti: aiemmat kerrat ja palautumistila treenin alussa.
   function haeKonteksti(state, k) {
@@ -276,13 +313,25 @@ export function render(root) {
     const liikkeet = Array.isArray(k.liikkeet) ? k.liikkeet : [];
     const auki = avoinIndeksi(k);
     const alku = aikaMs(k.aloitus);
+    const ajastin = ajastinPaalla(state);
 
     const otsake = el('header', { class: 'tr-top' },
       el('div', { class: 'tr-top-info' },
         el('span', { class: 'tr-top-title' }, k.paivaNimi || 'Treeni'),
         el('span', { class: 'tr-top-time', dataset: { aika: '' }, 'aria-label': 'Treenin kesto' },
           alku !== null ? mmss(Date.now() - alku) : '00:00')),
-      el('button', { class: 'btn tr-stop', type: 'button', onClick: lopetaYlapalkista }, 'Lopeta'));
+      el('button', {
+        class: `tr-timer-btn${ajastin ? '' : ' is-off'}`, type: 'button',
+        'aria-pressed': String(ajastin), 'aria-label': 'Palautusajastin',
+        dataset: { fokus: 'ajastin' }, onClick: vaihdaAjastin,
+      }, ajastinKuvake()),
+      el('button', { class: 'btn tr-stop', type: 'button', onClick: lopetaYlapalkista }, 'Lopeta'),
+      !ajastin && vihjeAsti > Date.now()
+        ? el('p', {
+          class: 'tr-hint', role: 'status',
+          onClick: (e) => { vihjeAsti = 0; e.currentTarget.remove(); },
+        }, 'Vinkki: palautusajastimen saa päälle kellosta')
+        : null);
 
     const kortit = liikkeet.map((tl, i) => liikeKortti(state, k, tl, i, i === auki, ctx, profiili, yksikko));
 
@@ -292,7 +341,18 @@ export function render(root) {
       liikkeet.length
         ? el('button', { class: 'btn tr-finish', type: 'button', onClick: lopeta }, 'Lopeta treeni')
         : el('p', { class: 'muted' }, 'Treenissä ei ole liikkeitä.'),
-      lepoPalkki(k));
+      lepoPalkki(state, k));
+  }
+
+  // Yläpalkin kellopainike: kytkee profiilin palautusajastimen. Pois kytkentä päättää tauon.
+  function vaihdaAjastin() {
+    const on = !ajastinPaalla(getState());
+    ilmoitus = null;
+    vihjeAsti = 0;
+    update((s) => {
+      s.profiili = { ...(s.profiili || {}), palautusajastin: on };
+      if (!on && s.kaynnissa) s.kaynnissa.palautusLoppuu = null;
+    });
   }
 
   function liikeKortti(state, k, tl, i, onAuki, ctx, profiili, yksikko) {
@@ -523,9 +583,16 @@ export function render(root) {
   }
 
   // Lisää sarjan, kirjaa ehdotuksen valinnan (jos käyttäjä ei valinnut, hyväksytyksi lasketaan
-  // ehdotuksen mukainen sarja) ja käynnistää palautusajastimen tallennetulla päättymisajalla.
+  // ehdotuksen mukainen sarja) ja käynnistää palautusajastimen tallennetulla päättymisajalla,
+  // jos ajastin on päällä. Kesto: profiilin palautusKesto tai tavoitteen palautusS (palautusKestoS).
+  // Ajastin pois: ensimmäisellä kuittauksella näytetään kerran vihje kellopainikkeesta.
   function kuittaaSarja(treeniId, i, sarja, palautusS, ehdotus) {
     let siirry = null;
+    const ennen = getState() || {};
+    const ajastin = ajastinPaalla(ennen);
+    const vihje = !ajastin && !((ennen.asetukset && ennen.asetukset.ajastinVihjeNaytetty) ?? false);
+    ilmoitus = null;
+    if (vihje) vihjeAsti = Date.now() + VIHJE_MS;
     // Luonnos tyhjennetään ennen päivitystä, koska update() piirtää näkymän heti uudelleen.
     luonnokset.set(`${treeniId}:${i}`, { paino: '', toistot: '', rir: null, virheet: {} });
     update((s) => {
@@ -544,10 +611,15 @@ export function render(root) {
           });
         }
       }
-      const kesto = Number.isFinite(palautusS) && palautusS > 0 ? palautusS : 90;
       kk.viimeisinSarjaAika = new Date().toISOString(); // kesken jääneen treenin kestoa varten
-      kk.palautusLoppuu = new Date(Date.now() + kesto * 1000).toISOString();
-      kk.palautusKestoS = kesto;
+      if (ajastin) {
+        const kesto = palautusKestoS(s.profiili, { palautusS });
+        kk.palautusLoppuu = new Date(Date.now() + kesto * 1000).toISOString();
+        kk.palautusKestoS = kesto;
+      } else {
+        kk.palautusLoppuu = null;
+      }
+      if (vihje) s.asetukset = { ...(s.asetukset || {}), ajastinVihjeNaytetty: true };
       // Siirrytään seuraavaan keskeneräiseen liikkeeseen, kun tavoitesarjat ovat täynnä.
       const tavoite = (tl.tavoite && tl.tavoite.sarjat) || 3;
       if (!sarja.lammittely && tyoSarjaMaara(tl) === tavoite) {
@@ -566,8 +638,22 @@ export function render(root) {
 
   // --- Palautusajastin --------------------------------------------------------
 
-  function lepoPalkki(k) {
-    const loppuu = aikaMs(k.palautusLoppuu);
+  function suljeIlmoitus() {
+    ilmoitus = null;
+    const palkki = root.querySelector('.tr-rest');
+    if (palkki) palkki.hidden = true;
+  }
+
+  function lepoPalkki(state, k) {
+    if (ilmoitus && ilmoitus.asti > Date.now()) {
+      // Välähdys vain ensimmäisellä piirrolla, ei jokaisella uudelleenpiirrolla.
+      const valahda = !ilmoitus.valahti;
+      ilmoitus.valahti = true;
+      return el('div', { class: `tr-rest is-done${valahda ? ' is-flash' : ''}`, role: 'status' },
+        el('div', { class: 'tr-rest-track', 'aria-hidden': 'true' }),
+        el('button', { class: 'tr-rest-done', type: 'button', onClick: suljeIlmoitus }, 'Tauko ohi – seuraava sarja'));
+    }
+    const loppuu = ajastinPaalla(state) ? aikaMs(k.palautusLoppuu) : null;
     const nakyvissa = loppuu !== null && loppuu > Date.now();
     return el('div', { class: 'tr-rest', hidden: !nakyvissa, role: 'timer', 'aria-label': 'Palautusaika' },
       el('div', { class: 'tr-rest-track', 'aria-hidden': 'true' }, el('div', { class: 'tr-rest-fill' })),
@@ -601,12 +687,32 @@ export function render(root) {
       const t = mmss(Date.now() - alku);
       if (aika.textContent !== t) aika.textContent = t;
     }
+    if (vihjeAsti && Date.now() >= vihjeAsti) {
+      vihjeAsti = 0;
+      const vihje = root.querySelector('.tr-hint');
+      if (vihje) vihje.remove();
+    }
     const palkki = root.querySelector('.tr-rest');
     if (!palkki) return;
-    const loppuu = aikaMs(k.palautusLoppuu);
+    const loppuu = ajastinPaalla(state) ? aikaMs(k.palautusLoppuu) : null;
     const jaljella = loppuu === null ? 0 : loppuu - Date.now();
     if (jaljella <= 0) {
+      if (loppuu !== null && !ilmoitus) {
+        // Tauko päättyi: ilmoitus kerran. Värinä vain, jos tauko nähtiin käynnissä tässä näkymässä.
+        if (nahtyKaynnissa === k.palautusLoppuu) varise();
+        ilmoitus = { asti: Date.now() + ILMOITUS_MS, valahti: false };
+        update((s) => { if (s.kaynnissa && s.kaynnissa.id === k.id) s.kaynnissa.palautusLoppuu = null; });
+        return; // uudelleenpiirto näyttää ilmoituspalkin
+      }
+      if (ilmoitus && Date.now() < ilmoitus.asti) return;
+      if (ilmoitus) ilmoitus = null;
       if (!palkki.hidden) palkki.hidden = true;
+      return;
+    }
+    nahtyKaynnissa = k.palautusLoppuu;
+    if (palkki.classList.contains('is-done')) {
+      ilmoitus = null; // uusi tauko alkoi ilmoituksen aikana: normaali palkki tilalle
+      piirra();
       return;
     }
     palkki.hidden = false;

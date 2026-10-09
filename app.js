@@ -54,7 +54,9 @@ const root = document.getElementById('view');
 const tabbar = document.getElementById('tabbar');
 const fab = document.getElementById('fab');
 const fabText = fab.querySelector('.fab-text');
-const themeMeta = document.querySelector('meta[name="theme-color"]');
+const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+const THEME_COLOR = { light: '#f2f5f7', dark: '#0e1626' }; // = --bg (styles.css)
+const darkQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
 let current = null; // { route, params, hash }
 let cleanup = null; // nykyisen näkymän siivousfunktio
@@ -86,12 +88,16 @@ function parseHash() {
   return null;
 }
 
+// Teema: 'vaalea' / 'tumma' pakottaa valinnan (data-theme), muuten (puuttuu tai 'auto')
+// attribuutti poistetaan ja CSS seuraa laitteen asetusta (prefers-color-scheme).
 function applyTheme(state) {
   const teema = state && state.asetukset ? state.asetukset.teema : null;
-  const light = teema === 'vaalea' || teema === 'light';
-  if (light) document.documentElement.dataset.theme = 'light';
+  const valinta = teema === 'vaalea' || teema === 'light' ? 'light'
+    : teema === 'tumma' || teema === 'dark' ? 'dark' : null;
+  if (valinta) document.documentElement.dataset.theme = valinta;
   else delete document.documentElement.dataset.theme;
-  if (themeMeta) themeMeta.setAttribute('content', light ? '#f3f4f8' : '#181a26');
+  const tumma = valinta ? valinta === 'dark' : !!(darkQuery && darkQuery.matches);
+  for (const meta of themeMetas) meta.setAttribute('content', tumma ? THEME_COLOR.dark : THEME_COLOR.light);
 }
 
 function mmss(ms) {
@@ -256,6 +262,11 @@ window.addEventListener('statechange', () => {
     onStateChange();
   });
 });
+
+// Automaattinen teema: laitteen vaihtaessa tilaa päivitetään selainpalkin väri (CSS hoitaa muun).
+if (darkQuery && typeof darkQuery.addEventListener === 'function') {
+  darkQuery.addEventListener('change', () => applyTheme(getState()));
+}
 
 setInterval(() => { if (current) updateFab(); }, 1000);
 

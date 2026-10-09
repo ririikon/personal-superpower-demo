@@ -384,6 +384,6 @@ export function seedState(nyt) {
     viikkosuunnitelmat: [],
     chat: [],
     kaynnissa: null,
-    asetukset: { teema: 'tumma' },
+    asetukset: { teema: 'auto' }, // auto = laitteen asetus (prefers-color-scheme)
   };
 }

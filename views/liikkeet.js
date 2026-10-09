@@ -19,7 +19,7 @@ const VIIKONPAIVAT = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
 const viikonpaiva = (pvm) => VIIKONPAIVAT[new Date(pvm + 'T12:00:00Z').getUTCDay()];
 
 function ryhmanVari(lihas) {
-  if (RYHMAT.tyonnot.includes(lihas)) return 'var(--accent)';
+  if (RYHMAT.tyonnot.includes(lihas)) return 'var(--push)';
   if (RYHMAT.vedot.includes(lihas)) return 'var(--pull)';
   if (RYHMAT.jalat.includes(lihas)) return 'var(--legs)';
   return 'var(--text-dim)';

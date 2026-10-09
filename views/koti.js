@@ -16,7 +16,7 @@ function lisaa(root, ...osat) {
 }
 
 const RYHMA_NIMI = { tyonnot: 'Työnnöt', vedot: 'Vedot', jalat: 'Jalat' };
-const RYHMA_VARI = { tyonnot: 'var(--accent)', vedot: 'var(--pull)', jalat: 'var(--legs)' };
+const RYHMA_VARI = { tyonnot: 'var(--push)', vedot: 'var(--pull)', jalat: 'var(--legs)' };
 const VIIKONPAIVAT = ['Su', 'Ma', 'Ti', 'Ke', 'To', 'Pe', 'La'];
 const VIIKONPAIVAT_PITKA = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
 const VINKKI_JARJESTYS = ['double-progression', 'deload', 'recovery', 'hold', 'rir-high', 'rir-zero', 'first-time'];

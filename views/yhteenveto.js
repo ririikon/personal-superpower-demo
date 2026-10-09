@@ -15,7 +15,7 @@ const KUUKAUDET = ['tammikuuta', 'helmikuuta', 'maaliskuuta', 'huhtikuuta', 'tou
 const KG_LB = 2.20462;
 const VIIKONPAIVAT = ['sunnuntai', 'maanantai', 'tiistai', 'keskiviikko', 'torstai', 'perjantai', 'lauantai'];
 const RYHMAT = [
-  { avain: 'tyonnot', nimi: 'Työnnöt', vari: 'var(--accent)' },
+  { avain: 'tyonnot', nimi: 'Työnnöt', vari: 'var(--push)' },
   { avain: 'vedot', nimi: 'Vedot', vari: 'var(--pull)' },
   { avain: 'jalat', nimi: 'Jalat', vari: 'var(--legs)' },
 ];
@@ -125,8 +125,9 @@ function tuotuYhteenveto(treeni, uusi) {
   if (Number.isFinite(treeni.kcal)) ruudut.push(['Kalorit', `${lukuTeksti(treeni.kcal)} kcal`]);
   if (Number.isFinite(treeni.matkaKm)) ruudut.push(['Matka', `${String(treeni.matkaKm).replace('.', ',')} km`]);
   return el('div', { class: 'yv' },
-    el('p', { class: 'yv-overline' }, pvmTeksti(treeni.pvm)),
-    el('h1', { class: 'page-title yv-title' }, uusi ? 'Hyvä treeni!' : (treeni.nimi || 'Aktiviteetti')),
+    el('div', { class: 'yv-hero' },
+      el('p', { class: 'yv-overline' }, pvmTeksti(treeni.pvm)),
+      el('h1', { class: 'page-title yv-title' }, uusi ? 'Hyvä treeni!' : (treeni.nimi || 'Aktiviteetti'))),
     avainluvut(ruudut),
     el('p', { class: 'yv-fine muted' }, 'Tuotu terveyssovelluksesta.'));
 }
@@ -164,8 +165,9 @@ export function renderSummary(treeni, { uusi = false } = {}) {
   const seuraavaksi = oivallukset.filter((o) => o.tyyppi === 'seuraavaksi');
 
   const osat = [
-    el('p', { class: 'yv-overline' }, [treeni.paivaNimi, pvmTeksti(treeni.pvm)].filter(Boolean).join(' · ')),
-    el('h1', { class: 'page-title yv-title' }, uusi ? 'Hyvä treeni!' : yhteenveto.otsikko),
+    el('div', { class: 'yv-hero' },
+      el('p', { class: 'yv-overline' }, [treeni.paivaNimi, pvmTeksti(treeni.pvm)].filter(Boolean).join(' · ')),
+      el('h1', { class: 'page-title yv-title' }, uusi ? 'Hyvä treeni!' : yhteenveto.otsikko)),
     avainluvut([
       ['Kesto', kestoTeksti(treeni.kestoS)],
       ['Liikkeitä', String(yhteenveto.liikkeita)],

@@ -11,8 +11,13 @@ import { OHJELMAT, OLETUSPROFIILI } from '../data.js';
 import { goalParams } from '../engine/progression.js';
 import { tanaanPvm } from '../seed.js';
 import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js';
+import { PALAUTUS_KESTOT } from './treeni-input.js';
 
 const KG_LB = 2.20462;
+
+function palautusKestoTeksti(valinta) {
+  return PALAUTUS_KESTOT.includes(valinta) ? `${valinta} s` : 'Tavoitteen mukaan';
+}
 
 // ---------------------------------------------------------------------------
 // Jaetut määritelmät
@@ -326,8 +331,9 @@ function toggleRivi(otsikko, arvo, onChange, { kuvaus, disabled } = {}) {
     kytkin);
 }
 
-function segmenttiRivi(otsikko, vaihtoehdot, arvo, onChange) {
-  return el('div', { class: 'row prof-row' },
+// pino: valitsin otsikon alle koko leveydelle (pitkät vaihtoehtotekstit, esim. teema).
+function segmenttiRivi(otsikko, vaihtoehdot, arvo, onChange, { pino = false } = {}) {
+  return el('div', { class: `row prof-row${pino ? ' is-stacked' : ''}` },
     el('span', { class: 'row-title' }, otsikko),
     el('div', { class: 'prof-seg' }, segmented({ vaihtoehdot, arvo, onChange, label: otsikko })));
 }
@@ -351,7 +357,9 @@ export function render(root) {
   const aktiivinen = ohjelma(s.aktiivinenOhjelmaId);
   const nimi = String(p.nimi || '').trim() || OLETUSPROFIILI.nimi;
   const valineet = Array.isArray(p.valineet) ? p.valineet : [];
-  const teema = s.asetukset && (s.asetukset.teema === 'vaalea' || s.asetukset.teema === 'light') ? 'vaalea' : 'tumma';
+  const teemaArvo = s.asetukset ? s.asetukset.teema : null;
+  const teema = teemaArvo === 'vaalea' || teemaArvo === 'light' ? 'vaalea'
+    : teemaArvo === 'tumma' || teemaArvo === 'dark' ? 'tumma' : 'auto';
 
   const vaihdaValine = (valine, paalla) => {
     const nyky = new Set(valineet);
@@ -488,9 +496,34 @@ export function render(root) {
       segmenttiRivi('Yksikkö', [{ arvo: 'kg', teksti: 'kg' }, { arvo: 'lb', teksti: 'lb' }], p.yksikko, (arvo) => tallenna({ yksikko: arvo })),
       segmenttiRivi('Viikon alku', [{ arvo: 'maanantai', teksti: 'Ma' }, { arvo: 'sunnuntai', teksti: 'Su' }], p.viikonAlku, (arvo) => tallenna({ viikonAlku: arvo })),
       toggleRivi('Lämmittelysarjat', !!p.lammittelysarjat, (on) => tallenna({ lammittelysarjat: on }), { kuvaus: '2 kevyttä sarjaa ennen ensimmäistä painavaa liikettä' }),
-      segmenttiRivi('Teema', [{ arvo: 'tumma', teksti: 'Tumma' }, { arvo: 'vaalea', teksti: 'Vaalea' }], teema, (arvo) => update((st) => {
+      toggleRivi('Palautusajastin', p.palautusajastin ?? false, (on) => update((st) => {
+        st.profiili = { ...OLETUSPROFIILI, ...(st.profiili || {}), palautusajastin: on };
+        // Pois kytkentä päättää käynnissä olevan tauon (kuten treenin yläpalkin kytkin).
+        if (!on && st.kaynnissa) st.kaynnissa.palautusLoppuu = null;
+      }), { kuvaus: 'Tauko alkaa, kun kuittaat sarjan' }),
+      (p.palautusajastin ?? false) ? listRow({
+        otsikko: 'Tauon pituus',
+        arvo: palautusKestoTeksti(p.palautusKesto ?? 'tavoite'),
+        onClick: () => valintaSheet({
+          otsikko: 'Tauon pituus',
+          selite: 'Tavoitteen mukaan tauko on liikkeen tavoitteen palautusaika. Kiinteä pituus koskee kaikkia sarjoja.',
+          osiot: [{
+            vaihtoehdot: [
+              { arvo: 'tavoite', otsikko: `Tavoitteen mukaan (esim. ${goalParams(p.tavoite).palautusS} s)` },
+              ...PALAUTUS_KESTOT.map((n) => ({ arvo: n, otsikko: `${n} s` })),
+            ],
+          }],
+          arvo: p.palautusKesto ?? 'tavoite',
+          onValitse: (arvo) => tallenna({ palautusKesto: arvo }),
+        }),
+      }) : null,
+      segmenttiRivi('Teema', [
+        { arvo: 'auto', teksti: 'Automaattinen' },
+        { arvo: 'vaalea', teksti: 'Vaalea' },
+        { arvo: 'tumma', teksti: 'Tumma' },
+      ], teema, (arvo) => update((st) => {
         st.asetukset = { ...(st.asetukset || {}), teema: arvo };
-      })),
+      }), { pino: true }),
       el('button', { class: 'row prof-danger', type: 'button', onClick: () => avaaNollausVahvistus() },
         el('span', { class: 'row-title' }, 'Nollaa demo'))),
   );

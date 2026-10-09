@@ -37,3 +37,17 @@ export function parseSet(painoTeksti, toistotTeksti) {
   const virheet = { paino: paino === null, toistot: toistot === null };
   return { ok: !virheet.paino && !virheet.toistot, paino, toistot, virheet };
 }
+
+// Profiilin "Tauon pituus" -valinnat: 'tavoite' = liikkeen tavoitteen palautusS (goalParams).
+export const PALAUTUS_KESTOT = [60, 90, 120, 180];
+const OLETUS_PALAUTUS_S = 90;
+
+// palautusKestoS(profiili, liikkeenTavoite) → tauon pituus sekunteina. Kiinteä valinta
+// (60/90/120/180) ohittaa tavoitteen; puuttuva tai tuntematon valinta = 'tavoite'.
+// Jos tavoitteen palautusS puuttuu tai on virheellinen, käytetään 90 s.
+export function palautusKestoS(profiili, liikkeenTavoite) {
+  const valinta = (profiili && profiili.palautusKesto) ?? 'tavoite';
+  if (PALAUTUS_KESTOT.includes(valinta)) return valinta;
+  const s = liikkeenTavoite ? Number(liikkeenTavoite.palautusS) : NaN;
+  return Number.isFinite(s) && s > 0 ? s : OLETUS_PALAUTUS_S;
+}

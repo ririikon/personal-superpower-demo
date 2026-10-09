@@ -25,14 +25,19 @@ const ENNATYS_NIMET = {
   toistot: 'toistot sarjassa',
 };
 
+// Täyttövärit, joilla valkoinen ikoni erottuu. Kultaisilla merkeillä ikoni on tumma (MERKKI_MUSTE).
 const MERKKI_VARIT = {
-  'eka-treeni': 'var(--warn)',
-  'treenit-10': 'var(--pull)',
-  'treenit-50': 'var(--score)',
-  'treenit-100': 'var(--legs)',
-  'eka-ennatys': 'var(--accent)',
-  'putki-4-viikkoa': '#f08a3c',
-  'volyymi-10000': '#9d8cf5',
+  'eka-treeni': 'var(--accent)',
+  'treenit-10': 'var(--ok)',
+  'treenit-50': 'var(--cta)',
+  'treenit-100': 'var(--score)',
+  'eka-ennatys': 'var(--score)',
+  'putki-4-viikkoa': 'var(--fatigue)',
+  'volyymi-10000': 'var(--hero)',
+};
+const MERKKI_MUSTE = {
+  'treenit-100': 'var(--on-score)',
+  'eka-ennatys': 'var(--on-score)',
 };
 
 const MERKKI_KUVAKKEET = {
@@ -140,7 +145,9 @@ function hexMerkki(id, kuvake, koko = 30) {
     d, fill: 'none', 'stroke-width': 1.8, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', class: 'hex-badge-ink',
     transform: 'translate(4.8 4.8) scale(0.6)',
   }));
-  return svgEl('svg', { class: 'hex-badge', viewBox: '-1 -1 26 26', width: koko, height: koko, 'aria-hidden': 'true' }, poly, ...ikonit);
+  const merkki = svgEl('svg', { class: 'hex-badge', viewBox: '-1 -1 26 26', width: koko, height: koko, 'aria-hidden': 'true' }, poly, ...ikonit);
+  if (MERKKI_MUSTE[id]) merkki.style.setProperty('--hex-ink', MERKKI_MUSTE[id]);
+  return merkki;
 }
 
 // ---------------------------------------------------------------------------
