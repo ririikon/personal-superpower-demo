@@ -8,7 +8,7 @@
 //   koko:    'iso' (klikattava) | 'pieni' (aikajanan kuvake, vain korostetut lihakset värillä)
 //   onSelect(lihas): kutsutaan, kun lihasaluetta napautetaan (vain iso versio)
 //   valittu: lihasryhmä, joka saa valintareunuksen
-import { svgEl } from './ui.js';
+import { svgEl } from './ui.js?v=270067f';
 
 const LEVEYS = 200; // peilaus x = 200 - x
 

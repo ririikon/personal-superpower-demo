@@ -1,7 +1,7 @@
 // Viikkotavoitteet eli sarjatavoitteet (speksi 4d, 4h). Puhdas moduuli: ei DOM-, window-,
 // localStorage- eikä Date.now()-kutsuja.
 
-import { addDays, onVoimatreeni, onTyosarja } from './util.js';
+import { addDays, onVoimatreeni, onTyosarja } from './util.js?v=270067f';
 
 export const LIHASRYHMAT_T = ['rinta', 'selkä', 'olkapäät', 'hauis', 'ojentajat', 'etureidet', 'takareidet', 'pakarat', 'pohkeet', 'vatsa'];
 export const RYHMAT_T = {

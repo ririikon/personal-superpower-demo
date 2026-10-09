@@ -6,12 +6,12 @@
 // Vie myös apurit, joita aloitusohjaus ja valmentaja käyttävät (tavoitteet, kokemustasot,
 // ohjelmasuositus, valintalaatikko ja Valmentajan muisti).
 
-import { getState, update, resetDemo } from '../store.js';
-import { OHJELMAT, OLETUSPROFIILI } from '../data.js';
-import { goalParams } from '../engine/progression.js';
-import { tanaanPvm } from '../seed.js';
-import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js';
-import { PALAUTUS_KESTOT } from './treeni-input.js';
+import { getState, update, resetDemo } from '../store.js?v=270067f';
+import { OHJELMAT, OLETUSPROFIILI } from '../data.js?v=270067f';
+import { goalParams } from '../engine/progression.js?v=270067f';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=270067f';
+import { PALAUTUS_KESTOT } from './treeni-input.js?v=270067f';
 
 const KG_LB = 2.20462;
 
@@ -358,8 +358,8 @@ export function render(root) {
   const nimi = String(p.nimi || '').trim() || OLETUSPROFIILI.nimi;
   const valineet = Array.isArray(p.valineet) ? p.valineet : [];
   const teemaArvo = s.asetukset ? s.asetukset.teema : null;
-  const teema = teemaArvo === 'vaalea' || teemaArvo === 'light' ? 'vaalea'
-    : teemaArvo === 'tumma' || teemaArvo === 'dark' ? 'tumma' : 'auto';
+  const teema = teemaArvo === 'auto' ? 'auto'
+    : teemaArvo === 'tumma' || teemaArvo === 'dark' ? 'tumma' : 'vaalea';
 
   const vaihdaValine = (valine, paalla) => {
     const nyky = new Set(valineet);
@@ -518,11 +518,11 @@ export function render(root) {
         }),
       }) : null,
       segmenttiRivi('Teema', [
-        { arvo: 'auto', teksti: 'Automaattinen' },
-        { arvo: 'vaalea', teksti: 'Vaalea' },
+        { arvo: 'vaalea', teksti: 'Vaalea (oletus)' },
         { arvo: 'tumma', teksti: 'Tumma' },
+        { arvo: 'auto', teksti: 'Automaattinen' },
       ], teema, (arvo) => update((st) => {
-        st.asetukset = { ...(st.asetukset || {}), teema: arvo };
+        st.asetukset = { ...(st.asetukset || {}), teema: arvo, teemaValittu: true };
       }), { pino: true }),
       el('button', { class: 'row prof-danger', type: 'button', onClick: () => avaaNollausVahvistus() },
         el('span', { class: 'row-title' }, 'Nollaa demo'))),

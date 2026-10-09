@@ -1,9 +1,9 @@
 // Ohjelmat (speksi 6.3, 4f): ohjelmakortit, ohjelman sisältö (päivät ja liikkeet, ▶ Näytä liike)
 // ja "Ota käyttöön", joka asettaa aktiivinenOhjelmaId:n. Sisältö: #/ohjelmat?id=<ohjelmaId>.
-import { getState, update } from '../store.js';
-import { OHJELMAT, liike as haeLiike } from '../data.js';
-import { el, svgEl, sectionTitle } from './ui.js';
-import { openExerciseSheet } from './media.js';
+import { getState, update } from '../store.js?v=270067f';
+import { OHJELMAT, liike as haeLiike } from '../data.js?v=270067f';
+import { el, svgEl, sectionTitle } from './ui.js?v=270067f';
+import { openExerciseSheet } from './media.js?v=270067f';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {

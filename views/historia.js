@@ -1,12 +1,12 @@
 // Historia (speksi 4e): otsikkorivi, 2 × 2 -yhteenveto, viikkonauha ja kuukausiruudukko sekä
 // "Menneet treenit" -aikajana. Reitti #/historia/<id> näyttää yksittäisen treenin yhteenvedon
 // (views/yhteenveto.js: renderSummary, varana oma yksinkertainen yhteenveto).
-import { getState } from '../store.js';
-import { tanaanPvm } from '../seed.js';
-import { LIIKKEET, MERKKIPAALUT, RYHMAT, liike as haeLiike } from '../data.js';
-import { workoutSummary, weeklyGoalDays, streakWeeks, milestones, weekStart, addDays } from '../engine.js';
-import { el, svgEl, card, sectionTitle, sheet, whyButton, formatWeight } from './ui.js';
-import { bodyMap } from './bodymap.js';
+import { getState } from '../store.js?v=270067f';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { LIIKKEET, MERKKIPAALUT, RYHMAT, liike as haeLiike } from '../data.js?v=270067f';
+import { workoutSummary, weeklyGoalDays, streakWeeks, milestones, weekStart, addDays } from '../engine.js?v=270067f';
+import { el, svgEl, card, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=270067f';
+import { bodyMap } from './bodymap.js?v=270067f';
 
 const KG_LB = 2.20462;
 const ERA = 30;
@@ -512,7 +512,7 @@ async function renderTreeni(root, params) {
 
   let solmu = null;
   try {
-    const mod = await import('./yhteenveto.js');
+    const mod = await import('./yhteenveto.js?v=270067f');
     if (mod && typeof mod.renderSummary === 'function') {
       solmu = await mod.renderSummary(t, { uusi: params.uusi === '1' });
       if (!(solmu instanceof Node)) solmu = null;

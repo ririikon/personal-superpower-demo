@@ -1,11 +1,11 @@
 // Tämän päivän treenin rakentaminen (speksi 6.2, 4b-2, 4h). Yhteinen Kodille ja Treenille,
 // jotta Kodin treenikortti näyttää samat liikkeet, sarjat, toistot ja keston kuin Treenin aloitus.
 // Ei DOM-kutsuja; aika annetaan parametrina.
-import { tanaanPvm } from '../seed.js';
-import { LIIKKEET, OHJELMAT, liike as haeLiike } from '../data.js';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { LIIKKEET, OHJELMAT, liike as haeLiike } from '../data.js?v=270067f';
 import {
   suggestNextSet, goalParams, recovery, round25, onVoimatreeni, VOIMANOSTO_PAALIIKKEET,
-} from '../engine.js';
+} from '../engine.js?v=270067f';
 
 const KAIKKI_VALINEET = ['levytanko', 'käsipainot', 'laitteet', 'taljat', 'kehonpaino'];
 export const LAMMITTELY = [{ osuus: 0.5, toistot: 8 }, { osuus: 0.75, toistot: 5 }];

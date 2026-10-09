@@ -1,7 +1,7 @@
 // Palautuminen (speksi 4b-2). Puhdas moduuli: ei DOM-, window-, localStorage- eikä Date.now()-kutsuja.
 // Aika annetaan parametrina (`nyt`: ISO-merkkijono).
 
-import { hoursBetween, onVoimatreeni, onTyosarja } from './util.js';
+import { hoursBetween, onVoimatreeni, onTyosarja } from './util.js?v=270067f';
 
 const LIHASRYHMAT = ['rinta', 'selkä', 'olkapäät', 'hauis', 'ojentajat', 'etureidet', 'takareidet', 'pakarat', 'pohkeet', 'vatsa'];
 

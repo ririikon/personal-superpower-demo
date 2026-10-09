@@ -3,12 +3,12 @@
 //
 // Rajapinta: renderSummary(treeni, { uusi = false } = {}) → HTMLElement. Laskee kaiken
 // tarvitsemansa getState()-kutsulla (aiemmat treenit, profiili, ohjelma, muistit, viikkosuunnitelma).
-import { getState } from '../store.js';
-import { LIIKKEET, OHJELMAT } from '../data.js';
+import { getState } from '../store.js?v=270067f';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=270067f';
 import {
   workoutSummary, workoutInsights, weeklyTargets, weeklyProgress, weekStart, addDays, onVoimatreeni,
-} from '../engine.js';
-import { el, card, sectionTitle, whyButton, hexRing } from './ui.js';
+} from '../engine.js?v=270067f';
+import { el, card, sectionTitle, whyButton, hexRing } from './ui.js?v=270067f';
 
 const KUUKAUDET = ['tammikuuta', 'helmikuuta', 'maaliskuuta', 'huhtikuuta', 'toukokuuta', 'kesäkuuta',
   'heinäkuuta', 'elokuuta', 'syyskuuta', 'lokakuuta', 'marraskuuta', 'joulukuuta'];

@@ -2,9 +2,9 @@
    (sporttimekkagym.fi) paletista: sininen #26548F, viininpunainen #763146, kulta #C8A42A,
    slate #1E293B.
 
-   Teema: vaalea on perusta. Tumma tulee käyttöön, kun <html data-theme="dark"> on asetettu
-   (käyttäjän valinta) tai kun data-theme puuttuu ja laite pyytää tummaa (automaattinen).
-   data-theme="light" pakottaa vaalean. Tumman teeman tokenit ovat siksi kahdessa lohkossa
+   Teema: vaalea on perusta ja oletus (myös kun data-theme puuttuu, esim. ennen JS:n latautumista).
+   Tumma tulee käyttöön, kun <html data-theme="dark"> on asetettu (käyttäjän valinta) tai kun
+   data-theme="auto" ja laite pyytää tummaa. Tumman teeman tokenit ovat siksi kahdessa lohkossa
    (attribuutti ja media query): PIDÄ NE SAMOINA.
 
    Kontrastit (WCAG 2.x), vaalea / tumma:
@@ -91,9 +91,9 @@
   color-scheme: dark;
 }
 
-/* Tumma teema 2/2: automaattinen (ei valintaa, laite pyytää tummaa). */
+/* Tumma teema 2/2: automaattinen (data-theme="auto", laite pyytää tummaa). */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root[data-theme="auto"] {
     --bg: #0e1626;
     --surface: #172338;
     --surface-2: #21304a;
@@ -1349,7 +1349,6 @@ body.no-nav .tabbar { display: none; }
   background: var(--surface);
   border-radius: var(--radius);
   overflow: hidden;
-  scroll-margin-top: 84px;
 }
 .tr-ex.is-done:not(.is-open) { opacity: 0.75; }
 .tr-ex-head { display: flex; align-items: center; gap: 8px; padding-right: 12px; }
@@ -1498,11 +1497,39 @@ body.no-nav .tabbar { display: none; }
 .tr-rest[hidden] { display: none; }
 .tr-rest-track { height: 4px; background: var(--line); }
 .tr-rest-fill { height: 100%; background: var(--accent); transform-origin: left center; transition: transform 0.5s linear; }
-.tr-rest-row { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; }
-.tr-rest-info { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
-.tr-rest-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
-.tr-rest-time { font-size: 26px; font-weight: 800; font-style: italic; font-variant-numeric: tabular-nums; }
-.tr-rest-btn { min-height: 48px; padding: 8px 14px; background: var(--surface); }
+/* Rivi rivittyy: jos aika ja painikkeet eivät mahdu vierekkäin (kapea näyttö, iso fontti),
+   painikkeet siirtyvät ajan alle koko leveydelle. Aika ei leikkaudu eikä jää painikkeiden alle. */
+.tr-rest-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 6px 8px 8px 14px; }
+/* Info vie rivin vapaan tilan (999), toimintoryhmä kasvaa vain omalla rivillään. */
+.tr-rest-info { flex: 999 1 auto; min-width: max-content; display: flex; flex-direction: column; }
+.tr-rest-label {
+  font-size: clamp(10.5px, 3.2vw, 12.5px);
+  line-height: 1.2;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.tr-rest-time {
+  flex: 1 1 auto;
+  min-width: max-content;
+  font-size: clamp(22px, 7.5vw, 28px);
+  line-height: 1.1;
+  font-weight: 800;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tr-rest-actions { flex: 1 0 auto; display: flex; gap: 8px; }
+.tr-rest-btn {
+  flex: 1 0 auto;
+  min-height: 48px;
+  padding: 8px clamp(8px, 2.6vw, 12px);
+  background: var(--surface);
+  font-size: clamp(14px, 4.3vw, 16px);
+  white-space: nowrap;
+}
 /* Tauko ohi: ilmoituspalkki välähtää kerran ja poistuu 4 s kuluttua tai napautuksesta */
 .tr-rest.is-done .tr-rest-track { background: var(--ok); }
 .tr-rest-done {
@@ -1602,7 +1629,20 @@ body.no-nav .tabbar { display: none; }
 .yv-ai-note { margin-top: 20px; text-align: center; }
 .yv-fine { margin-top: 12px; }
 .yv-done { margin-top: 20px; }
-.tr-running { padding-bottom: 72px; } /* tilaa kiinteälle palautuspalkille */
+/* Kiinteä alapalkki (palautus tai Aloita) näkyvissä: sisällölle palkin korkeuden verran lisää
+   alatilaa #view-alueen (alanavigaatio + safe-area) päälle. Korkeudet mittaa treeni.js. */
+.tr-view.has-bottombar { padding-bottom: calc(var(--tr-bar-h, 72px) + 16px); }
+/* Vieritysmarginaalit: ohjelmallinen vieritys ja fokus eivät vie kohdetta yläpalkin
+   (otsikko, kello, Lopeta) tai alapalkkien alle. */
+.tr-running .tr-ex,
+.tr-running .tr-entry,
+.tr-running .tr-warm,
+.tr-running .tr-input,
+.tr-running .tr-rir-chip,
+.tr-running .tr-log {
+  scroll-margin-top: calc(var(--tr-top-h, 76px) + 8px);
+  scroll-margin-bottom: calc(var(--tr-bottom-h, 0px) + 8px);
+}
 
 /* === T10 edistyminen ja historia === */
 

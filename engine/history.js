@@ -1,9 +1,9 @@
 // Historia (speksi 4e): kalorit, treenin yhteenveto, viikkotavoitteen päivät, putki ja
 // merkkipaalut. Puhdas moduuli: ei DOM-, window-, localStorage- eikä Date.now()-kutsuja.
 
-import { addDays, weekStart, onVoimatreeni, onTyosarja } from './util.js';
-import { exerciseRecords } from './score.js';
-import { MERKKIPAALUT } from '../data.js';
+import { addDays, weekStart, onVoimatreeni, onTyosarja } from './util.js?v=270067f';
+import { exerciseRecords } from './score.js?v=270067f';
+import { MERKKIPAALUT } from '../data.js?v=270067f';
 
 const MET_VOIMA = 5.0;
 const OLETUS_KEHONPAINO = 80; // demon oletus, jos kehonpainoa ei ole annettu

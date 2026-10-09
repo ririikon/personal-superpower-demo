@@ -5,7 +5,7 @@
 // Rajapinta: getState(), update(fn), resetDemo(). createStore(tallennus, nytFn) on testejä
 // varten; moduulin oletusinstanssi käyttää window.localStorage-oliota, jos se on saatavilla.
 
-import { seedState } from './seed.js';
+import { seedState } from './seed.js?v=270067f';
 
 export const TALLENNUSAVAIN = 'psp-poc-v1';
 export const TILAN_VERSIO = 1;
@@ -49,9 +49,20 @@ export function createStore(tallennus, nytFn = oletusNyt) {
     }
   }
 
+  // Migraatio: aiemmat oletusteemat ('tumma', 'auto') vaihtuvat vaaleaksi, ellei käyttäjä ole
+  // itse valinnut teemaa Profiilista (asetukset.teemaValittu). Muu tila ja versio säilyvät.
+  function migroi(tila) {
+    const asetukset = tila.asetukset && typeof tila.asetukset === 'object' ? tila.asetukset : {};
+    if (asetukset.teemaValittu === true || asetukset.teema === 'vaalea') return false;
+    tila.asetukset = { ...asetukset, teema: 'vaalea' };
+    return true;
+  }
+
   let state = lue();
   if (!state) {
     state = seedState(nyt());
+    tallenna();
+  } else if (migroi(state)) {
     tallenna();
   }
 

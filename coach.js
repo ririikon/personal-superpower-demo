@@ -3,10 +3,10 @@
 // Puhdas moduuli: ei DOMia, ei windowia, ei localStoragea eikä Date.now()-kutsuja.
 // buildReply ei muuta tilaa, vaan palauttaa muutokset, jotka näkymä vie tilaan.
 
-import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js';
-import { weeklyTargets, weeklyProgress } from './engine/targets.js';
-import { recovery } from './engine/recovery.js';
-import { addDays, daysBetween, weekStart } from './engine/util.js';
+import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=270067f';
+import { weeklyTargets, weeklyProgress } from './engine/targets.js?v=270067f';
+import { recovery } from './engine/recovery.js?v=270067f';
+import { addDays, daysBetween, weekStart } from './engine/util.js?v=270067f';
 
 export const ESIMERKKISIRUT = [
   'Ensi viikolla olen reissussa ja pelaan 3 kertaa padelia',

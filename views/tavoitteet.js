@@ -1,11 +1,11 @@
 // Viikon sarjatavoitteet (speksi 4d, 4h): kuusikulmiorengas, ryhmäkortit, jotka avautuvat
 // lihasriveiksi, ja "Muokattu viikko" -merkintä, kun hyväksytty viikkosuunnitelma on voimassa.
-import { getState } from '../store.js';
-import { tanaanPvm } from '../seed.js';
-import { LIIKKEET, RYHMAT } from '../data.js';
-import { el, svgEl, hexRing, whyButton, segmented } from './ui.js';
-import { weeklyTargets, weeklyProgress } from '../engine/targets.js';
-import { weekStart, addDays } from '../engine/util.js';
+import { getState } from '../store.js?v=270067f';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { LIIKKEET, RYHMAT } from '../data.js?v=270067f';
+import { el, svgEl, hexRing, whyButton, segmented } from './ui.js?v=270067f';
+import { weeklyTargets, weeklyProgress } from '../engine/targets.js?v=270067f';
+import { weekStart, addDays } from '../engine/util.js?v=270067f';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {

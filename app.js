@@ -19,18 +19,18 @@
 // 6. Ilman lippua näkymä piirretään statechange-tapahtumasta uudelleen (siivous ensin),
 //    ja vierityskohta säilyy. Useat peräkkäiset update()-kutsut yhdistetään yhdeksi piirroksi.
 // 7. Reitin vaihtuessa root saa kohdistuksen (preventScroll) ja sivu vieritetään alkuun.
-import { getState } from './store.js';
-import { el, card } from './views/ui.js';
-import * as koti from './views/koti.js';
-import * as valmentaja from './views/valmentaja.js';
-import * as edistyminen from './views/edistyminen.js';
-import * as historia from './views/historia.js';
-import * as liikkeet from './views/liikkeet.js';
-import * as tavoitteet from './views/tavoitteet.js';
-import * as ohjelmat from './views/ohjelmat.js';
-import * as profiili from './views/profiili.js';
-import * as aloitus from './views/aloitus.js';
-import * as treeni from './views/treeni.js';
+import { getState } from './store.js?v=270067f';
+import { el, card } from './views/ui.js?v=270067f';
+import * as koti from './views/koti.js?v=270067f';
+import * as valmentaja from './views/valmentaja.js?v=270067f';
+import * as edistyminen from './views/edistyminen.js?v=270067f';
+import * as historia from './views/historia.js?v=270067f';
+import * as liikkeet from './views/liikkeet.js?v=270067f';
+import * as tavoitteet from './views/tavoitteet.js?v=270067f';
+import * as ohjelmat from './views/ohjelmat.js?v=270067f';
+import * as profiili from './views/profiili.js?v=270067f';
+import * as aloitus from './views/aloitus.js?v=270067f';
+import * as treeni from './views/treeni.js?v=270067f';
 
 // tab: korostettava alanavigaation kohta; fab: näytetäänkö "Aloita treeni".
 // Kodissa ei ole kelluvaa Aloita-painiketta: treenikortissa on oma painike, ja kelluva
@@ -88,15 +88,14 @@ function parseHash() {
   return null;
 }
 
-// Teema: 'vaalea' / 'tumma' pakottaa valinnan (data-theme), muuten (puuttuu tai 'auto')
-// attribuutti poistetaan ja CSS seuraa laitteen asetusta (prefers-color-scheme).
+// Teema: 'tumma' → data-theme="dark", 'auto' → data-theme="auto" (CSS seuraa laitteen
+// asetusta, prefers-color-scheme), muuten (vaalea, puuttuva tai tuntematon) data-theme="light".
 function applyTheme(state) {
   const teema = state && state.asetukset ? state.asetukset.teema : null;
-  const valinta = teema === 'vaalea' || teema === 'light' ? 'light'
-    : teema === 'tumma' || teema === 'dark' ? 'dark' : null;
-  if (valinta) document.documentElement.dataset.theme = valinta;
-  else delete document.documentElement.dataset.theme;
-  const tumma = valinta ? valinta === 'dark' : !!(darkQuery && darkQuery.matches);
+  const valinta = teema === 'auto' ? 'auto'
+    : teema === 'tumma' || teema === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = valinta;
+  const tumma = valinta === 'auto' ? !!(darkQuery && darkQuery.matches) : valinta === 'dark';
   for (const meta of themeMetas) meta.setAttribute('content', tumma ? THEME_COLOR.dark : THEME_COLOR.light);
 }
 

@@ -9,12 +9,12 @@
 // syöttökentän kohdistus säilyy. Näkymä piirtää viestilistan itse ja purkaa kuuntelijan
 // ja ajastimet siivousfunktiossa.
 
-import { getState, update } from '../store.js';
-import { LIIKKEET, OHJELMAT } from '../data.js';
-import { buildReply, ESIMERKKISIRUT } from '../coach.js';
-import { tanaanPvm } from '../seed.js';
-import { el, svgEl } from './ui.js';
-import { avaaMuistit } from './profiili.js';
+import { getState, update } from '../store.js?v=270067f';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=270067f';
+import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=270067f';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { el, svgEl } from './ui.js?v=270067f';
+import { avaaMuistit } from './profiili.js?v=270067f';
 
 export const omaPaivitys = true;
 

@@ -14,7 +14,7 @@
 // - Vanhemmat merkinnät ovat kevyitä voimamerkintöjä (kokonaismäärä ja merkkipaalut).
 // - Viimeisille 3 viikolle 7 tuotua kävelyä tai pyöräilyä, joista kaksi samana päivänä.
 
-import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js';
+import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=270067f';
 
 export const SEED_OHJELMA_ID = 'koko-kroppa-3';
 
@@ -384,6 +384,6 @@ export function seedState(nyt) {
     viikkosuunnitelmat: [],
     chat: [],
     kaynnissa: null,
-    asetukset: { teema: 'auto' }, // auto = laitteen asetus (prefers-color-scheme)
+    asetukset: { teema: 'vaalea' }, // vaalea | tumma | auto (auto = laitteen asetus)
   };
 }

@@ -1,11 +1,11 @@
 // Treenin jälkeiset oivallukset (speksi 4g, muistit ja viikkosuunnitelma 4h).
 // Puhdas moduuli: ei DOM-, window-, localStorage- eikä Date.now()-kutsuja.
 
-import { addDays, daysBetween, weekStart, hoursBetween, onVoimatreeni, onTyosarja } from './util.js';
-import { e1rm, detectStall } from './progression.js';
-import { recovery } from './recovery.js';
-import { weeklyTargets, weeklyProgress, RYHMAT_T } from './targets.js';
-import { workoutSummary } from './history.js';
+import { addDays, daysBetween, weekStart, hoursBetween, onVoimatreeni, onTyosarja } from './util.js?v=270067f';
+import { e1rm, detectStall } from './progression.js?v=270067f';
+import { recovery } from './recovery.js?v=270067f';
+import { weeklyTargets, weeklyProgress, RYHMAT_T } from './targets.js?v=270067f';
+import { workoutSummary } from './history.js?v=270067f';
 
 const MAX_EDISTYS = 3;
 const MAX_HUOMIO = 2;

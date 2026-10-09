@@ -1,13 +1,13 @@
 // Treeni-näkymä (speksi 6.2, 4c, 4b-2, 4f, 4h): aloitus, sarjojen kirjaus, ehdotuskortti,
 // palautusajastin ja lopetus. Näkymä päivittää itsensä (omaPaivitys), jotta syötekenttien
 // kohdistus säilyy; render palauttaa siivousfunktion, joka purkaa ajastimen ja kuuntelijan.
-import { getState, update } from '../store.js';
-import { tanaanPvm } from '../seed.js';
-import { LIIKKEET, liike as haeLiike } from '../data.js';
-import { suggestNextSet, recovery, round25, onTyosarja } from '../engine.js';
-import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js';
-import { parseSet, palautusKestoS } from './treeni-input.js';
-import { rakennaPaiva, liikkeenKerrat, onKehonpaino, LAMMITTELY, LAMMITTELY_PALAUTUS_S } from './paiva.js';
+import { getState, update } from '../store.js?v=270067f';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { LIIKKEET, liike as haeLiike } from '../data.js?v=270067f';
+import { suggestNextSet, recovery, round25, onTyosarja } from '../engine.js?v=270067f';
+import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=270067f';
+import { parseSet, palautusKestoS } from './treeni-input.js?v=270067f';
+import { rakennaPaiva, liikkeenKerrat, onKehonpaino, LAMMITTELY, LAMMITTELY_PALAUTUS_S } from './paiva.js?v=270067f';
 
 export const omaPaivitys = true;
 
@@ -94,7 +94,7 @@ function lammittelyMaara(tl) {
 
 function avaaLiike(liike) {
   if (!liike) return;
-  import('./media.js')
+  import('./media.js?v=270067f')
     .then((m) => { if (m && typeof m.openExerciseSheet === 'function') m.openExerciseSheet(liike); })
     .catch(() => {});
 }
@@ -630,10 +630,7 @@ export function render(root) {
         }
       }
     });
-    if (siirry !== null) {
-      const kortti = root.querySelector('.tr-ex.is-open');
-      if (kortti && typeof kortti.scrollIntoView === 'function') kortti.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    }
+    naytaSyottoRivi(siirry !== null ? root.querySelector('.tr-ex.is-open') : null);
   }
 
   // --- Palautusajastin --------------------------------------------------------
@@ -661,23 +658,99 @@ export function render(root) {
         el('div', { class: 'tr-rest-info' },
           el('span', { class: 'tr-rest-label' }, 'Palautus'),
           el('span', { class: 'tr-rest-time', dataset: { lepo: '' } }, nakyvissa ? mmss(loppuu - Date.now() + 999) : '00:00')),
-        el('button', {
-          class: 'btn tr-rest-btn', type: 'button',
-          onClick: () => update((s) => {
-            const kk = s.kaynnissa;
-            if (!kk) return;
-            const pohja = Math.max(Date.now(), aikaMs(kk.palautusLoppuu) || 0);
-            kk.palautusLoppuu = new Date(pohja + 15000).toISOString();
-            kk.palautusKestoS = (kk.palautusKestoS || 0) + 15;
-          }),
-        }, '+15 s'),
-        el('button', {
-          class: 'btn tr-rest-btn', type: 'button',
-          onClick: () => update((s) => { if (s.kaynnissa) s.kaynnissa.palautusLoppuu = null; }),
-        }, 'Ohita')));
+        el('div', { class: 'tr-rest-actions' },
+          el('button', {
+            class: 'btn tr-rest-btn', type: 'button',
+            onClick: () => update((s) => {
+              const kk = s.kaynnissa;
+              if (!kk) return;
+              const pohja = Math.max(Date.now(), aikaMs(kk.palautusLoppuu) || 0);
+              kk.palautusLoppuu = new Date(pohja + 15000).toISOString();
+              kk.palautusKestoS = (kk.palautusKestoS || 0) + 15;
+            }),
+          }, '+15 s'),
+          el('button', {
+            class: 'btn tr-rest-btn', type: 'button',
+            onClick: () => update((s) => { if (s.kaynnissa) s.kaynnissa.palautusLoppuu = null; }),
+          }, 'Ohita'))));
+  }
+
+  // --- Kiinteät palkit ja vieritys -----------------------------------------------
+  // Yläpalkki, palautuspalkki (tai Aloita-palkki) ja alanavigaatio peittävät osan näkymästä.
+  // reunat(): näkyvän alueen ylä- ja alareuna (viewport-px) sekä korkeudet näkymän CSS-px:einä.
+  function reunat(nakyma) {
+    const z = nakyma.currentCSSZoom || 1;
+    const korkeus = window.innerHeight;
+    const yla = nakyma.querySelector('.tr-top');
+    const ylaReuna = yla ? Math.max(0, yla.getBoundingClientRect().bottom) : 0;
+    let alaReuna = korkeus;
+    let palkkiH = 0;
+    for (const palkki of nakyma.querySelectorAll('.tr-rest, .tr-actionbar')) {
+      const r = palkki.hidden ? null : palkki.getBoundingClientRect();
+      if (!r || !r.height) continue;
+      alaReuna = Math.min(alaReuna, r.top);
+      palkkiH = Math.max(palkkiH, r.height / z);
+    }
+    const tabbar = document.getElementById('tabbar');
+    const tr = tabbar ? tabbar.getBoundingClientRect() : null;
+    if (tr && tr.height) alaReuna = Math.min(alaReuna, tr.top);
+    return {
+      ylaReuna, alaReuna, palkkiH,
+      ylaH: yla ? yla.getBoundingClientRect().height / z : 0,
+      alaH: Math.max(0, (korkeus - alaReuna) / z),
+    };
+  }
+
+  // Palkkien korkeudet CSS-muuttujiin: sisällölle alatilaa (has-bottombar) ja vieritysmarginaalit,
+  // jotta ohjelmallinen vieritys ja kenttien fokusointi eivät jätä kohdetta palkin alle.
+  function paivitaPalkkitilat() {
+    const nakyma = root.querySelector('.tr-view');
+    if (!nakyma) return;
+    const { palkkiH, ylaH, alaH } = reunat(nakyma);
+    const aseta = (nimi, px) => {
+      const arvo = `${Math.ceil(px)}px`;
+      if (nakyma.style.getPropertyValue(nimi) !== arvo) nakyma.style.setProperty(nimi, arvo);
+    };
+    aseta('--tr-top-h', ylaH);
+    aseta('--tr-bottom-h', alaH);
+    aseta('--tr-bar-h', palkkiH);
+    nakyma.classList.toggle('has-bottombar', palkkiH > 0);
+  }
+
+  // Kuittauksen jälkeen seuraavan sarjan syöttörivi näkyviin, mutta vain jos se on palkkien alla.
+  // Liikkeen vaihtuessa (kortti) uusi kortti vieritetään alkuun, jos sen syöttökentät mahtuvat
+  // silloin palkkien väliin; muuten etusija on syöttörivillä.
+  function naytaSyottoRivi(kortti = null) {
+    const nakyma = root.querySelector('.tr-view');
+    if (!nakyma) return;
+    const rivi = nakyma.querySelector('.tr-ex.is-open .tr-entry, .tr-ex.is-open .tr-warm');
+    paivitaPalkkitilat();
+    const { ylaReuna, alaReuna } = reunat(nakyma);
+    if (kortti && typeof kortti.scrollIntoView === 'function') {
+      const kentat = rivi ? rivi.querySelector('.tr-fields') || rivi : null;
+      const mahtuu = !kentat
+        || kentat.getBoundingClientRect().bottom - kortti.getBoundingClientRect().top + ylaReuna + 8 <= alaReuna;
+      if (mahtuu) {
+        kortti.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        return;
+      }
+    }
+    if (!rivi || typeof rivi.scrollIntoView !== 'function') return;
+    const r = rivi.getBoundingClientRect();
+    if (r.top >= ylaReuna && r.bottom <= alaReuna) return;
+    // Liian korkea rivi keskelle ei mahdu: alku (otsikko ja kentät) näkyviin yläpalkin alle.
+    rivi.scrollIntoView({ block: r.height > alaReuna - ylaReuna ? 'start' : 'center', behavior: 'smooth' });
   }
 
   function paivitaAjat() {
+    try {
+      paivitaAjatJaPalkki();
+    } finally {
+      paivitaPalkkitilat();
+    }
+  }
+
+  function paivitaAjatJaPalkki() {
     const state = getState();
     const k = state && state.kaynnissa;
     if (!k) return;

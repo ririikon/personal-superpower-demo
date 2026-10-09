@@ -1,14 +1,14 @@
 // Koti (speksi 6.1, 4d, 4h): tervehdys, tämän päivän treeni, viikkonauha, viikkotavoite,
 // muistirivi, progressiovinkki, valmentaja-, ohjelma- ja ravintokortit.
-import { getState } from '../store.js';
-import { tanaanPvm } from '../seed.js';
-import { LIIKKEET } from '../data.js';
-import { el, svgEl, card, sectionTitle, hexRing, whyButton, formatWeight } from './ui.js';
-import { weeklyTargets, weeklyProgress } from '../engine/targets.js';
-import { recovery } from '../engine/recovery.js';
-import { suggestNextSet } from '../engine/progression.js';
-import { weekStart, addDays } from '../engine/util.js';
-import { rakennaPaiva } from './paiva.js';
+import { getState } from '../store.js?v=270067f';
+import { tanaanPvm } from '../seed.js?v=270067f';
+import { LIIKKEET } from '../data.js?v=270067f';
+import { el, svgEl, card, sectionTitle, hexRing, whyButton, formatWeight } from './ui.js?v=270067f';
+import { weeklyTargets, weeklyProgress } from '../engine/targets.js?v=270067f';
+import { recovery } from '../engine/recovery.js?v=270067f';
+import { suggestNextSet } from '../engine/progression.js?v=270067f';
+import { weekStart, addDays } from '../engine/util.js?v=270067f';
+import { rakennaPaiva } from './paiva.js?v=270067f';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {
