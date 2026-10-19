@@ -14,15 +14,137 @@ export const RYHMAT = {
 
 export const VERTAILULIIKKEET = ['penkkipunnerrus', 'takakyykky', 'maastaveto', 'leuanveto', 'pystypunnerrus'];
 
+// --- Salin laitteet (speksi 4j) ------------------------------------------------
+// Lattia ja kehonpaino ovat aina käytettävissä, eikä niitä listata.
+export const LAITERYHMAT = ['vapaat', 'laitteet', 'taljat', 'kehonpaino'];
+
+export const LAITTEET = [
+  { id: 'levytanko', nimi: 'Levytanko', ryhma: 'vapaat' },
+  { id: 'kyykkyteline', nimi: 'Kyykkyteline', ryhma: 'vapaat' },
+  { id: 'penkki', nimi: 'Penkki', ryhma: 'vapaat' },
+  { id: 'käsipainot', nimi: 'Käsipainot', ryhma: 'vapaat' },
+  { id: 'kahvakuulat', nimi: 'Kahvakuulat', ryhma: 'vapaat' },
+  { id: 'jalkaprässi', nimi: 'Jalkaprässi', ryhma: 'laitteet' },
+  { id: 'reiden-ojennuslaite', nimi: 'Reiden ojennus', ryhma: 'laitteet' },
+  { id: 'reiden-koukistuslaite', nimi: 'Reiden koukistus', ryhma: 'laitteet' },
+  { id: 'smith-laite', nimi: 'Smith-laite', ryhma: 'laitteet' },
+  { id: 'rintaprässi', nimi: 'Rintaprässi', ryhma: 'laitteet' },
+  { id: 'soutulaite', nimi: 'Soutulaite', ryhma: 'laitteet' },
+  { id: 'lonkkalaite', nimi: 'Lonkkalaite (loitonnus ja lähennys)', ryhma: 'laitteet' },
+  { id: 'pohjelaite', nimi: 'Pohjelaite', ryhma: 'laitteet' },
+  { id: 'ylätalja', nimi: 'Ylätalja', ryhma: 'taljat' },
+  { id: 'alatalja', nimi: 'Alatalja', ryhma: 'taljat' },
+  { id: 'ristikkäistalja', nimi: 'Ristikkäistalja', ryhma: 'taljat' },
+  { id: 'leuanvetotanko', nimi: 'Leuanvetotanko', ryhma: 'kehonpaino' },
+  { id: 'dippiteline', nimi: 'Dippiteline', ryhma: 'kehonpaino' },
+  { id: 'vastuskuminauhat', nimi: 'Vastuskuminauhat', ryhma: 'kehonpaino' },
+];
+
+const KAIKKI_LAITTEET = LAITTEET.map((l) => l.id);
+
+// Pikavalinnat Profiilin laitenäkymään.
+export const LAITEPOHJAT = [
+  { id: 'taysi-sali', nimi: 'Täysi kuntosali', laitteet: [...KAIKKI_LAITTEET] },
+  { id: 'kotisali', nimi: 'Kotisali',
+    laitteet: ['levytanko', 'kyykkyteline', 'penkki', 'käsipainot', 'leuanvetotanko', 'vastuskuminauhat'] },
+  { id: 'hotellisali', nimi: 'Hotellisali', laitteet: ['käsipainot', 'penkki', 'ylätalja', 'alatalja'] },
+  { id: 'vain-kehonpaino', nimi: 'Vain kehonpaino', laitteet: [] },
+];
+
+export const KAAVAT = [
+  'kyykky', 'lantiosarana', 'vaakatyonto', 'pystytyonto', 'vaakaveto', 'pystyveto',
+  'eristava-ylä', 'eristava-ala', 'keskivartalo',
+];
+export const KUORMITUSALUEET = ['polvi', 'alaselkä', 'olkapää', 'kyynärpää', 'ranne'];
+
+// Vanhan välinemallin (profiili.valineet) vastineet laitteina. Käytetään migraatiossa.
+export const VALINE_LAITTEET = {
+  levytanko: ['levytanko', 'kyykkyteline', 'penkki'],
+  'käsipainot': ['käsipainot', 'penkki'],
+  laitteet: LAITTEET.filter((l) => l.ryhma === 'laitteet').map((l) => l.id),
+  taljat: LAITTEET.filter((l) => l.ryhma === 'taljat').map((l) => l.id),
+  kehonpaino: ['leuanvetotanko', 'dippiteline'],
+};
+
+/**
+ * valineetLaitteiksi(valineet, vainKehonpaino) → [laiteId] LAITTEET-järjestyksessä.
+ * vainKehonpaino → tyhjä lista. Puuttuva tai tyhjä välinelista → täysi kuntosali, samoin vanha
+ * oletusvalinta, jossa kaikki välineet ovat valittuina (myös laitteet, joilla ei ollut vastinetta).
+ */
+export function valineetLaitteiksi(valineet, vainKehonpaino = false) {
+  if (vainKehonpaino) return [];
+  if (!Array.isArray(valineet) || valineet.length === 0) return [...KAIKKI_LAITTEET];
+  if (Object.keys(VALINE_LAITTEET).every((v) => valineet.includes(v))) return [...KAIKKI_LAITTEET];
+  const joukko = new Set(valineet.flatMap((v) => VALINE_LAITTEET[v] || []));
+  return KAIKKI_LAITTEET.filter((id) => joukko.has(id));
+}
+
+// Liikkeiden tarvikkeet, liikemalli (kaava) ja kuormittamat alueet (speksi 4j).
+// [tarvikkeet, kaava, kuormittaa]; tyhjä tarvikelista = vain kehonpaino.
+const VAIHTOTIEDOT = {
+  penkkipunnerrus: [['levytanko', 'penkki'], 'vaakatyonto', ['olkapää', 'ranne']],
+  'vinopenkkipunnerrus-kasipainot': [['käsipainot', 'penkki'], 'vaakatyonto', ['olkapää']],
+  kasipainopenkkipunnerrus: [['käsipainot', 'penkki'], 'vaakatyonto', ['olkapää']],
+  punnerrus: [[], 'vaakatyonto', ['olkapää', 'ranne']],
+  'rintaprassi-laite': [['rintaprässi'], 'vaakatyonto', ['olkapää']],
+  taljaristikkaisveto: [['ristikkäistalja'], 'eristava-ylä', ['olkapää']],
+  leuanveto: [['leuanvetotanko'], 'pystyveto', ['olkapää', 'kyynärpää']],
+  kulmasoutu: [['levytanko'], 'vaakaveto', ['alaselkä']],
+  ylataljaveto: [['ylätalja'], 'pystyveto', ['olkapää', 'kyynärpää']],
+  alataljasoutu: [['alatalja'], 'vaakaveto', []],
+  kasipainosoutu: [['käsipainot', 'penkki'], 'vaakaveto', []],
+  pystypunnerrus: [['levytanko'], 'pystytyonto', ['olkapää', 'alaselkä']],
+  kasipainopystypunnerrus: [['käsipainot', 'penkki'], 'pystytyonto', ['olkapää']],
+  vipunostot: [['käsipainot'], 'eristava-ylä', ['olkapää']],
+  kasvoveto: [['ylätalja'], 'vaakaveto', ['olkapää']],
+  'hauiskaanto-tanko': [['levytanko'], 'eristava-ylä', ['kyynärpää', 'ranne']],
+  'hauiskaanto-kasipainot': [['käsipainot'], 'eristava-ylä', ['kyynärpää']],
+  vasarakaanto: [['käsipainot'], 'eristava-ylä', ['kyynärpää']],
+  'ojentajapunnerrus-talja': [['ylätalja'], 'eristava-ylä', ['kyynärpää']],
+  'ranskalainen-punnerrus': [['levytanko', 'penkki'], 'eristava-ylä', ['kyynärpää']],
+  dipit: [['dippiteline'], 'pystytyonto', ['olkapää', 'kyynärpää']],
+  'kapea-penkkipunnerrus': [['levytanko', 'penkki'], 'vaakatyonto', ['olkapää', 'kyynärpää', 'ranne']],
+  penkkidipit: [[], 'pystytyonto', ['olkapää', 'kyynärpää']], // penkin tai tuolin reuna
+  takakyykky: [['levytanko', 'kyykkyteline'], 'kyykky', ['polvi', 'alaselkä']],
+  jalkaprassi: [['jalkaprässi'], 'kyykky', ['polvi']],
+  'askelkyykky-kasipainot': [['käsipainot'], 'kyykky', ['polvi']],
+  'reiden-ojennus': [['reiden-ojennuslaite'], 'eristava-ala', ['polvi']],
+  'bulgarialainen-kyykky': [['käsipainot', 'penkki'], 'kyykky', ['polvi']],
+  ilmakyykky: [[], 'kyykky', ['polvi']],
+  maastaveto: [['levytanko'], 'lantiosarana', ['alaselkä']],
+  'romanialainen-maastaveto': [['levytanko'], 'lantiosarana', ['alaselkä']],
+  'romanialainen-maastaveto-kasipainot': [['käsipainot'], 'lantiosarana', ['alaselkä']],
+  'reiden-koukistus': [['reiden-koukistuslaite'], 'eristava-ala', ['polvi']],
+  lantionnosto: [['levytanko', 'penkki'], 'lantiosarana', []],
+  pakarasilta: [[], 'lantiosarana', []],
+  'lonkan-loitonnus': [['lonkkalaite'], 'eristava-ala', []],
+  // Seisten tehtävä pohjenousu on tämän liikkeen ohjeessa ja painoissa laitteella; portaalla
+  // tehtävä versio on erillinen liike (yhden-jalan-pohjenousu).
+  'pohjenousu-seisten': [['pohjelaite'], 'eristava-ala', []],
+  'pohjenousu-istuen': [['pohjelaite'], 'eristava-ala', []],
+  'yhden-jalan-pohjenousu': [[], 'eristava-ala', []],
+  vatsarutistus: [[], 'keskivartalo', []],
+  'roikkuen-jalkojen-nosto': [['leuanvetotanko'], 'keskivartalo', ['olkapää']],
+  taljarutistus: [['ylätalja'], 'keskivartalo', []],
+  // Välineettömät liikkeet, jotta "Vain kehonpaino" kattaa kaikki lihasryhmät.
+  'superman-selkaojennus': [[], 'keskivartalo', ['alaselkä']],
+  'pike-punnerrus': [[], 'pystytyonto', ['olkapää', 'ranne']],
+  pyyhehauis: [[], 'eristava-ylä', ['kyynärpää']],
+  'liukuva-reiden-koukistus': [[], 'eristava-ala', ['polvi']],
+};
+
 // Täydentää liikkeen oletuskentät. Painoliikkeillä annetaan viitekerroin ja aloituspaino (kg),
 // kehonpainoliikkeillä viitetoistot. youtubeId on aina null (tunnisteita ei keksitä).
+// `valine` on vanha välinemalli, jota näkymät käyttävät yhä; laitevaihdot käyttävät `tarvikkeet`-kenttää.
 function maarita({
   id, nimi, lihasryhma, toissijaiset = [], valine, alue, ohje,
   viitekerroin = null, viitetoistot = null, aloituspaino = 0, hakusana, animaatio = null,
 }) {
+  const [tarvikkeet, kaava, kuormittaa] = VAIHTOTIEDOT[id] || [[], null, []];
   return {
     id, nimi, lihasryhma, toissijaiset, valine, alue, ohje,
     viitekerroin, viitetoistot, aloituspaino,
+    tarvikkeet: [...tarvikkeet], kaava, kuormittaa: [...kuormittaa],
     media: { youtubeId: null, hakusana, animaatio },
   };
 }
@@ -108,6 +230,13 @@ export const LIIKKEET = [
     hakusana: 'one arm dumbbell row form',
     ohje: 'Tue toinen käsi ja polvi penkkiin ja pidä selkä suorana ja lattian suuntaisena. Vedä käsipaino lantion viereen kyynärpää vartaloa pitkin. Laske paino hallitusti alas kiertämättä ylävartaloa.',
   }),
+  maarita({
+    id: 'superman-selkaojennus', nimi: 'Superman-selkäojennus', lihasryhma: 'selkä',
+    toissijaiset: ['pakarat'], valine: 'kehonpaino', alue: 'ylä',
+    viitetoistot: 20,
+    hakusana: 'superman back extension form',
+    ohje: 'Makaa vatsallasi lattialla kädet suorina pään jatkeena. Nosta kädet, rintakehä ja jalat hieman irti lattiasta ja purista lapaluita yhteen. Pidä yläasento hetken ja laske hallitusti alas. Pidä katse lattiassa, jotta niska pysyy neutraalina.',
+  }),
 
   // --- Olkapäät ---
   maarita({
@@ -138,6 +267,13 @@ export const LIIKKEET = [
     hakusana: 'cable face pull form',
     ohje: 'Säädä talja silmien korkeudelle ja tartu köysikahvaan peukalot taaksepäin. Vedä köyttä kasvoja kohti ja levitä kädet sivuille niin, että kyynärpäät ovat korkealla. Palauta hallitusti ja pidä ylävartalo paikallaan.',
   }),
+  maarita({
+    id: 'pike-punnerrus', nimi: 'Pike-punnerrus', lihasryhma: 'olkapäät',
+    toissijaiset: ['ojentajat'], valine: 'kehonpaino', alue: 'ylä',
+    viitetoistot: 15,
+    hakusana: 'pike push up form',
+    ohje: 'Asetu punnerrusasentoon ja kävele jalkoja käsiä kohti, kunnes lantio nousee korkealle ja vartalo muodostaa ylösalaisin olevan V:n. Laske päälakea lattiaa kohti koukistamalla kyynärpäitä ja punnerra takaisin ylös. Pidä paino käsillä ja selkä suorana. Helpota liikettä tekemällä se kädet korokkeella.',
+  }),
 
   // --- Hauis ---
   maarita({
@@ -160,6 +296,13 @@ export const LIIKKEET = [
     viitekerroin: 0.15, aloituspaino: 7.5,
     hakusana: 'hammer curl form',
     ohje: 'Pidä käsipainoja kämmenet vartaloa kohti kuin vasaraa. Koukista kyynärpää ja nosta paino olkapäätä kohti ranteen asentoa muuttamatta. Laske hitaasti ja pidä olkavarsi vartalon vieressä.',
+  }),
+  maarita({
+    id: 'pyyhehauis', nimi: 'Pyyhehauis', lihasryhma: 'hauis',
+    toissijaiset: [], valine: 'kehonpaino', alue: 'ylä',
+    viitetoistot: 15,
+    hakusana: 'towel bicep curl form',
+    ohje: 'Astu pyyhkeen keskelle toisella jalalla ja tartu pyyhkeen päihin kämmenet ylöspäin. Koukista kyynärpäät ja vedä pyyhettä ylös samalla, kun jalka vastustaa liikettä. Laske hitaasti jalan vastusta vastaan ja pidä olkavarret vartalon vieressä. Voit myös pitää liikkeen puolivälissä 20–30 sekunnin pidon.',
   }),
 
   // --- Ojentajat ---
@@ -271,6 +414,13 @@ export const LIIKKEET = [
     viitekerroin: 0.5, aloituspaino: 25,
     hakusana: 'leg curl machine form',
     ohje: 'Säädä laite niin, että polvinivel on laitteen kääntöakselin kohdalla ja tyyny nilkkojen yläpuolella. Koukista polvet niin pitkälle kuin hallitusti pystyt ja palauta hitaasti. Pidä lantio kiinni penkissä koko liikkeen ajan.',
+  }),
+  maarita({
+    id: 'liukuva-reiden-koukistus', nimi: 'Liukuva reiden koukistus', lihasryhma: 'takareidet',
+    toissijaiset: ['pakarat'], valine: 'kehonpaino', alue: 'ala',
+    viitetoistot: 12,
+    hakusana: 'sliding leg curl form',
+    ohje: 'Makaa selälläsi liukkaalla lattialla sukat jalassa tai kantapäät pyyhkeen päällä. Nosta lantio ylös pakarasiltaan ja vedä kantapäät pakaroita kohti koukistamalla polvia. Liu\'uta jalat hitaasti takaisin suoriksi niin, ettei lantio putoa. Helpota liikettä laskemalla lantio lattiaan toistojen välissä.',
   }),
 
   // --- Pakarat ---
@@ -533,6 +683,15 @@ export const MERKKIPAALUT = [
   { id: 'volyymi-10000', nimi: '10 000 kg yhdessä treenissä', kuvake: 'weight' },
 ];
 
+// Haastemerkit (speksin kohta 4i). Ansaitsemisen logiikka on engine/challenges.js:n badges-funktiossa.
+// Uudet kuvakkeet (calendar, users, gift) piirretään näkymässä; tuntematon kuvake näytetään tähtenä.
+export const HAASTEMERKIT = [
+  { id: 'kuukauden-haaste', nimi: 'Kuukauden haaste', kuvake: 'calendar', ehto: 'Suorita oma kuukauden haaste' },
+  { id: 'eka-kaverihaaste', nimi: 'Ensimmäinen kaverihaaste', kuvake: 'users', ehto: 'Osallistu kaverihaasteeseen loppuun asti' },
+  { id: 'voitettu-kaverihaaste', nimi: 'Voitettu kaverihaaste', kuvake: 'trophy', ehto: 'Voita kaverihaaste' },
+  { id: 'kumppanihaaste', nimi: 'Kumppanihaaste', kuvake: 'gift', ehto: 'Suorita kumppanin haaste' },
+];
+
 // Esimerkkiprofiili (speksin kohta 4c), jota käytetään, kun aloitusohjaus ohitetaan.
 export const OLETUSPROFIILI = {
   nimi: 'Demokäyttäjä',
@@ -543,6 +702,9 @@ export const OLETUSPROFIILI = {
   jako: 'automaattinen',
   valineet: ['levytanko', 'käsipainot', 'laitteet', 'taljat', 'kehonpaino'],
   vainKehonpaino: false,
+  // Salin laitteet (speksi 4j), oletuksena täysi kuntosali. Vanhasta tilasta kenttä johdetaan
+  // migraatiossa `valineet`/`vainKehonpaino`-asetuksesta.
+  laitteet: [...KAIKKI_LAITTEET],
   lammittelysarjat: true,
   kehonpaino: 80,
   yksikko: 'kg',
@@ -551,4 +713,6 @@ export const OLETUSPROFIILI = {
   // Vanhasta tilasta kentät voivat puuttua: lue aina oletuksella (?? false / ?? 'tavoite').
   palautusajastin: false,
   palautusKesto: 'tavoite',
+  // Kuntosali, jonka jäsenhaasteet näkyvät Yhteisössä (speksi 4i). Vanhasta tilasta kenttä voi puuttua.
+  sali: 'Kotisali',
 };

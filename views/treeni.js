@@ -1,13 +1,22 @@
 // Treeni-näkymä (speksi 6.2, 4c, 4b-2, 4f, 4h): aloitus, sarjojen kirjaus, ehdotuskortti,
 // palautusajastin ja lopetus. Näkymä päivittää itsensä (omaPaivitys), jotta syötekenttien
 // kohdistus säilyy; render palauttaa siivousfunktion, joka purkaa ajastimen ja kuuntelijan.
-import { getState, update } from '../store.js?v=270067f';
-import { tanaanPvm } from '../seed.js?v=270067f';
-import { LIIKKEET, liike as haeLiike } from '../data.js?v=270067f';
-import { suggestNextSet, recovery, round25, onTyosarja } from '../engine.js?v=270067f';
-import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=270067f';
-import { parseSet, palautusKestoS } from './treeni-input.js?v=270067f';
-import { rakennaPaiva, liikkeenKerrat, onKehonpaino, LAMMITTELY, LAMMITTELY_PALAUTUS_S } from './paiva.js?v=270067f';
+import { getState, update } from '../store.js?v=6612722';
+import { tanaanPvm } from '../seed.js?v=6612722';
+import { LIIKKEET, liike as haeLiike } from '../data.js?v=6612722';
+import { suggestNextSet, recovery, round25, onTyosarja, estimatedStrength, goalParams } from '../engine.js?v=6612722';
+import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=6612722';
+import { parseSet, palautusKestoS } from './treeni-input.js?v=6612722';
+import {
+  rakennaPaiva, liikkeenKerrat, liikkeenTavoite, onKehonpaino, LAMMITTELY, LAMMITTELY_PALAUTUS_S,
+} from './paiva.js?v=6612722';
+import {
+  openSwapSheet, swipeRow, vihjaaPyyhkaisy, vaihtoNappi, vaihtoRivi, taydennaVaihdettu,
+  tallennaPaivanVaihto, palautaPaivanVaihto, ohitetutLista, normalisoiVaihdettu,
+  kaytetytLiikkeet, palautusEstetty, kaikkiOhitettu, PALAUTUS_ESTETTY,
+} from './vaihto.js?v=6612722';
+// Nimetty uudelleen: näkymässä on oma ilmoitus-muuttuja (tauon päättymisilmoitus).
+import { ilmoitus as naytaIlmoitus } from './yhteiso.js?v=6612722';
 
 export const omaPaivitys = true;
 
@@ -94,7 +103,7 @@ function lammittelyMaara(tl) {
 
 function avaaLiike(liike) {
   if (!liike) return;
-  import('./media.js?v=270067f')
+  import('./media.js?v=6612722')
     .then((m) => { if (m && typeof m.openExerciseSheet === 'function') m.openExerciseSheet(liike); })
     .catch(() => {});
 }
@@ -127,11 +136,19 @@ function varise() {
   }
 }
 
-function naytaLiikeNappi(liike) {
+// kompakti: pelkkä ▶ (käynnissä olevan liikkeen otsikossa, kun vieressä on myös ⇄-painike).
+function naytaLiikeNappi(liike, { kompakti = false } = {}) {
   return el('button', {
-    class: 'tr-show', type: 'button', 'aria-label': `Näytä liike: ${liike ? liike.nimi : ''}`,
+    class: `tr-show${kompakti ? ' is-icon' : ''}`, type: 'button', 'aria-label': `Näytä liike: ${liike ? liike.nimi : ''}`,
     onClick: (e) => { e.stopPropagation(); avaaLiike(liike); },
-  }, el('span', { 'aria-hidden': 'true' }, '▶'), ' Näytä liike');
+  }, el('span', { 'aria-hidden': 'true' }, '▶'), kompakti ? null : ' Näytä liike');
+}
+
+// Tallennettu johdettu lähde ({ liikeId, arvioituVoima }) suggestNextSet-muotoon ({ liike, arvioituVoima }).
+function johdettuLahde(tl) {
+  const j = tl && tl.johdettuLahde;
+  const l = j && haeLiike(j.liikeId);
+  return l && Number.isFinite(j.arvioituVoima) ? { liike: l, arvioituVoima: j.arvioituVoima } : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -147,6 +164,7 @@ export function render(root) {
   // poissa (esim. uudelleenlataus), ilmoitus annetaan hiljaa ilman värinää.
   let nahtyKaynnissa = null;
   let vihjeAsti = 0; // ajastinvihjeen näkyvyys (aikaleima, ms)
+  let peruPyyhkaisyVihje = () => {}; // aloitusnäkymän pyyhkäisyvihjeen ajastimet
 
   // Treenin aikainen laskentakonteksti: aiemmat kerrat ja palautumistila treenin alussa.
   function haeKonteksti(state, k) {
@@ -156,6 +174,7 @@ export function render(root) {
     konteksti = {
       id: k.id,
       historia: state.historia,
+      historiaLista: historia,
       kerrat: new Map(),
       tilat: recovery(LIIKKEET, historia, alku).lihakset,
     };
@@ -163,6 +182,12 @@ export function render(root) {
       if (!konteksti.kerrat.has(tl.liikeId)) konteksti.kerrat.set(tl.liikeId, liikkeenKerrat(historia, tl.liikeId));
     }
     return konteksti;
+  }
+
+  // Liikkeen aiemmat kerrat kontekstista; vaihdettu liike lasketaan tarvittaessa.
+  function kerrat(ctx, liikeId) {
+    if (!ctx.kerrat.has(liikeId)) ctx.kerrat.set(liikeId, liikkeenKerrat(ctx.historiaLista, liikeId));
+    return ctx.kerrat.get(liikeId);
   }
 
   function luonnos(k, i) {
@@ -193,6 +218,8 @@ export function render(root) {
       ? [aktiivinen.selectionStart, aktiivinen.selectionEnd] : null;
     const y = window.scrollY;
 
+    peruPyyhkaisyVihje();
+    peruPyyhkaisyVihje = () => {};
     root.replaceChildren(k ? kaynnissaNakyma(state, k) : aloitusNakyma(state));
 
     if (fokus) {
@@ -250,26 +277,49 @@ export function render(root) {
           + 'Arvot ovat demon oletuksia. Tuotteessa tekoäly personoi ne.')));
     }
 
+    // Liikkeet: pyyhkäisy vasemmalle tai ⇄ avaa vaihdon (speksi 4j); vaihto tallentuu päivän vaihtoihin.
     sisalto.push(sectionTitle('Liikkeet'));
+    const tanaan = tanaanPvm(nyt);
+    // Vaihtoehdoista karsitaan sekä nykyiset että vaihdettujen rivien alkuperäiset liikkeet.
+    const paivanLiikkeet = kaytetytLiikkeet(p.rivit);
     const lista = el('ol', { class: 'tr-plan list' });
     p.rivit.forEach((r, i) => {
-      const alkup = r.vaihdettu ? haeLiike(r.vaihdettu) : null;
-      lista.append(el('li', { class: 'tr-plan-row' },
+      const alkuperainen = r.vaihdettu ? r.vaihdettu.alkuperainen : r.liikeId;
+      const vaihdettu = taydennaVaihdettu(r.vaihdettu, state, tanaan);
+      const avaa = () => openSwapSheet({
+        liikeId: r.liikeId, pvm: tanaan, konteksti: 'aloitus', paivanLiikkeet, laitteet: p.laitteet,
+        onValittu: (korvaava, tieto) => tallennaPaivanVaihto(tanaan, alkuperainen, korvaava, tieto),
+      });
+      const rivi = el('div', { class: `tr-plan-row${r.eiVaihtoehtoa ? ' is-skip' : ''}` },
         el('span', { class: 'tr-num', 'aria-hidden': 'true' }, String(i + 1)),
         el('div', { class: 'tr-plan-main' },
           el('span', { class: 'tr-plan-name' }, r.liike.nimi),
           el('span', { class: 'tr-plan-sub' },
             `${tavoiteTeksti(r.tavoite)} · palautus ${r.tavoite.palautusS} s`
             + (r.lammittelyt.length ? ` · +${r.lammittelyt.length} lämmittelyä` : '')),
-          alkup ? el('span', { class: 'tr-plan-swap' }, `Vaihdettu: ${alkup.nimi} (väline ei käytössä)`) : null),
-        naytaLiikeNappi(r.liike)));
+          vaihtoRivi({
+            vaihdettu, liike: r.liike, laitteet: p.laitteet, eiVaihtoehtoa: r.eiVaihtoehtoa,
+            onPalauta: vaihdettu && vaihdettu.syy === 'kayttaja' ? () => palautaPaivanVaihto(tanaan, alkuperainen, p.rivit) : null,
+          }),
+          naytaLiikeNappi(r.liike)),
+        vaihtoNappi(r.liike.nimi, avaa, `aloitus:${alkuperainen}`));
+      const kaare = swipeRow(rivi, avaa);
+      if (i === 0) peruPyyhkaisyVihje = vihjaaPyyhkaisy(kaare);
+      lista.append(el('li', { class: 'vx-li' }, kaare));
     });
     sisalto.push(lista);
+    const ohitetut = ohitetutLista({ state, pvm: tanaan, ohjelmassa: p.paiva.liikkeet.map((x) => x.liikeId), rivit: p.rivit });
+    if (ohitetut) sisalto.push(ohitetut);
     sisalto.push(el('p', { class: 'tr-fine muted' },
       `Sarjamäärät on sovitettu ${p.kestoMin} minuuttiin. Toistohaarukka, sarjat ja palautus tulevat tavoitteestasi (demon oletukset).`));
 
-    sisalto.push(el('div', { class: 'tr-actionbar' },
-      el('button', { class: 'btn btn-primary tr-start-btn', type: 'button', onClick: aloita }, 'Aloita treeni')));
+    // Kaikki liikkeet ohitettu (tai ilman vaihtoehtoa): ei Aloita-painiketta, vaan palautus.
+    if (p.rivit.some((r) => !r.eiVaihtoehtoa)) {
+      sisalto.push(el('div', { class: 'tr-actionbar' },
+        el('button', { class: 'btn btn-primary tr-start-btn', type: 'button', onClick: aloita }, 'Aloita treeni')));
+    } else {
+      sisalto.push(kaikkiOhitettu({ state, pvm: tanaan, rivit: p.rivit, konteksti: 'aloitus' }));
+    }
     return el('div', { class: 'tr-view tr-start' }, ...sisalto);
   }
 
@@ -281,19 +331,26 @@ export function render(root) {
     }
     const nyt = new Date().toISOString();
     const p = rakennaPaiva(state, nyt);
+    if (!p.rivit.some((r) => !r.eiVaihtoehtoa)) {
+      piirra();
+      return;
+    }
+    const pvm = tanaanPvm(nyt);
     const k = {
       id: `t-${Date.now().toString(36)}`,
       aloitus: nyt,
-      pvm: tanaanPvm(nyt),
+      pvm,
       ohjelmaId: p.ohjelma.id,
       paivaNimi: p.paiva.nimi,
       tyyppi: 'voima',
       lahde: 'psp',
-      liikkeet: p.rivit.map((r) => {
+      // Liike, jolle ei löytynyt korvaajaa ("Ei laitteita – ohitetaan tänään"), jää pois treenistä.
+      liikkeet: p.rivit.filter((r) => !r.eiVaihtoehtoa).map((r) => {
         const { sarjatMin, ...tavoite } = r.tavoite;
         const tl = { liikeId: r.liikeId, tavoite, sarjat: [] };
         if (r.lammittelyt.length) tl.lammittelyt = r.lammittelyt;
-        if (r.vaihdettu) tl.vaihdettu = r.vaihdettu;
+        if (r.vaihdettu) tl.vaihdettu = taydennaVaihdettu(r.vaihdettu, state, pvm);
+        if (r.johdettuLahde) tl.johdettuLahde = { liikeId: r.johdettuLahde.liike.id, arvioituVoima: r.johdettuLahde.arvioituVoima };
         return tl;
       }),
       ehdotukset: [],
@@ -361,6 +418,15 @@ export function render(root) {
     const tavoite = tl.tavoite || { sarjat: 3, toistoMin: 8, toistoMax: 12, palautusS: 90 };
     const tehty = tyoSarjaMaara(tl);
     const valmis = tehty >= tavoite.sarjat;
+    // Liikkeen voi vaihtaa, kunnes sille on kirjattu työsarjoja (speksi 4j).
+    const vaihdettavissa = !!liike && tehty === 0;
+    const vaihto = normalisoiVaihdettu(tl.vaihdettu);
+    const alkuperainen = vaihto ? vaihto.alkuperainen : tl.liikeId;
+    const avaaVaihto = () => openSwapSheet({
+      liikeId: tl.liikeId, pvm: k.pvm, konteksti: 'treeni',
+      paivanLiikkeet: kaytetytLiikkeet(k.liikkeet),
+      onValittu: (korvaava, tieto) => vaihdaKaynnissa(k.id, i, korvaava, tieto),
+    });
 
     const otsikko = el('div', { class: 'tr-ex-head' },
       el('button', {
@@ -373,17 +439,21 @@ export function render(root) {
       el('span', { class: `tr-num${valmis ? ' is-done' : ''}`, 'aria-hidden': 'true' }, valmis ? '✓' : String(i + 1)),
       el('span', { class: 'tr-ex-name' }, nimi),
       el('span', { class: 'tr-ex-count' }, `${tehty}/${tavoite.sarjat}`)),
-      naytaLiikeNappi(liike));
+      naytaLiikeNappi(liike, { kompakti: vaihdettavissa }),
+      vaihdettavissa ? vaihtoNappi(nimi, avaaVaihto, `treeni:${i}`) : null);
 
-    const kortti = el('section', { class: `tr-ex${onAuki ? ' is-open' : ''}${valmis ? ' is-done' : ''}` }, otsikko);
+    const merkki = vaihto ? vaihtoRivi({
+      vaihdettu: vaihto, liike, laitteet: profiili.laitteet,
+      onPalauta: vaihdettavissa && vaihto.syy === 'kayttaja'
+        ? () => palautaKaynnissa(k, i, alkuperainen) : null,
+    }) : null;
+    const kortti = el('section', { class: `tr-ex${onAuki ? ' is-open' : ''}${valmis ? ' is-done' : ''}` },
+      vaihdettavissa ? swipeRow(otsikko, avaaVaihto) : otsikko,
+      merkki ? el('div', { class: 'tr-ex-swapmark' }, merkki) : null);
     if (!onAuki) return kortti;
 
     const runko = el('div', { class: 'tr-ex-body' });
     runko.append(el('p', { class: 'tr-goal' }, el('span', { class: 'tr-goal-label' }, 'Tavoite '), tavoiteTeksti(tavoite)));
-    if (tl.vaihdettu) {
-      const alkup = haeLiike(tl.vaihdettu);
-      runko.append(el('p', { class: 'tr-plan-swap' }, `Vaihdettu: ${alkup ? alkup.nimi : tl.vaihdettu} (väline ei käytössä)`));
-    }
 
     // Kirjatut sarjat.
     if ((tl.sarjat || []).length) {
@@ -410,10 +480,12 @@ export function render(root) {
       const ehdotus = suggestNextSet({
         liike,
         tavoite,
-        edellisetKerrat: ctx.kerrat.get(tl.liikeId) || [],
+        edellisetKerrat: kerrat(ctx, tl.liikeId),
         tamanKerranSarjat: tl.sarjat || [],
         kokemus: profiili.kokemus,
         lihasTila: liike && ctx.tilat[liike.lihasryhma] ? ctx.tilat[liike.lihasryhma].tila : undefined,
+        // Vaihdettu liike ilman omaa historiaa: aloituspaino johdetaan korvatun liikkeen voimasta.
+        johdettuLahde: johdettuLahde(tl),
       });
       runko.append(ehdotusKortti(k, tl, i, ehdotus, liike, yksikko));
       runko.append(syottoRivi(k, tl, i, ehdotus, liike, yksikko, tehty, tavoite));
@@ -452,7 +524,8 @@ export function render(root) {
     const indeksi = (tl.sarjat || []).length;
     const merkinta = ehdotusMerkinta(k, tl.liikeId, indeksi);
     const arvo = `${painoTeksti(ehdotus.paino, yksikko, liike)} × ${ehdotus.toistot}`;
-    const syy = SYY_NIMET[ehdotus.syy] || 'Ehdotus';
+    const johdettu = ehdotus.syy === 'first-time' && /johdettu/.test(ehdotus.miksi || '');
+    const syy = johdettu ? 'Johdettu aloituspaino' : SYY_NIMET[ehdotus.syy] || 'Ehdotus';
 
     if (merkinta) {
       const ok = merkinta.hyvaksytty;
@@ -631,6 +704,77 @@ export function render(root) {
       }
     });
     naytaSyottoRivi(siirry !== null ? root.querySelector('.tr-ex.is-open') : null);
+  }
+
+  // Palauta käynnissä olevassa treenissä: ei kaksoiskappaletta, jos alkuperäinen on jo toisen
+  // liikkeen tilalla (ilmoitus, vaihto jää voimaan).
+  function palautaKaynnissa(k, i, alkuperainen) {
+    if (palautusEstetty(k.liikkeet, alkuperainen, i)) {
+      naytaIlmoitus(PALAUTUS_ESTETTY);
+      return;
+    }
+    vaihdaKaynnissa(k.id, i, alkuperainen, null);
+  }
+
+  // --- Liikkeen vaihto käynnissä olevassa treenissä (speksi 4j) -----------------
+  // Vain liikkeelle, jolla ei ole työsarjoja. korvaavaId null = ohita (liike poistetaan treenistä),
+  // alkuperäinen id = palauta. Sarjat tyhjennetään, toistohaarukka päivitetään tavoitteesta ja
+  // lämmittelysarjat lasketaan uudelleen, jos liikkeellä oli niitä.
+  function vaihdaKaynnissa(treeniId, i, korvaavaId, tieto) {
+    const ennen = getState() || {};
+    const kk0 = ennen.kaynnissa;
+    if (!kk0 || kk0.id !== treeniId || !kk0.liikkeet || !kk0.liikkeet[i] || tyoSarjaMaara(kk0.liikkeet[i]) > 0) return;
+    const ctx = haeKonteksti(ennen, kk0);
+    const historia = ctx.historiaLista;
+    const profiili = ennen.profiili || {};
+    // Luonnokset ja avoin kortti ennen päivitystä: update() piirtää näkymän heti uudelleen.
+    for (const avain of [...luonnokset.keys()]) {
+      const [id, n] = avain.split(':');
+      if (id === treeniId && Number(n) >= i) luonnokset.delete(avain);
+    }
+    if (korvaavaId === null) avoin = { id: treeniId, i: null };
+    update((s) => {
+      const kk = s.kaynnissa;
+      if (!kk || kk.id !== treeniId || !kk.liikkeet[i]) return;
+      const tl = kk.liikkeet[i];
+      const vanhaId = tl.liikeId;
+      kk.ehdotukset = (kk.ehdotukset || []).filter((e) => e.liikeId !== vanhaId);
+      if (korvaavaId === null) {
+        kk.liikkeet.splice(i, 1);
+        return;
+      }
+      const uusi = haeLiike(korvaavaId);
+      if (!uusi) return;
+      const vanhaVaihto = normalisoiVaihdettu(tl.vaihdettu);
+      const alkupId = vanhaVaihto ? vanhaVaihto.alkuperainen : vanhaId;
+      tl.liikeId = korvaavaId;
+      tl.sarjat = [];
+      delete tl.lammittelyOhitettu;
+      if (korvaavaId === alkupId) {
+        delete tl.vaihdettu;
+        delete tl.johdettuLahde;
+      } else {
+        tl.vaihdettu = { alkuperainen: alkupId, syy: 'kayttaja', tarkenne: (tieto && tieto.syy) || 'muu' };
+        const voima = estimatedStrength(haeLiike(alkupId), historia, kk.pvm || tanaanPvm(new Date().toISOString()));
+        if (voima && voima.yksikko === 'kg') tl.johdettuLahde = { liikeId: alkupId, arvioituVoima: voima.arvo };
+        else delete tl.johdettuLahde;
+      }
+      const t = liikkeenTavoite(goalParams(profiili.tavoite), korvaavaId);
+      tl.tavoite = { ...(tl.tavoite || {}), toistoMin: t.toistoMin, toistoMax: t.toistoMax };
+      if (Array.isArray(tl.lammittelyt) && tl.lammittelyt.length) {
+        const eka = onKehonpaino(uusi) ? null : suggestNextSet({
+          liike: uusi, tavoite: tl.tavoite, edellisetKerrat: liikkeenKerrat(historia, korvaavaId),
+          tamanKerranSarjat: [], kokemus: profiili.kokemus,
+          lihasTila: ctx.tilat[uusi.lihasryhma] && ctx.tilat[uusi.lihasryhma].tila,
+          johdettuLahde: johdettuLahde(tl),
+        });
+        if (eka && eka.paino >= 20) {
+          tl.lammittelyt = LAMMITTELY.map((l) => ({ paino: Math.max(2.5, round25(eka.paino * l.osuus)), toistot: l.toistot }));
+        } else {
+          delete tl.lammittelyt;
+        }
+      }
+    });
   }
 
   // --- Palautusajastin --------------------------------------------------------
@@ -934,5 +1078,6 @@ export function render(root) {
   return () => {
     clearInterval(ajastin);
     window.removeEventListener('statechange', onStateChange);
+    peruPyyhkaisyVihje();
   };
 }

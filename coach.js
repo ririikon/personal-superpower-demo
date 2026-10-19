@@ -3,10 +3,11 @@
 // Puhdas moduuli: ei DOMia, ei windowia, ei localStoragea eikä Date.now()-kutsuja.
 // buildReply ei muuta tilaa, vaan palauttaa muutokset, jotka näkymä vie tilaan.
 
-import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=270067f';
-import { weeklyTargets, weeklyProgress } from './engine/targets.js?v=270067f';
-import { recovery } from './engine/recovery.js?v=270067f';
-import { addDays, daysBetween, weekStart } from './engine/util.js?v=270067f';
+import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=6612722';
+import { weeklyTargets, weeklyProgress } from './engine/targets.js?v=6612722';
+import { recovery } from './engine/recovery.js?v=6612722';
+import { addDays, daysBetween, weekStart } from './engine/util.js?v=6612722';
+import { challengeProgress, baseline } from './engine/challenges.js?v=6612722';
 
 export const ESIMERKKISIRUT = [
   'Ensi viikolla olen reissussa ja pelaan 3 kertaa padelia',
@@ -120,6 +121,8 @@ const KIPU_TILANTEET = [
 const VASYMYS_RE = /väsy|uupu|stress|univaje|nukuin huonosti|nukkunut huonosti|huonosti nuk|huonot yöunet|huono yö|valvoin|valvonut/;
 const KIIRE_RE = /kiire|kiirei|vähän aikaa|aikaa vähän|nopea treeni|lyhyt treeni|pikatreeni/;
 const MUISTI_RE = /mitä.*tänään|tänään.*mitä|muistat|tällä viikolla|tämän viikon/;
+// Haaste (speksi 4i): haaste, kilpailla, kaveri, kisa. "Haasteellinen" ja "haastava" eivät ole haastepyyntöjä.
+const HAASTE_RE = /haast(?!eelli|av)|kilpail|kaver|kisa|kisoi|kisoj/;
 
 const LUKUSANAT = { yksi: 1, yhden: 1, kaksi: 2, kahdesti: 2, kolme: 3, kolmesti: 3, neljä: 4, neljästi: 4, viisi: 5, viidesti: 5, kuusi: 6, kuudesti: 6 };
 const KERRAT_OLETUS = 2;
@@ -231,8 +234,9 @@ function poimiMatkapaivat(t) {
 }
 
 /**
- * detectScenario(teksti) → { id: 'reissu-laji'|'reissu'|'kipu'|'vasymys'|'kiire'|'muisti'|'muu', laji?, kerrat?, lihas? }
- * Tunnistus pienaakkosiksi muutetusta tekstistä, ensimmäinen osuma voittaa.
+ * detectScenario(teksti) → { id: 'reissu-laji'|'reissu'|'kipu'|'vasymys'|'kiire'|'haaste'|'muisti'|'muu', laji?, kerrat?, lihas? }
+ * Tunnistus pienaakkosiksi muutetusta tekstistä, ensimmäinen osuma voittaa. Haaste tarkistetaan
+ * kiireen jälkeen ja ennen muistikysymystä, jotta esim. reissu kaverin kanssa pysyy reissuna.
  */
 export function detectScenario(teksti) {
   const t = String(teksti || '').toLowerCase();
@@ -252,6 +256,8 @@ export function detectScenario(teksti) {
 
   const min = poimiMinuutit(t);
   if ((min !== null && min > 0 && min <= 45) || KIIRE_RE.test(t)) return { id: 'kiire' };
+
+  if (HAASTE_RE.test(t)) return { id: 'haaste' };
 
   if (MUISTI_RE.test(t)) return { id: 'muisti' };
 
@@ -329,6 +335,7 @@ function normalisoi(konteksti) {
     liikeMap: new Map(liikkeet.map((l) => [l.id, l])),
     muistit: Array.isArray(k.muistit) ? k.muistit : [],
     viikkosuunnitelmat: Array.isArray(k.viikkosuunnitelmat) ? k.viikkosuunnitelmat : [],
+    yhteiso: k.yhteiso && typeof k.yhteiso === 'object' ? k.yhteiso : null,
   };
 }
 
@@ -842,6 +849,105 @@ function vastausMuisti(teksti, k) {
   return { teksti: kappaleet.join('\n\n'), muistit: [], poistettavat: [], ehdotus: null, sirut: [] };
 }
 
+// --- Haaste (speksi 4i) ------------------------------------------------------
+
+// Tavoiteltava ennustesuhde (ennuste / tavoite) kokemuksen mukaan: aloittelijalle varma onnistuminen,
+// kokeneelle venyttävä haaste.
+const HAASTE_KOHDE = { aloittelija: 1.3, keskitaso: 1.05, kokenut: 0.95 };
+const KOKEMUS_GEN = { aloittelija: 'aloittelevan', keskitaso: 'keskitason', kokenut: 'kokeneen' };
+
+function tuhannet(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function mittariTeksti(mittari, n) {
+  const x = Math.round(n);
+  switch (mittari) {
+    case 'treenit': return x === 1 ? '1 treeni' : `${x} treeniä`;
+    case 'volyymi': return `${tuhannet(x)} kg`;
+    case 'sarjat': return x === 1 ? '1 sarja' : `${x} sarjaa`;
+    case 'aktiivisetPaivat': return x === 1 ? '1 aktiivinen päivä' : `${x} aktiivista päivää`;
+    case 'putki': return x === 1 ? '1 viikko' : `${x} viikkoa`;
+    default: return String(x);
+  }
+}
+
+// Liittymättömät, voimassa olevat haasteet ennusteineen: arvo + oma lähtötahti × jäljellä olevat päivät.
+function haasteEhdokkaat(k) {
+  const haasteet = k.yhteiso && Array.isArray(k.yhteiso.haasteet) ? k.yhteiso.haasteet : [];
+  const tila = { historia: k.historia, profiili: k.profiili, viikkosuunnitelmat: k.viikkosuunnitelmat, yhteiso: k.yhteiso };
+  const opts = { liikkeet: k.liikkeet, profiili: k.profiili, viikkosuunnitelmat: k.viikkosuunnitelmat };
+  return haasteet
+    .filter((h) => h && !h.liittynyt && h.alku && h.loppu && h.loppu >= k.tanaan)
+    .map((h) => {
+      const p = challengeProgress(h, tila, k.nyt);
+      const pituus = daysBetween(h.alku, h.loppu) + 1;
+      const tahti = baseline(h.mittari, k.historia, h.alku, h.loppu, opts) / pituus;
+      const jaljella = p.alkanut ? p.paivaaJaljella : pituus;
+      const ennuste = p.arvo + tahti * jaljella;
+      const suhde = p.tavoite > 0 && h.tyyppi !== 'kaveri' ? ennuste / p.tavoite : 1;
+      return { h, p, ennuste, suhde, jaljella };
+    });
+}
+
+function vastausHaaste(teksti, k) {
+  const nimi = etunimi(k.profiili);
+  const kokemus = HAASTE_KOHDE[k.profiili.kokemus] ? k.profiili.kokemus : 'keskitaso';
+  const kohde = HAASTE_KOHDE[kokemus];
+  const ehdokkaat = haasteEhdokkaat(k);
+
+  if (!ehdokkaat.length) {
+    const kappaleet = [
+      valitse([
+        `Hyvä ajatus, ${nimi}! Haasteet tuovat treeniin mukavaa lisäpotkua.`,
+        `Kiva, että haasteet kiinnostavat, ${nimi}.`,
+        `Haasteet ovat hyvä tapa pitää rytmi yllä, ${nimi}.`,
+      ], teksti),
+      'Olet jo mukana kaikissa avoimissa haasteissa, tai uusia ei juuri nyt ole tarjolla. Yhteisö-välilehdellä voit seurata edistymistäsi ja luoda oman kaverihaasteen.',
+    ];
+    return { teksti: kappaleet.join('\n\n'), muistit: [], poistettavat: [], ehdotus: null, sirut: [], toiminto: null };
+  }
+
+  // Lähimpänä kokemustason kohdesuhdetta; tasatilanteessa haasteiden järjestys.
+  const valittu = ehdokkaat.reduce((a, b) => (Math.abs(b.suhde - kohde) < Math.abs(a.suhde - kohde) ? b : a));
+  const { h, p, ennuste, suhde, jaljella } = valittu;
+
+  let perustelu;
+  if (h.tyyppi === 'kaveri') {
+    perustelu = h.tasapainotus
+      ? 'Siinä on tasapainotus päällä, joten jokaista verrataan omaan lähtötasoonsa ja pärjäät, kun treenaat omaa tasoasi paremmin.'
+      : 'Se on kaverihaaste, joten yhteinen tavoite pitää motivaation yllä.';
+  } else if (suhde >= 1.2) {
+    perustelu = `Nykyisellä tahdillasi kerrytät noin ${mittariTeksti(h.mittari, ennuste)}, joten ${mittariTeksti(h.mittari, p.tavoite)} on varma onnistuminen ja pitää rytmin yllä.`;
+  } else if (suhde >= 0.95) {
+    perustelu = `Nykyisellä tahdillasi kerrytät noin ${mittariTeksti(h.mittari, ennuste)}, joten ylität tavoitteen ${mittariTeksti(h.mittari, p.tavoite)} niukasti. Sopivan haastava!`;
+  } else {
+    perustelu = `Nykyisellä tahdillasi ehdit noin ${mittariTeksti(h.mittari, ennuste)}, kun tavoite on ${mittariTeksti(h.mittari, p.tavoite)}, joten se vaatii hieman tavallista enemmän. Juuri sopiva venytys.`;
+  }
+
+  const kappaleet = [
+    valitse([
+      `Hyvä ajatus, ${nimi}! Haaste tuo treeniin mukavaa lisäpotkua.`,
+      `Selvä, ${nimi}! Katsotaan, mikä haaste sopii sinulle nyt parhaiten.`,
+      `Kiva, että haasteet kiinnostavat, ${nimi}. Tässä ehdotukseni.`,
+    ], teksti),
+    `Ehdotan haastetta "${h.nimi}". ${perustelu}`,
+  ];
+  if (p.alkanut && h.tyyppi !== 'kaveri') {
+    kappaleet.push(`Tilanteesi nyt: ${mittariTeksti(h.mittari, p.arvo)} / ${mittariTeksti(h.mittari, p.tavoite)}, ja aikaa on ${jaljella} päivää. Aiemmat treenisi haasteen ajalta lasketaan mukaan.`);
+  }
+  kappaleet.push(`Valitsin sen ${KOKEMUS_GEN[kokemus]} treenaajan tasolle sopivaksi oman treenihistoriasi perusteella. Liity alla olevasta painikkeesta; haasteesta voi myös poistua milloin tahansa.`);
+
+  return {
+    teksti: kappaleet.join('\n\n'),
+    muistit: [],
+    poistettavat: [],
+    ehdotus: null,
+    sirut: ['Liity haasteeseen'],
+    toiminto: { tyyppi: 'liityHaasteeseen', haasteId: h.id },
+  };
+}
+
 function vastausMuu(teksti, k) {
   const nimi = etunimi(k.profiili);
   const seuraava = k.ohjelma.paivat[seuraavaPaivaIndeksi(k)];
@@ -858,8 +964,9 @@ function vastausMuu(teksti, k) {
 }
 
 /**
- * buildReply(teksti, konteksti) → { teksti, muistit: [uusiMuisti], poistettavat: [id], ehdotus: Viikkosuunnitelma|null, sirut: [] }
- * konteksti = { tanaan, nyt, profiili, ohjelma, historia, liikkeet, muistit, viikkosuunnitelmat }
+ * buildReply(teksti, konteksti) → { teksti, muistit: [uusiMuisti], poistettavat: [id], ehdotus: Viikkosuunnitelma|null, sirut: [],
+ *   toiminto?: { tyyppi: 'liityHaasteeseen', haasteId }|null (vain haaste-skenaariossa) }
+ * konteksti = { tanaan, nyt, profiili, ohjelma, historia, liikkeet, muistit, viikkosuunnitelmat, yhteiso? }
  * Puhdas funktio: palauttaa muutokset, eikä muuta kontekstia.
  */
 export function buildReply(teksti, konteksti) {
@@ -876,6 +983,8 @@ export function buildReply(teksti, konteksti) {
       return vastausVasymys(syote, k);
     case 'kiire':
       return vastausKiire(syote, k);
+    case 'haaste':
+      return vastausHaaste(syote, k);
     case 'muisti':
       return vastausMuisti(syote, k);
     default:

@@ -1,12 +1,12 @@
 // Liikkeet (speksi 6.5, 4f): haku, lihasryhmäsirut ja lista. Liikkeen sivu #/liike/<id>:
 // media ylimpänä, lihasryhmät, paras arvioitu voima, ennätykset, oma historia ja ohje.
-import { getState } from '../store.js?v=270067f';
-import { tanaanPvm } from '../seed.js?v=270067f';
-import { LIIKKEET, LIHASRYHMAT, RYHMAT, liike as haeLiike } from '../data.js?v=270067f';
-import { el, svgEl, card, sectionTitle, whyButton, formatWeight } from './ui.js?v=270067f';
-import { estimatedStrength, exerciseRecords } from '../engine/score.js?v=270067f';
-import { e1rm } from '../engine/progression.js?v=270067f';
-import { openExerciseSheet, exerciseMedia, youtubeLinkki } from './media.js?v=270067f';
+import { getState } from '../store.js?v=6612722';
+import { tanaanPvm } from '../seed.js?v=6612722';
+import { LIIKKEET, LIHASRYHMAT, RYHMAT, liike as haeLiike } from '../data.js?v=6612722';
+import { el, svgEl, card, sectionTitle, whyButton, formatWeight } from './ui.js?v=6612722';
+import { estimatedStrength, exerciseRecords } from '../engine/score.js?v=6612722';
+import { e1rm } from '../engine/progression.js?v=6612722';
+import { openExerciseSheet, exerciseMedia, youtubeLinkki } from './media.js?v=6612722';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {

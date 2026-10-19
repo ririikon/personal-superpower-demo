@@ -19,18 +19,19 @@
 // 6. Ilman lippua näkymä piirretään statechange-tapahtumasta uudelleen (siivous ensin),
 //    ja vierityskohta säilyy. Useat peräkkäiset update()-kutsut yhdistetään yhdeksi piirroksi.
 // 7. Reitin vaihtuessa root saa kohdistuksen (preventScroll) ja sivu vieritetään alkuun.
-import { getState } from './store.js?v=270067f';
-import { el, card } from './views/ui.js?v=270067f';
-import * as koti from './views/koti.js?v=270067f';
-import * as valmentaja from './views/valmentaja.js?v=270067f';
-import * as edistyminen from './views/edistyminen.js?v=270067f';
-import * as historia from './views/historia.js?v=270067f';
-import * as liikkeet from './views/liikkeet.js?v=270067f';
-import * as tavoitteet from './views/tavoitteet.js?v=270067f';
-import * as ohjelmat from './views/ohjelmat.js?v=270067f';
-import * as profiili from './views/profiili.js?v=270067f';
-import * as aloitus from './views/aloitus.js?v=270067f';
-import * as treeni from './views/treeni.js?v=270067f';
+import { getState } from './store.js?v=6612722';
+import { el, svgEl, card } from './views/ui.js?v=6612722';
+import * as koti from './views/koti.js?v=6612722';
+import * as valmentaja from './views/valmentaja.js?v=6612722';
+import * as yhteiso from './views/yhteiso.js?v=6612722';
+import * as edistyminen from './views/edistyminen.js?v=6612722';
+import * as historia from './views/historia.js?v=6612722';
+import * as liikkeet from './views/liikkeet.js?v=6612722';
+import * as tavoitteet from './views/tavoitteet.js?v=6612722';
+import * as ohjelmat from './views/ohjelmat.js?v=6612722';
+import * as profiili from './views/profiili.js?v=6612722';
+import * as aloitus from './views/aloitus.js?v=6612722';
+import * as treeni from './views/treeni.js?v=6612722';
 
 // tab: korostettava alanavigaation kohta; fab: näytetäänkö "Aloita treeni".
 // Kodissa ei ole kelluvaa Aloita-painiketta: treenikortissa on oma painike, ja kelluva
@@ -38,11 +39,14 @@ import * as treeni from './views/treeni.js?v=270067f';
 const ROUTES = [
   { name: 'koti', re: /^koti$/, view: koti, tab: 'koti' },
   { name: 'valmentaja', re: /^valmentaja$/, view: valmentaja, tab: 'valmentaja' },
+  { name: 'yhteiso', re: /^yhteiso$/, view: yhteiso, tab: 'yhteiso' },
+  { name: 'yhteiso-haaste', re: /^yhteiso\/haaste\/([^/]+)$/, keys: ['id'], view: yhteiso, tab: 'yhteiso' },
   { name: 'edistyminen', re: /^edistyminen$/, view: edistyminen, tab: 'edistyminen' },
   { name: 'historia', re: /^historia$/, view: historia, tab: 'historia', fab: true },
   { name: 'historia-treeni', re: /^historia\/([^/]+)$/, keys: ['id'], view: historia, tab: 'historia' },
-  { name: 'liikkeet', re: /^liikkeet$/, view: liikkeet, tab: 'liikkeet' },
-  { name: 'liike', re: /^liike\/([^/]+)$/, keys: ['id'], view: liikkeet, tab: 'liikkeet' },
+  // Liikkeet ei ole alanavigaatiossa: sinne tullaan Kodin Liikekirjasto-kortista ja treenin linkeistä.
+  { name: 'liikkeet', re: /^liikkeet$/, view: liikkeet, tab: 'koti' },
+  { name: 'liike', re: /^liike\/([^/]+)$/, keys: ['id'], view: liikkeet, tab: 'koti' },
   { name: 'tavoitteet', re: /^tavoitteet$/, view: tavoitteet, tab: 'koti' },
   { name: 'ohjelmat', re: /^ohjelmat$/, view: ohjelmat, tab: 'koti' },
   { name: 'profiili', re: /^profiili$/, view: profiili, tab: 'koti' },
@@ -57,6 +61,37 @@ const fabText = fab.querySelector('.fab-text');
 const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
 const THEME_COLOR = { light: '#f2f5f7', dark: '#0e1626' }; // = --bg (styles.css)
 const darkQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+// Alanavigaatio (speksi 4i): Koti, Valmentaja, Yhteisö, Edistyminen ja Historia. Välilehdet
+// rakennetaan tässä, jotta index.html:n staattinen varasisältö korvautuu heti käynnistyksessä.
+const NAVIGAATIO = [
+  { tab: 'koti', teksti: 'Koti', kuvake: [['path', { d: 'M3.5 10.5 12 3.5l8.5 7V19a1.5 1.5 0 0 1-1.5 1.5h-4.5v-6h-5v6H5A1.5 1.5 0 0 1 3.5 19z' }]] },
+  { tab: 'valmentaja', teksti: 'Valmentaja', kuvake: [
+    ['path', { d: 'M20.5 11.5a8 8 0 0 1-11.7 7.1L3.5 20l1.4-4.9A8 8 0 1 1 20.5 11.5z' }],
+    ['path', { d: 'M12.5 7.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z' }],
+  ] },
+  { tab: 'yhteiso', teksti: 'Yhteisö', kuvake: [
+    ['circle', { cx: 9, cy: 8, r: 3.5 }],
+    ['path', { d: 'M2.5 20a6.5 6.5 0 0 1 13 0' }],
+    ['path', { d: 'M15.5 4.6a3.5 3.5 0 0 1 0 6.8' }],
+    ['path', { d: 'M17.5 13.8a6.5 6.5 0 0 1 4 6.2' }],
+  ] },
+  { tab: 'edistyminen', teksti: 'Edistyminen', kuvake: [
+    ['path', { d: 'M3.5 20.5h17' }],
+    ['path', { d: 'M6.5 16.5v-4M11 16.5v-8M15.5 16.5v-6M20 16.5V4.5' }],
+  ] },
+  { tab: 'historia', teksti: 'Historia', kuvake: [
+    ['rect', { x: 3.5, y: 5, width: 17, height: 15.5, rx: 2.5 }],
+    ['path', { d: 'M3.5 10h17M8 3v4M16 3v4' }],
+  ] },
+];
+
+function rakennaNavigaatio() {
+  tabbar.replaceChildren(...NAVIGAATIO.map((n) => el('a', { class: 'tab', href: `#/${n.tab}`, dataset: { tab: n.tab } },
+    svgEl('svg', { viewBox: '0 0 24 24', width: 24, height: 24, 'aria-hidden': 'true' },
+      ...n.kuvake.map(([tag, attrs]) => svgEl(tag, attrs))),
+    el('span', null, n.teksti))));
+}
 
 let current = null; // { route, params, hash }
 let cleanup = null; // nykyisen näkymän siivousfunktio
@@ -269,4 +304,5 @@ if (darkQuery && typeof darkQuery.addEventListener === 'function') {
 
 setInterval(() => { if (current) updateFab(); }, 1000);
 
+rakennaNavigaatio();
 navigate();

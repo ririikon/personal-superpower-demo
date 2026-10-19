@@ -1,17 +1,18 @@
 // Profiili ja oma suunnitelma (speksi 4c ja 6.6). Rakenne: korostettu Tavoite-rivi, jonka
-// takana on oma valintanäkymä, ja sen alla ryhmitellyt osiot VÄLINEET, TREENIPROFIILI,
-// TREENIN MUOTO, VALMENTAJAN MUISTI ja ASETUKSET. Jokainen muutos tallentuu heti update()-
+// takana on oma valintanäkymä, ja sen alla ryhmitellyt osiot SALIN LAITTEET (speksi 4j),
+// TREENIPROFIILI, TREENIN MUOTO, VALMENTAJAN MUISTI, TIETOA ja ASETUKSET. Jokainen muutos tallentuu heti update()-
 // kutsulla, ja reititin piirtää näkymän uudelleen statechange-tapahtumasta.
 //
 // Vie myös apurit, joita aloitusohjaus ja valmentaja käyttävät (tavoitteet, kokemustasot,
 // ohjelmasuositus, valintalaatikko ja Valmentajan muisti).
 
-import { getState, update, resetDemo } from '../store.js?v=270067f';
-import { OHJELMAT, OLETUSPROFIILI } from '../data.js?v=270067f';
-import { goalParams } from '../engine/progression.js?v=270067f';
-import { tanaanPvm } from '../seed.js?v=270067f';
-import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=270067f';
-import { PALAUTUS_KESTOT } from './treeni-input.js?v=270067f';
+import { getState, update, resetDemo } from '../store.js?v=6612722';
+import { OHJELMAT, OLETUSPROFIILI, LAITTEET, LAITERYHMAT, LAITEPOHJAT } from '../data.js?v=6612722';
+import { goalParams } from '../engine/progression.js?v=6612722';
+import { tanaanPvm } from '../seed.js?v=6612722';
+import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=6612722';
+import { PALAUTUS_KESTOT } from './treeni-input.js?v=6612722';
+import { ohjelmanLaiteVaihdot } from './vaihto.js?v=6612722';
 
 const KG_LB = 2.20462;
 
@@ -37,13 +38,73 @@ export const KOKEMUKSET = [
   { arvo: 'kokenut', otsikko: 'Kokenut', kuvaus: 'Yli 3 vuotta, tekniikka ja ohjelmointi ovat tuttuja.' },
 ];
 
-const VALINEET = [
-  { arvo: 'levytanko', otsikko: 'Levytanko' },
-  { arvo: 'käsipainot', otsikko: 'Käsipainot' },
-  { arvo: 'laitteet', otsikko: 'Laitteet' },
-  { arvo: 'taljat', otsikko: 'Taljat' },
-  { arvo: 'kehonpaino', otsikko: 'Kehonpaino' },
-];
+// Salin laitteet (speksi 4j). Vanha välinevalinta (profiili.valineet, vainKehonpaino) ei näy enää
+// Profiilissa; kentät säilyvät tilassa yhteensopivuuden vuoksi.
+const LAITERYHMA_NIMI = { vapaat: 'Vapaat painot', laitteet: 'Laitteet', taljat: 'Taljat', kehonpaino: 'Kehonpaino' };
+const KAIKKI_LAITTEET = LAITTEET.map((l) => l.id);
+
+function omatLaitteet(p) {
+  return Array.isArray(p.laitteet) ? p.laitteet.filter((id) => KAIKKI_LAITTEET.includes(id)) : [...KAIKKI_LAITTEET];
+}
+
+function samatLaitteet(a, b) {
+  return a.length === b.length && a.every((id) => b.includes(id));
+}
+
+function tallennaLaitteet(lista) {
+  const joukko = new Set(lista);
+  tallenna({ laitteet: KAIKKI_LAITTEET.filter((id) => joukko.has(id)) });
+}
+
+// Alalaatikko: pikavalinnat (LAITEPOHJAT) ja laitteet ryhmittäin rastiruutuina. Muutos tallentuu
+// heti; laatikko päivittää omat tilansa paikallaan, jotta kohdistus säilyy.
+function avaaLaitteet() {
+  const yhteenveto = el('p', { class: 'muted small vx-gear-count', 'aria-live': 'polite' });
+  const vaihtuu = el('p', { class: 'vx-gear-swaps', 'aria-live': 'polite' });
+  const pohjaNapit = LAITEPOHJAT.map((pohja) => el('button', {
+    class: 'chip', type: 'button', 'aria-pressed': 'false',
+    onClick: () => { tallennaLaitteet(pohja.laitteet); paivita(); },
+  }, pohja.nimi));
+  const ruudut = new Map();
+  const ryhmat = LAITERYHMAT.map((ryhma) => [
+    sectionTitle(LAITERYHMA_NIMI[ryhma] || ryhma),
+    el('div', { class: 'list vx-gear-list' }, ...LAITTEET.filter((l) => l.ryhma === ryhma).map((l) => {
+      const ruutu = el('input', {
+        type: 'checkbox', class: 'vx-check-input',
+        onChange: (e) => {
+          const nyky = new Set(omatLaitteet(profiili()));
+          if (e.target.checked) nyky.add(l.id);
+          else nyky.delete(l.id);
+          tallennaLaitteet([...nyky]);
+          paivita();
+        },
+      });
+      ruudut.set(l.id, ruutu);
+      return el('label', { class: 'row vx-check' }, ruutu, el('span', { class: 'row-title' }, l.nimi));
+    })),
+  ]);
+
+  function paivita() {
+    const omat = omatLaitteet(profiili());
+    yhteenveto.textContent = `${omat.length}/${LAITTEET.length} laitetta valittu`;
+    pohjaNapit.forEach((nappi, i) => nappi.setAttribute('aria-pressed', String(samatLaitteet(omat, LAITEPOHJAT[i].laitteet))));
+    for (const [id, ruutu] of ruudut) ruutu.checked = omat.includes(id);
+    const { vaihtuu: n, eiVaihtoehtoa } = ohjelmanLaiteVaihdot(ohjelma(getState().aktiivinenOhjelmaId), omat);
+    vaihtuu.textContent = `${n} ${n === 1 ? 'liike vaihtuu' : 'liikettä vaihtuu'} nykyisessä ohjelmassa`
+      + (eiVaihtoehtoa ? ` · ${eiVaihtoehtoa} ilman vaihtoehtoa` : '');
+  }
+  paivita();
+
+  return sheet(el('div', { class: 'pick-sheet vx-gear-sheet' },
+    el('h2', { class: 'sheet-title' }, 'Salini laitteet'),
+    yhteenveto,
+    el('div', { class: 'chips vx-gear-presets', role: 'group', 'aria-label': 'Pikavalinnat' }, ...pohjaNapit),
+    el('p', { class: 'muted small vx-gear-floor' }, 'Lattia ja kehonpaino ovat aina käytettävissä.'),
+    ...ryhmat,
+    el('div', { class: 'note vx-gear-note' },
+      el('p', null, 'Ohjelma vaihtaa automaattisesti liikkeet, joiden laitteita salilta ei löydy.'),
+      vaihtuu)));
+}
 
 const KESTOT = [30, 45, 60, 75, 90];
 
@@ -356,17 +417,9 @@ export function render(root) {
   const p = profiili();
   const aktiivinen = ohjelma(s.aktiivinenOhjelmaId);
   const nimi = String(p.nimi || '').trim() || OLETUSPROFIILI.nimi;
-  const valineet = Array.isArray(p.valineet) ? p.valineet : [];
   const teemaArvo = s.asetukset ? s.asetukset.teema : null;
   const teema = teemaArvo === 'auto' ? 'auto'
     : teemaArvo === 'tumma' || teemaArvo === 'dark' ? 'tumma' : 'vaalea';
-
-  const vaihdaValine = (valine, paalla) => {
-    const nyky = new Set(valineet);
-    if (paalla) nyky.add(valine);
-    else nyky.delete(valine);
-    tallenna({ valineet: VALINEET.map((v) => v.arvo).filter((v) => nyky.has(v)) });
-  };
 
   root.append(
     el('div', { class: 'prof-top' },
@@ -383,10 +436,9 @@ export function render(root) {
       listRow({ otsikko: 'Tavoite', arvo: nimiArvolle(TAVOITTEET, p.tavoite), onClick: () => avaaTavoiteValinta() })),
     el('p', { class: 'muted small prof-goal-hint' }, `Ohjaa treenejäsi: ${tavoiteHaarukka(p.tavoite)} (demon oletus).`),
 
-    sectionTitle('Välineet'),
+    sectionTitle('Salin laitteet'),
     lista(
-      ...VALINEET.map((v) => toggleRivi(v.otsikko, valineet.includes(v.arvo), (on) => vaihdaValine(v.arvo, on), { disabled: !!p.vainKehonpaino })),
-      toggleRivi('Vain kehonpaino', !!p.vainKehonpaino, (on) => tallenna({ vainKehonpaino: on }), { kuvaus: 'Liikkeet ilman välineitä' }),
+      listRow({ otsikko: 'Salini laitteet', arvo: `${omatLaitteet(p).length}/${LAITTEET.length}`, onClick: () => avaaLaitteet() }),
       tulossaRivi('Sijainnit')),
 
     sectionTitle('Treeniprofiili'),
@@ -490,6 +542,9 @@ export function render(root) {
     sectionTitle('Valmentajan muisti'),
     muistiLista(),
     el('p', { class: 'muted small memory-note' }, MUISTI_SELITE),
+
+    sectionTitle('Tietoa'),
+    lista(listRow({ otsikko: 'Tietoa demosta ja ominaisuuksista', href: './ominaisuudet.html' })),
 
     sectionTitle('Asetukset'),
     lista(

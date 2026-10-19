@@ -171,6 +171,16 @@ export function sheet(sisaltoNode, { label } = {}) {
   let closed = false;
   const html = document.documentElement;
   const palautaKohdistus = document.activeElement;
+  const kohdistusAvain = palautaKohdistus && palautaKohdistus.dataset ? palautaKohdistus.dataset.kohdistus : null;
+
+  // Kohdistus takaisin avaajaan; jos se on piirretty uudelleen, saman avaimen uuteen elementtiin.
+  function palautaKohdistusNyt() {
+    let kohde = palautaKohdistus;
+    if (!(kohde && kohde.isConnected) && kohdistusAvain) {
+      kohde = document.querySelector(`[data-kohdistus="${CSS.escape(kohdistusAvain)}"]`);
+    }
+    if (kohde && kohde.isConnected && typeof kohde.focus === 'function') kohde.focus({ preventScroll: true });
+  }
 
   const body = el('div', { class: 'sheet-body' }, sisaltoNode);
   const panel = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', tabindex: '-1' },
@@ -206,8 +216,16 @@ export function sheet(sisaltoNode, { label } = {}) {
     syncInert();
     layer.inert = true;
     layer.classList.remove('is-open');
-    if (restore && palautaKohdistus && palautaKohdistus.isConnected && typeof palautaKohdistus.focus === 'function') {
-      palautaKohdistus.focus({ preventScroll: true });
+    if (restore) {
+      palautaKohdistusNyt();
+      // Laatikon toiminto voi piirtää avaajan uudelleen (esim. liikkeen vaihto): kohdistus siirretään
+      // saman data-kohdistus-avaimen uuteen elementtiin, kun piirto on valmis.
+      if (kohdistusAvain) {
+        setTimeout(() => {
+          const a = document.activeElement;
+          if (!a || a === document.body || !a.isConnected) palautaKohdistusNyt();
+        }, 0);
+      }
     }
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (immediate || reduce) {

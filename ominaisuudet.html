@@ -1,0 +1,2351 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="description" content="Personal SuperPower -treenisovelluksen konseptidemon ominaisuudet, säännöt ja tuotevaatimukset.">
+<meta name="theme-color" content="#26548f">
+<title>Personal SuperPower – ominaisuudet</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2326548f'/%3E%3Cpath d='M37 6 15 36h14l-4 22 24-31H34z' fill='%23c8a42a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js');</script>
+<style>
+:root {
+  color-scheme: light;
+  --sininen: #26548f;
+  --sininen-soft: rgba(38, 84, 143, 0.09);
+  --viini: #763146;
+  --viini-soft: rgba(118, 49, 70, 0.08);
+  --kulta: #c8a42a;
+  --kulta-teksti: #7a6210;
+  --kulta-soft: rgba(200, 164, 42, 0.14);
+  --tausta: #f2f5f7;
+  --pinta: #ffffff;
+  --teksti: #1e293b;
+  --himmea: #5a6880;
+  --viiva: rgba(30, 41, 59, 0.12);
+  --ok: #1e7a4f;
+  --varoitus: #c00000;
+  --palautumassa: #b5651d;
+  --varjo: 0 1px 4px rgba(30, 41, 59, 0.1);
+  --sade: 14px;
+  --fontti: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--tausta); color: var(--teksti);
+  font-family: var(--fontti); font-size: 16px; line-height: 1.6;
+  overflow-wrap: break-word;
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+a { color: var(--sininen); }
+a:hover { color: var(--viini); }
+:focus-visible { outline: 3px solid var(--kulta); outline-offset: 2px; border-radius: 4px; }
+[tabindex="-1"]:focus { outline: none; }
+h1, h2, h3, h4 { line-height: 1.25; margin: 0; }
+h2 { font-size: 1.55rem; font-weight: 800; color: var(--sininen); margin-bottom: 12px; }
+h3 { font-size: 1.15rem; font-weight: 800; }
+h4 { font-size: 1rem; font-weight: 800; margin: 18px 0 8px; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-left: 1.3em; }
+li { margin: 3px 0; }
+code { font-family: var(--mono); font-size: 0.88em; background: var(--sininen-soft); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+small, .himmea { color: var(--himmea); }
+[id] { scroll-margin-top: 16px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+html:not(.js) .vain-js { display: none !important; }
+
+/* --- Yläpalkki ja hero --- */
+.ylapalkki { background: var(--sininen); color: #fff; }
+.ylapalkki-sisa { max-width: 1180px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brandi { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+.brandi svg { width: 28px; height: 28px; flex: none; }
+.demolinkki { display: inline-flex; align-items: center; gap: 6px; background: var(--viini); color: #fff; text-decoration: none; font-weight: 800; padding: 8px 14px; border-radius: 999px; font-size: 0.95rem; }
+.demolinkki:hover { color: #fff; background: #5e2738; }
+.hero { background: var(--sininen); color: #dce4ee; padding: 18px 16px 30px; }
+.hero-sisa { max-width: 1180px; margin: 0 auto; }
+.hero h1 { color: var(--kulta); font-size: clamp(1.8rem, 6vw, 2.6rem); font-weight: 800; margin-bottom: 8px; }
+.hero .ingressi { font-size: 1.12rem; color: #fff; max-width: 760px; margin-bottom: 14px; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.88rem; }
+.hero-meta span { background: rgba(255,255,255,0.12); border-radius: 999px; padding: 4px 12px; }
+
+/* --- Ohjaimet --- */
+.ohjaimet { max-width: 1180px; margin: -18px auto 0; padding: 0 16px; position: relative; }
+.ohjaimet-kortti { background: var(--pinta); border-radius: var(--sade); box-shadow: 0 6px 20px rgba(30,41,59,0.12); padding: 14px; display: grid; gap: 12px; }
+.ohjaimet-rivi { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.ohjaimet-rivi .otsake { font-weight: 800; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--himmea); }
+.segmentti { display: inline-flex; background: var(--tausta); border-radius: 999px; padding: 3px; border: 1px solid var(--viiva); }
+.segmentti input { position: absolute; opacity: 0; pointer-events: none; }
+.segmentti label { padding: 7px 16px; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--himmea); }
+.segmentti input:checked + label { background: var(--sininen); color: #fff; }
+.segmentti input:focus-visible + label { outline: 3px solid var(--kulta); outline-offset: 1px; }
+.nakyma-kuvaus { font-size: 0.9rem; color: var(--himmea); flex: 1 1 260px; margin: 0; }
+.tarkistus-palkki { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-top: 1px solid var(--viiva); padding-top: 12px; }
+.tarkistus-palkki progress { width: 140px; height: 10px; accent-color: var(--kulta); }
+.tarkistus-palkki strong { font-variant-numeric: tabular-nums; }
+.nappi { font: inherit; font-weight: 700; font-size: 0.9rem; border: 1px solid var(--viiva); background: var(--pinta); color: var(--teksti); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 36px; }
+.nappi:hover { border-color: var(--sininen); color: var(--sininen); }
+.nappi-ensisijainen { background: var(--sininen); color: #fff; border-color: var(--sininen); }
+.nappi-ensisijainen:hover { background: #1d4373; color: #fff; }
+
+/* --- Asettelu --- */
+.asettelu { max-width: 1180px; margin: 0 auto; padding: 20px 16px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+main { min-width: 0; max-width: 860px; width: 100%; }
+.sivupalkki { min-width: 0; }
+.toc { background: var(--pinta); border-radius: var(--sade); box-shadow: var(--varjo); }
+.toc > summary { list-style: none; cursor: pointer; padding: 12px 16px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+.toc > summary::-webkit-details-marker { display: none; }
+.toc > summary::after { content: ""; width: 9px; height: 9px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin-right: 4px; }
+.toc[open] > summary::after { transform: rotate(-135deg); }
+.toc nav { padding: 0 8px 12px; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc ol ol { padding-left: 12px; margin: 2px 0 6px; border-left: 2px solid var(--viiva); margin-left: 10px; }
+.toc a { display: block; text-decoration: none; color: var(--teksti); padding: 4px 8px; border-radius: 8px; font-size: 0.93rem; line-height: 1.35; }
+.toc ol ol a { font-size: 0.87rem; color: var(--himmea); }
+.toc a:hover { background: var(--sininen-soft); color: var(--sininen); }
+.toc a.aktiivinen { background: var(--sininen); color: #fff; }
+@media (min-width: 1100px) {
+  .asettelu { grid-template-columns: 260px minmax(0, 860px); justify-content: center; }
+  .sivupalkki { position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); overflow-y: auto; }
+  html.js .toc > summary { display: none; }
+  html.js .toc nav { padding-top: 12px; }
+}
+
+/* --- Osiot ja kortit --- */
+.osio { margin: 0 0 40px; }
+.osio-numero { display: inline-block; color: var(--kulta-teksti); font-weight: 800; margin-right: 6px; }
+.kortti { background: var(--pinta); border-radius: var(--sade); box-shadow: var(--varjo); padding: 16px; margin-bottom: 14px; }
+.ruudukko { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 14px; }
+.ruudukko .kortti { margin: 0; }
+.kortti h3 { margin-bottom: 6px; color: var(--sininen); }
+.korostus { border-left: 5px solid var(--kulta); }
+.huomio { background: var(--kulta-soft); border-radius: 10px; padding: 10px 14px; font-size: 0.93rem; margin: 10px 0 14px; }
+.huomio-sininen { background: var(--sininen-soft); }
+.oletusmerkki { display: inline-block; background: var(--kulta-soft); color: var(--kulta-teksti); font-size: 0.78rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+.askeleet { counter-reset: askel; list-style: none; padding: 0; }
+.askeleet > li { counter-increment: askel; position: relative; padding-left: 40px; margin: 10px 0; }
+.askeleet > li::before { content: counter(askel); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--sininen); color: #fff; font-weight: 800; display: grid; place-items: center; font-size: 0.9rem; }
+.polku { margin-bottom: 14px; }
+.polku h3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.polku .askeleet { margin-bottom: 4px; }
+
+/* --- Moduulit --- */
+.suodatin { display: grid; gap: 10px; margin-bottom: 14px; }
+.hakukentta { display: flex; align-items: center; gap: 8px; background: var(--pinta); border: 1px solid var(--viiva); border-radius: 12px; padding: 0 12px; }
+.hakukentta:focus-within { border-color: var(--sininen); box-shadow: 0 0 0 3px var(--sininen-soft); }
+.hakukentta svg { width: 18px; height: 18px; flex: none; color: var(--himmea); }
+.hakukentta input { border: 0; outline: 0; background: transparent; font: inherit; color: inherit; padding: 10px 0; width: 100%; min-width: 0; }
+.sirut { display: flex; flex-wrap: wrap; gap: 6px; }
+.siru { font: inherit; font-size: 0.88rem; font-weight: 700; border: 1px solid var(--viiva); background: var(--pinta); color: var(--teksti); border-radius: 999px; padding: 5px 12px; cursor: pointer; min-height: 34px; }
+.siru[aria-pressed="true"] { background: var(--sininen); border-color: var(--sininen); color: #fff; }
+.suodatin-tila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.9rem; color: var(--himmea); }
+.suodatin-tila .napit { display: flex; gap: 6px; flex-wrap: wrap; }
+.ei-osumia { background: var(--pinta); border-radius: var(--sade); padding: 16px; text-align: center; color: var(--himmea); }
+.moduuli { position: relative; background: var(--pinta); border-radius: var(--sade); box-shadow: var(--varjo); margin-bottom: 12px; }
+.moduuli > details > summary { list-style: none; cursor: pointer; padding: 14px 56px 14px 16px; display: grid; gap: 4px; }
+.moduuli > details > summary::-webkit-details-marker { display: none; }
+.moduuli > details > summary::after { content: ""; position: absolute; right: 20px; top: 22px; width: 9px; height: 9px; border-right: 2px solid var(--himmea); border-bottom: 2px solid var(--himmea); transform: rotate(45deg); }
+.moduuli > details[open] > summary::after { transform: rotate(-135deg); top: 26px; }
+.moduuli-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--himmea); padding-right: 36px; }
+.moduuli h3 { color: var(--teksti); padding-right: 36px; }
+.moduuli-tiivis { color: var(--himmea); font-size: 0.93rem; }
+.hk-tila { font-variant-numeric: tabular-nums; background: var(--kulta-soft); color: var(--kulta-teksti); border-radius: 999px; padding: 1px 8px; letter-spacing: 0; text-transform: none; }
+.hk-tila.valmis { background: var(--ok); color: #fff; }
+.kopioi { position: absolute; top: 10px; right: 46px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--viiva); background: var(--pinta); color: var(--sininen); display: grid; place-items: center; cursor: pointer; }
+.kopioi:hover { background: var(--sininen-soft); }
+.kopioi svg { width: 17px; height: 17px; }
+.moduuli-runko { padding: 0 16px 16px; border-top: 1px solid var(--viiva); }
+.moduuli-toiminnot { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 2px; }
+.kokeile { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; text-decoration: none; background: var(--sininen-soft); padding: 6px 12px; border-radius: 999px; font-size: 0.9rem; }
+.osa { margin-top: 14px; padding: 12px 14px; border-radius: 12px; }
+.osa h4 { margin: 0 0 8px; }
+.osa ul, .osa ol { margin-bottom: 0; }
+.osa-demo { background: var(--sininen-soft); }
+.osa-tuote { background: var(--viini-soft); }
+.osa-hk { background: var(--kulta-soft); }
+.lappu { display: inline-block; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 10px; border-radius: 6px; }
+.lappu-demo { background: var(--sininen); color: #fff; }
+.lappu-tuote { background: var(--viini); color: #fff; }
+.lappu-hk { background: var(--kulta); color: var(--teksti); }
+.hk-lista { padding-left: 1.4em; }
+html.js .hk-lista { list-style: none; padding-left: 0; }
+.hk-lista li { margin: 6px 0; }
+.hk-lista li label { display: inline; cursor: pointer; }
+.hk-lista input[type="checkbox"] { width: 18px; height: 18px; margin: 0 8px 0 0; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+.hk-lista li.tehty label { color: var(--himmea); text-decoration: line-through; text-decoration-color: rgba(30,41,59,0.35); }
+mark.osuma { background: #f7e08a; color: inherit; border-radius: 3px; padding: 0 1px; }
+
+/* --- Taulukot ja kaavat --- */
+.taulukko { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 14px; background: var(--pinta); border-radius: 12px; box-shadow: var(--varjo); }
+.taulukko:focus-visible { outline: 3px solid var(--kulta); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--viiva); }
+thead th { background: var(--sininen); color: #fff; font-weight: 700; white-space: nowrap; }
+thead th:first-child { border-top-left-radius: 12px; }
+thead th:last-child { border-top-right-radius: 12px; }
+tbody tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.leveä table { min-width: 620px; }
+.kaava { font-family: var(--mono); font-size: clamp(0.8rem, 2.6vw, 0.9rem); background: var(--pinta); border-left: 4px solid var(--sininen); border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.saanto { margin-bottom: 30px; }
+.saanto > h3 { color: var(--sininen); margin-bottom: 8px; }
+
+/* --- Laskurit --- */
+.laskuri { background: var(--pinta); border-radius: var(--sade); box-shadow: var(--varjo); border-top: 4px solid var(--kulta); padding: 14px 16px; margin: 0 0 16px; }
+.laskuri-otsikko { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin-bottom: 10px; }
+.laskuri-otsikko h4 { margin: 0; }
+.laskuri-ui { display: none; }
+html.js .laskuri-ui { display: block; }
+.kentat { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 12px; }
+.kentta { display: grid; gap: 3px; font-size: 0.86rem; font-weight: 700; color: var(--himmea); }
+.kentta input:not([type="checkbox"]):not([type="range"]), .kentta select { font: inherit; font-weight: 600; font-size: 0.98rem; color: var(--teksti); background: var(--tausta); border: 1px solid var(--viiva); border-radius: 10px; padding: 7px 10px; width: 100%; min-width: 0; }
+.kentta input[type="range"] { width: 100%; accent-color: var(--sininen); }
+.valinta { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; font-weight: 600; color: var(--teksti); }
+.valinta input { width: 18px; height: 18px; accent-color: var(--sininen); }
+.tulos { display: block; background: var(--sininen-soft); border-radius: 12px; padding: 12px 14px; }
+.tulos-iso { font-size: 1.45rem; font-weight: 800; color: var(--sininen); line-height: 1.2; }
+.saantonimi { display: inline-block; background: var(--sininen); color: #fff; font-weight: 800; font-size: 0.8rem; padding: 2px 10px; border-radius: 999px; margin: 6px 0; }
+.tilamerkki { display: inline-block; font-weight: 800; font-size: 0.85rem; padding: 2px 10px; border-radius: 999px; color: #fff; }
+.tila-vasynyt { background: var(--varoitus); }
+.tila-palautumassa { background: var(--palautumassa); }
+.tila-palautunut { background: var(--ok); }
+.laskuri-esim { font-size: 0.9rem; color: var(--himmea); margin: 10px 0 0; }
+html.js .laskuri-esim { display: none; }
+.mittari { display: flex; gap: 4px; margin: 8px 0 4px; max-width: 360px; }
+.mittari span { flex: 1; height: 18px; background: var(--teksti); transform: skewX(-14deg); border-radius: 2px; position: relative; overflow: hidden; }
+.mittari span i { position: absolute; inset: 0 auto 0 0; background: var(--kulta); }
+.palkit { display: grid; gap: 6px; margin-top: 6px; }
+.palkki-rivi { display: grid; grid-template-columns: minmax(70px, auto) 1fr auto; align-items: center; gap: 8px; font-size: 0.9rem; }
+.palkki { height: 12px; background: rgba(30,41,59,0.1); border-radius: 999px; overflow: hidden; }
+.palkki i { display: block; height: 100%; background: var(--sininen); border-radius: 999px; }
+.palkki-rivi.sina .palkki i { background: var(--viini); }
+.vertailu { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.vertailu h5 { margin: 0 0 4px; font-size: 0.9rem; }
+.henkilo { border: 1px solid var(--viiva); border-radius: 12px; padding: 10px 12px; }
+.henkilo legend { font-weight: 800; padding: 0 4px; }
+
+/* --- Toast ja alalinkit --- */
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--teksti); color: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.25); z-index: 20; max-width: calc(100vw - 32px); }
+.toast[hidden] { display: none; }
+.ylos { position: fixed; right: 16px; bottom: 16px; z-index: 10; background: var(--sininen); color: #fff; border-radius: 999px; padding: 9px 14px; text-decoration: none; font-weight: 800; font-size: 0.88rem; box-shadow: 0 6px 18px rgba(30,41,59,0.25); }
+.ylos:hover { color: #fff; }
+@media (min-width: 1100px) { .ylos { display: none; } }
+footer.alapalkki { background: var(--teksti); color: #dce4ee; padding: 24px 16px 70px; }
+footer.alapalkki .sisa { max-width: 1180px; margin: 0 auto; display: grid; gap: 10px; }
+footer.alapalkki a.demolinkki { justify-self: start; }
+
+/* --- Näkymät --- */
+@media screen {
+  html.nakyma-esittely .vain-speksi { display: none !important; }
+  html.nakyma-speksi .vain-esittely { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+/* --- Tulostus --- */
+@media print {
+  @page { margin: 16mm 14mm; }
+  body { background: #fff; font-size: 10.5pt; line-height: 1.45; }
+  .ylapalkki, .ohjaimet, .sivupalkki, .ylos, .toast, .kopioi, .suodatin, .moduuli-toiminnot, .laskuri-ui, .vain-esittely, .ei-osumia { display: none !important; }
+  html.js .laskuri-esim { display: block; }
+  .hero { background: #fff; color: var(--teksti); padding: 0 0 10px; border-bottom: 2px solid var(--sininen); }
+  .hero h1 { color: var(--sininen); }
+  .hero .ingressi { color: var(--teksti); }
+  .hero-meta span { background: none; border: 1px solid var(--viiva); }
+  .asettelu { display: block; padding: 10px 0; max-width: none; }
+  main { max-width: none; }
+  .kortti, .moduuli, .laskuri, .taulukko { box-shadow: none; border: 1px solid #ccd3dc; }
+  .moduuli, .laskuri, .kortti, tr, .kaava { break-inside: avoid; }
+  .moduuli[hidden] { display: block !important; }
+  h2, h3, h4 { break-after: avoid; }
+  .taulukko { overflow: visible; }
+  .leveä table { min-width: 0; }
+  thead th { white-space: normal; }
+  .moduuli > details > summary::after { display: none; }
+  a { color: var(--teksti); text-decoration: none; }
+  footer.alapalkki { background: #fff; color: var(--himmea); padding: 10px 0; border-top: 1px solid var(--viiva); }
+  footer.alapalkki .demolinkki { display: none; }
+  mark.osuma { background: none; }
+  .osa, .huomio, .tulos, .lappu, thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="ylapalkki">
+  <div class="ylapalkki-sisa">
+    <div class="brandi">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d4373"/><path d="M37 6 15 36h14l-4 22 24-31H34z" fill="#c8a42a"/></svg>
+      <span>Personal SuperPower</span>
+    </div>
+    <a class="demolinkki" href="./">Avaa demo <span aria-hidden="true">→</span></a>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="hero-sisa">
+    <h1>Personal SuperPower: ominaisuudet</h1>
+    <p class="ingressi">Treenisovellus salilla kävijöille. Sovellus kertoo jokaisessa sarjassa, mitä seuraavaksi kannattaa nostaa ja miksi, ja tekoälyvalmentaja sovittaa treenin elämän muutoksiin.</p>
+    <div class="hero-meta">
+      <span>Konseptidemo, versio 19.10.2026</span>
+      <span>Demossa data tallentuu vain omaan selaimeesi</span>
+      <span>Konseptidokumentti, ei hakukoneissa</span>
+    </div>
+  </div>
+</header>
+
+<div class="ohjaimet vain-js">
+  <div class="ohjaimet-kortti">
+    <div class="ohjaimet-rivi">
+      <span class="otsake" id="nakyma-otsake">Lukijanäkymä</span>
+      <div class="segmentti" role="radiogroup" aria-labelledby="nakyma-otsake">
+        <input type="radio" name="nakyma" id="nakyma-esittely" value="esittely" checked>
+        <label for="nakyma-esittely">Esittely</label>
+        <input type="radio" name="nakyma" id="nakyma-speksi" value="speksi">
+        <label for="nakyma-speksi">Toteutusspeksi</label>
+      </div>
+      <p class="nakyma-kuvaus vain-esittely">Lyhyt esittely: mitä demossa on ja mitä idea mahdollistaa.</p>
+      <p class="nakyma-kuvaus vain-speksi">Koko speksi toteuttajalle: vaatimukset, hyväksymiskriteerit, säännöt, tietomalli ja reunaehdot.</p>
+    </div>
+    <div class="tarkistus-palkki vain-speksi" aria-label="Hyväksymiskriteerien tarkistuslista">
+      <span class="otsake">Hyväksymiskriteerit</span>
+      <progress id="hk-progress" max="1" value="0" aria-label="Tarkistettujen kriteerien osuus"></progress>
+      <strong id="hk-yhteensa" aria-live="polite">0/0</strong>
+      <button type="button" class="nappi" id="hk-vie">Vie tarkistuslista</button>
+      <button type="button" class="nappi" id="hk-tyhjenna">Tyhjennä</button>
+    </div>
+  </div>
+</div>
+
+<div class="asettelu">
+  <aside class="sivupalkki" aria-label="Sisällysluettelo">
+    <details class="toc" id="toc" open>
+      <summary>Sisällys</summary>
+      <nav aria-label="Sisällys">
+        <ol>
+          <li><a href="#tiivistelma">1. Tiivistelmä</a></li>
+          <li><a href="#visio">2. Visio ja liiketoimintamalli</a></li>
+          <li><a href="#kokeile">3. Näin kokeilet demoa</a></li>
+          <li><a href="#moduulit">4. Ominaisuudet moduuleittain</a>
+            <ol>
+              <li><a href="#m-aloitus">Aloitusohjaus ja profiili</a></li>
+              <li><a href="#m-ohjelmat">Ohjelmat ja päivän treeni</a></li>
+              <li><a href="#m-kirjaus">Treenin kirjaus</a></li>
+              <li><a href="#m-progressio">Progressioehdotukset</a></li>
+              <li><a href="#m-vaihto">Liikkeen vaihto</a></li>
+              <li><a href="#m-yhteenveto">Yhteenveto ja oivallukset</a></li>
+              <li><a href="#m-treeniscore">Treeniscore ja voima</a></li>
+              <li><a href="#m-palautuminen">Palautuminen ja kehokartta</a></li>
+              <li><a href="#m-viikkotavoitteet">Viikon sarjatavoitteet</a></li>
+              <li><a href="#m-historia">Historia ja merkkipaalut</a></li>
+              <li><a href="#m-liikekirjasto">Liikekirjasto ja videot</a></li>
+              <li><a href="#m-valmentaja">Tekoälyvalmentaja ja muisti</a></li>
+              <li><a href="#m-yhteiso">Yhteisö</a></li>
+              <li><a href="#m-ulkoasu">Ulkoasu ja teemat</a></li>
+            </ol>
+          </li>
+          <li class="vain-speksi"><a href="#saannot">5. Säännöt ja laskentakaavat</a>
+            <ol>
+              <li><a href="#s-progressio">Progressio</a></li>
+              <li><a href="#s-e1rm">e1RM ja jumiutuminen</a></li>
+              <li><a href="#s-tavoitteet">Tavoitteiden haarukat</a></li>
+              <li><a href="#s-treeniscore">Treeniscore</a></li>
+              <li><a href="#s-palautuminen">Palautuminen</a></li>
+              <li><a href="#s-viikko">Viikkotavoitteet</a></li>
+              <li><a href="#s-oivallukset">Oivallukset</a></li>
+              <li><a href="#s-haasteet">Haasteet ja tasot</a></li>
+              <li><a href="#s-vaihto">Vaihtoehtojen pisteytys</a></li>
+            </ol>
+          </li>
+          <li class="vain-speksi"><a href="#tietomalli">6. Tietomalli</a></li>
+          <li class="vain-speksi"><a href="#tekoaly">7. Tekoäly tuotteessa</a></li>
+          <li class="vain-speksi"><a href="#integraatiot">8. Integraatiot</a></li>
+          <li class="vain-speksi"><a href="#ei-toiminnalliset">9. Ei-toiminnalliset vaatimukset</a></li>
+          <li class="vain-speksi"><a href="#avoimet">10. Avoimet kysymykset</a></li>
+          <li><a href="#versiot">11. Versiohistoria</a></li>
+        </ol>
+      </nav>
+    </details>
+  </aside>
+
+  <main id="sisalto">
+
+<!-- ============================ 1 ============================ -->
+<section class="osio" id="tiivistelma" data-toc>
+  <h2><span class="osio-numero">1</span>Tiivistelmä</h2>
+  <p><strong>Personal SuperPower</strong> on kuluttajille suunnattu saliharjoittelun sovellus. Ydinlupaus on <strong>tekoälyn personoima progressio, joka perustuu tutkittuihin harjoitteluperiaatteisiin</strong>, sekä <strong>valmentaja, joka mukautuu elämään</strong>. Sovellus ehdottaa jokaiseen sarjaan painon ja toistot ja kertoo perustelun. Valmentaja muistaa reissut, lajit ja vaivat ja muuttaa viikon suunnitelmaa, kun käyttäjä hyväksyy muutoksen.</p>
+  <div class="ruudukko">
+    <div class="kortti">
+      <h3>Kenelle</h3>
+      <p>Salilla kävijöille aloittelijasta kokeneeseen. Sovellus sopii erityisesti niille, jotka haluavat kehittyä ilman henkilökohtaista valmentajaa mutta eivät halua arvailla painoja.</p>
+    </div>
+    <div class="kortti">
+      <h3>Miksi</h3>
+      <p>Moni treenaa samoilla painoilla kuukausia tai luopuu, kun arki muuttuu. Personal SuperPower tekee kehityksestä näkyvää: perustellut ehdotukset, palautuminen, viikon sarjatavoitteet ja yhteisön tuki ovat samassa sovelluksessa.</p>
+    </div>
+    <div class="kortti">
+      <h3>Mitä demo näyttää</h3>
+      <p>Koko kulun kodista treeniin: sarjojen kirjaus, ehdotuksen hyväksyminen, treenin yhteenveto ja oivallukset, Treeniscore, palautuminen, valmentajachat muisteineen sekä yhteisön haasteet.</p>
+    </div>
+  </div>
+  <div class="huomio">
+    <strong>Konseptidemo, versio 19.10.2026.</strong> Demo toimii puhelimen selaimessa ilman käyttäjätiliä. Data on esimerkkidataa, ja kaikki tallentuu vain käyttäjän omaan selaimeen. Mitään ei lähetetä palvelimelle. Tekoälyvalmentaja on demossa käsikirjoitettu mockup.
+    <br><a href="./"><strong>Avaa demo →</strong></a>
+  </div>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section class="osio" id="visio" data-toc>
+  <h2><span class="osio-numero">2</span>Visio ja liiketoimintamalli</h2>
+  <p>Visio on, että jokaisella salilla kävijällä olisi taskussaan valmentaja, joka tuntee hänen historiansa, tavoitteensa ja arkensa ja joka osaa perustella jokaisen ehdotuksensa. Tuote rakentuu kolmen asiakasryhmän varaan.</p>
+  <div class="ruudukko">
+    <div class="kortti korostus">
+      <h3>Kuluttajat</h3>
+      <p>Kuluttajatilaus (kuukausi- tai vuosihinta). Maksuton perustaso, ja tekoälyvalmentaja, personoitu progressio ja syvempi analytiikka sisältyvät tilaukseen. Hinnoittelu on avoin kysymys.</p>
+    </div>
+    <div class="kortti korostus">
+      <h3>Salit (B2B)</h3>
+      <p>Salit voivat järjestää omia jäsenhaasteitaan ja antaa salin laitelistan valmiiksi sovellukseen, jolloin ohjelmat vastaavat heti salin laitteita. Salit saavat jäsenaktivointia ja koottua tietoa osallistumisesta. Henkilötason dataa ei luovuteta ilman jäsenen suostumusta.</p>
+    </div>
+    <div class="kortti korostus">
+      <h3>Kumppanit</h3>
+      <p>Urheiluvälineiden, ravinnon ja palveluiden kumppanit voivat sponsoroida haasteita. Haasteen suorittanut käyttäjä saa edun, esimerkiksi alennuskoodin. Kumppani näkee haasteen tavoittavuuden koottuna.</p>
+    </div>
+  </div>
+  <h3>Mikä erottaa tuotteen vastaavista sovelluksista</h3>
+  <p>Vastaavat markkinoilla olevat sovellukset keskittyvät usein yhteen asiaan, kuten kirjaukseen, valmiisiin ohjelmiin tai sosiaalisiin haasteisiin. Personal SuperPower yhdistää ne yhteen datamalliin ja tekee päättelystä näkyvää.</p>
+  <ul>
+    <li><strong>Jokainen ehdotus on perusteltu.</strong> Miksi?-teksti nimeää periaatteen (kaksoisprogressio, RIR-autoregulaatio, kevennys, palautuminen) ja luvut, joihin ehdotus perustuu.</li>
+    <li><strong>Valmentaja mukautuu elämään.</strong> Reissut, lajit, kiire ja kivut muuttavat viikon suunnitelmaa ja sarjatavoitteita, mutta vasta käyttäjän hyväksynnällä.</li>
+    <li><strong>Muisti on läpinäkyvä.</strong> Käyttäjä näkee jokaisen asian, jonka valmentaja muistaa, ja voi poistaa sen.</li>
+    <li><strong>Reilut haasteet.</strong> Tasapainotettu tulostaulukko vertaa jokaista omaan lähtötasoonsa, joten aloittelija ja kokenut voivat kilpailla keskenään.</li>
+    <li><strong>Oma sali huomioidaan.</strong> Laitelista ja liikkeen vaihto yhdellä pyyhkäisyllä. Sovellus ehdottaa sopivan korvaavan liikkeen ja perustelee valinnan.</li>
+    <li><strong>Kokonaiskuva.</strong> Progressio, palautuminen, viikon sarjatavoitteet, Treeniscore ja yhteisö perustuvat samaan kirjausdataan, joten ne tukevat toisiaan.</li>
+  </ul>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section class="osio" id="kokeile" data-toc>
+  <h2><span class="osio-numero">3</span>Näin kokeilet demoa</h2>
+  <p>Demo toimii parhaiten puhelimella. Jokainen polku vie 1–3 minuuttia. Aloita polusta 1, jos avaat demon ensimmäistä kertaa.</p>
+
+  <div class="kortti polku">
+    <h3>1. Ensimmäinen käynnistys</h3>
+    <ol class="askeleet">
+      <li>Avaa <a href="./">demo</a>. Aloitusohjaus kysyy neljä asiaa omilla näytöillään: tavoite, kokemus, treenit viikossa ja kehonpaino.</li>
+      <li>Lopuksi näet suositellun ohjelman perusteluineen. Paina <em>Aloita</em>.</li>
+      <li>Vaihtoehtoisesti valitse <em>Kokeile esimerkkiprofiililla</em> (lihasmassa, keskitaso, 3 treeniä viikossa, 80 kg).</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>2. Treeni ja progressioehdotukset</h3>
+    <ol class="askeleet">
+      <li>Kodissa näkyy <em>Tämän päivän treeni</em>. Paina <em>Aloita treeni</em>.</li>
+      <li>Tee lämmittelysarjat tai ohita ne. Kirjaa ensimmäinen työsarja: paino, toistot ja RIR eli montako toistoa jäi varalle.</li>
+      <li>Ehdotuskortti näyttää seuraavan sarjan. Paina <em>Miksi?</em> nähdäksesi perustelun ja <em>Hyväksy</em> täyttääksesi kentät.</li>
+      <li>Kokeile kirjata sarja RIR 0:lla ja sitten RIR 4+:lla ja katso, miten ehdotus muuttuu.</li>
+      <li>Halutessasi kytke palautusajastin päälle treeninäkymästä. Se on valinnainen ja oletuksena pois.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>3. Treenin yhteenveto</h3>
+    <ol class="askeleet">
+      <li>Paina <em>Lopeta treeni</em>. Näet otsikon <em>Hyvä treeni!</em>, keston, volyymin ja kalorit.</li>
+      <li>Lue kortit <em>Edistyit</em>, <em>Kaipaa huomiota</em> ja <em>Seuraavaksi</em> sekä viikkotavoitteen muutos.</li>
+      <li>Avaa <a href="./#/historia">Historia</a>: uusi treeni näkyy aikajanalla ja kalenterissa.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>4. Valmentaja ja muisti (padel-reissu)</h3>
+    <ol class="askeleet">
+      <li>Avaa <a href="./#/valmentaja">Valmentaja</a> ja napauta sirua <em>Ensi viikolla olen reissussa ja pelaan 3 kertaa padelia</em>.</li>
+      <li>Valmentaja tallentaa muistin (muistisiru) ja ehdottaa viikkosuunnitelmaa. Paina <em>Ota käyttöön</em>.</li>
+      <li>Katso Kodin viikkonauha ja <a href="./#/tavoitteet">Tavoitteet</a>, joissa jalkojen sarjatavoite on kevennetty (merkintä <em>Muokattu viikko</em>).</li>
+      <li>Aloita uusi keskustelu ja kysy <em>Mitä teen tänään?</em>. Valmentaja muistaa reissun ja padelin.</li>
+      <li>Profiilin <em>Valmentajan muisti</em> näyttää kaiken, mitä valmentaja muistaa. Voit poistaa muistin.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>5. Yhteisö ja tasapainotus</h3>
+    <ol class="askeleet">
+      <li>Avaa alanavigaatiosta <a href="./#/yhteiso">Yhteisö</a>. Haasteet-välilehden ylimpänä ovat tasosi ja pisteesi, ja niiden alla omat haasteet, kaverihaasteet, salihaaste ja kumppanihaaste.</li>
+      <li>Avaa <a href="./#/yhteiso/haaste/kaveri-volyymi-2vk">Kahden viikon volyymikisa</a>. Vaihda tulostaulukon valitsin tilojen <em>Raaka</em> ja <em>Tasapainotettu</em> välillä ja katso, miten järjestys vaihtuu. Kokenut kaveri johtaa raakana, mutta tasapainotettuna sinä olet kärjessä tai sen tuntumassa. <em>Miksi?</em> selittää tasapainotuksen.</li>
+      <li>Palaa Haasteet-välilehdelle ja paina <em>Luo kaverihaaste</em>. Valitse mittari, kesto (1, 2 tai 4 viikkoa) ja kutsuttavat kaverit, jätä tasapainotus päälle ja paina <em>Luo haaste</em>.</li>
+      <li>Avaa kumppanihaaste <em>Kumppani X: 7 treeniä 2 viikossa</em>. Siinä on 5/7 treeniä tehtynä. Koodi on lukittu. Kun kirjaat vielä kaksi treeniä, <em>Paljasta koodi</em> näyttää koodin <code>PSP-DEMO-25</code>, ja sen voi kopioida.</li>
+      <li>Kokeile salihaastetta (salin nimi tulee profiilista) ja <em>Liity</em>- ja <em>Poistu</em>-painikkeita.</li>
+      <li>Avaa <a href="./#/yhteiso?tab=merkit">Merkit</a>-välilehti (taso, pisteiden erittely, ansaitut ja saatavilla olevat merkit, pistetaulukko) ja <a href="./#/yhteiso?tab=kaverit">Kaverit</a>-välilehti, jossa voit tsempata kavereiden tapahtumia.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>6. Liikkeen vaihto</h3>
+    <ol class="askeleet">
+      <li>Kodin <em>Tämän päivän treeni</em> -listassa pyyhkäise liikeriviä vasemmalle tai paina rivin ⇄-painiketta.</li>
+      <li>Valitse syy: <em>Laite puuttuu</em>, <em>Laite varattu</em>, <em>Kipu tai loukkaantuminen</em> (ja kipualue) tai <em>Muu</em>.</li>
+      <li>Valitse vaihtoehto. Jokaisella on perustelu, <em>▶ Näytä liike</em> ja <em>Valitse</em>. <em>Laite puuttuu</em> kysyy vielä, poistetaanko laite salisi laitteista. <em>Kipu</em> tallentaa valmentajan muistiin 14 päivän muistin, joka näkyy Profiilin kohdassa <em>Valmentajan muisti</em>.</li>
+      <li>Vaihdetulla rivillä näkyy merkki, esimerkiksi <em>Vaihdettu · ei kyykkytelinettä</em>, ja <em>Palauta</em> palauttaa alkuperäisen liikkeen.</li>
+      <li>Avaa <a href="./#/profiili">Profiili</a> → <em>Salini laitteet · 19/19</em> ja valitse pikavalinta <em>Hotellisali</em> tai <em>Kotisali</em>. Kodissa liikkeet, joiden laitteita ei ole, on vaihdettu automaattisesti (<em>Vaihdettu automaattisesti · …</em>). Jos sopivaa vaihtoehtoa ei ole, liike ohitetaan tältä päivältä.</li>
+      <li>Aloita treeni. Korvaavan liikkeen ensimmäinen painoehdotus on johdettu alkuperäisen liikkeen voimasta, ja <em>Miksi?</em> kertoo laskun. Palauta lopuksi pikavalinta <em>Täysi kuntosali</em>.</li>
+    </ol>
+  </div>
+
+  <div class="ruudukko">
+    <div class="kortti">
+      <h3>Lisää kotinäyttöön</h3>
+      <p><strong>iPhone (Safari):</strong> Jaa-painike → <em>Lisää Koti-valikkoon</em>.<br><strong>Android (Chrome):</strong> valikko ⋮ → <em>Lisää aloitusnäytölle</em>.</p>
+      <p class="himmea">Demo aukeaa silloin kuin sovellus, ilman selaimen osoiteriviä.</p>
+    </div>
+    <div class="kortti">
+      <h3>Nollaa demo</h3>
+      <p><a href="./#/profiili">Profiili</a> → <em>Asetukset</em> → <em>Nollaa demo</em>. Kaikki kirjaukset, muistit ja asetukset palaavat alkutilaan, ja aloitusohjaus alkaa alusta.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section class="osio" id="moduulit" data-toc>
+  <h2><span class="osio-numero">4</span>Ominaisuudet moduuleittain</h2>
+  <p class="vain-esittely">Jokaisessa kortissa kerrotaan, mitä demossa voi kokeilla. <span class="vain-js">Toteutusspeksi-näkymä näyttää lisäksi tuotteen vaatimukset ja hyväksymiskriteerit.</span></p>
+  <p class="vain-speksi">Jokaisessa moduulissa on kolme osaa: <span class="lappu lappu-demo">Demossa</span> kertoo, mitä konseptidemossa on (osa on mockupia), <span class="lappu lappu-tuote">Tuotteessa</span> kertoo oikean tuotteen vaatimukset ja <span class="lappu lappu-hk">Hyväksymiskriteerit</span> ovat testattavia lauseita. Ristiriitatilanteessa Tuotteessa-osio on sitova, ja demo havainnollistaa sitä.</p>
+
+  <div class="suodatin vain-js" role="search">
+    <label class="hakukentta" for="haku">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <span class="sr-only">Hae moduuleista</span>
+      <input type="search" id="haku" placeholder="Hae moduuleista, esim. RIR, padel tai tasapainotus" autocomplete="off">
+    </label>
+    <div class="sirut" role="group" aria-label="Suodata kategorian mukaan">
+      <button type="button" class="siru" data-kat="kaikki" aria-pressed="true">Kaikki</button>
+      <button type="button" class="siru" data-kat="treeni" aria-pressed="false">Treeni</button>
+      <button type="button" class="siru" data-kat="edistyminen" aria-pressed="false">Edistyminen</button>
+      <button type="button" class="siru" data-kat="tekoaly" aria-pressed="false">Tekoäly</button>
+      <button type="button" class="siru" data-kat="yhteiso" aria-pressed="false">Yhteisö</button>
+      <button type="button" class="siru" data-kat="profiili" aria-pressed="false">Profiili</button>
+    </div>
+    <div class="suodatin-tila">
+      <span id="haku-tulos" aria-live="polite">14 moduulia</span>
+      <span class="napit">
+        <button type="button" class="nappi" id="avaa-kaikki">Avaa kaikki</button>
+        <button type="button" class="nappi" id="sulje-kaikki">Sulje kaikki</button>
+      </span>
+    </div>
+  </div>
+  <p class="ei-osumia" id="ei-osumia" hidden>Ei osumia. Kokeile toista hakusanaa tai valitse <em>Kaikki</em>.</p>
+
+  <!-- M1 -->
+  <article class="moduuli" id="m-aloitus" data-kat="profiili" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Profiili <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Aloitusohjaus ja profiili</h3>
+        <span class="moduuli-tiivis">Tavoite, kokemus, treenimäärä, kesto ja salin laitteet ohjaavat kaikkea muuta.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/profiili">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Ensimmäisellä käynnistyksellä aloitusohjaus kysyy neljä asiaa omilla näytöillään: tavoite, kokemus, treenit viikossa ja kehonpaino. Lopuksi näytetään suositeltu ohjelma perusteluineen (2–3 treeniä: koko kroppa, 4: ylä/ala, 5–6: työntö/veto/jalat).</li>
+            <li>Ohjauksen voi ohittaa esimerkkiprofiililla (lihasmassa, keskitaso, 3 treeniä viikossa, 80 kg).</li>
+            <li>Profiilissa ylimpänä on korostettu Tavoite-rivi ja oma valintanäkymä. Sen alla ovat salin laitteet, treeniprofiili (kokemus, treenit viikossa, kesto 30–90 min, jako), treenin muoto, valmentajan muisti, Tietoa (linkki tälle sivulle) ja asetukset (kg/lb, lämmittelysarjat, palautusajastin, teema, Nollaa demo). Muutos tallentuu heti.</li>
+            <li>Salin laitteet: rivi <em>Salini laitteet · N/19</em> avaa alalaatikon, jossa on pikavalinnat (täysi kuntosali, kotisali, hotellisali, vain kehonpaino) ja 19 laitetta ryhmittäin rastiruutuina. Alareunassa lukee, että ohjelma vaihtaa automaattisesti liikkeet, joiden laitteita salilta ei löydy.</li>
+            <li>Vammat ja rajoitteet, useampi sali, venyttely ja kardio näkyvät <em>tulossa</em>-riveinä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Aloitusohjaus kysyy tavoitteen, kokemuksen, treenit viikossa, treenin keston, salin laitteet (pikavalinta ja muokkaus) sekä kehonpainon. Nimi on valinnainen. Ohjaus kestää alle kaksi minuuttia, ja sen voi keskeyttää ja jatkaa.</li>
+            <li>Tavoite määrää toistohaarukan, sarjamäärän, palautusajan ja RIR-tavoitteen (ks. <a href="#s-tavoitteet">tavoitteiden haarukat</a>). Kokemus määrää aloituspainon ja painonnoston askeleen.</li>
+            <li>Kesto rajoittaa sarjamäärää niin, että arvioitu treenin kesto mahtuu valittuun aikaan.</li>
+            <li>Laitelista: 19 laitetta neljässä ryhmässä (vapaat painot, laitteet, taljat, kehonpainovälineet). Lattia ja kehonpaino ovat aina käytettävissä. Käyttäjällä voi olla useampi sali, ja salin laitelistan voi saada salilta (B2B).</li>
+            <li>Yksikkö (kg/lb) vaikuttaa vain näyttöön. Data tallennetaan aina kiloina.</li>
+            <li>Profiilin muutokset vaikuttavat heti seuraavaan treeniin ja synkronoituvat käyttäjän laitteiden välillä.</li>
+            <li>Vammat ja rajoitteet tallennetaan profiiliin ja valmentajan muistiin, ja ne ohjaavat liikevalintaa (ks. <a href="#m-vaihto">liikkeen vaihto</a>).</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Uusi käyttäjä ohjataan aloitusohjaukseen, eikä kotinäkymä avaudu ennen kuin ohjaus on tehty tai ohitettu.</li>
+            <li>Kun treenejä viikossa on 4, suositeltu ohjelma on ylä/ala-jako, ja suosituksen perustelu näytetään.</li>
+            <li>Kun tavoite vaihdetaan lihasmassasta voimaan, seuraavan treenin toistohaarukka on 3–6 ja palautus 180 s.</li>
+            <li>Kun kesto lasketaan 60 minuutista 30 minuuttiin, seuraavan treenin arvioitu kesto on enintään 30 minuuttia.</li>
+            <li>Kun salin laitteista poistetaan laite, mikään ohjelman liike ei vaadi kyseistä laitetta.</li>
+            <li>Kun yksikkö vaihdetaan lb:ksi, painot näytetään paunoina, mutta tallennettu arvo pysyy kiloina.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-aloitus" aria-label="Kopioi linkki: Aloitusohjaus ja profiili"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M2 -->
+  <article class="moduuli" id="m-ohjelmat" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Ohjelmat ja päivän treeni</h3>
+        <span class="moduuli-tiivis">Valmis ohjelma, josta Koti näyttää aina seuraavan päivän.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/ohjelmat">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Kolme ohjelmaa: Koko kroppa 3x/vko, Ylä/ala 4x/vko ja Työntö/veto/jalat 6x/vko. Ohjelmat avataan Kodin <em>Ohjelmasi</em>-kortista tai Profiilista, ja <em>Ota käyttöön</em> vaihtaa aktiivisen ohjelman.</li>
+            <li>Kodin <em>Tämän päivän treeni</em> on aktiivisen ohjelman seuraava päivä. Se näyttää liikkeet, sarjat, toistot ja arvioidun keston.</li>
+            <li>Ohjelman sarjat, toistot ja palautus ovat oletuksia, ja tavoitteen haarukat ohittavat ne treeniä aloitettaessa.</li>
+            <li>Keston sovitus pudottaa sarjoja, kunnes arvioitu kesto mahtuu valittuun aikaan (arvio: 40 s per sarja + palautus + liikkeen vaihto).</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Ohjelmakirjasto, jonka ohjelmat asiantuntija on tarkistanut, sekä tekoälyn profiilista kokoama ohjelma. Tekoälyn ohjelma noudattaa samoja rajoja (haarukat, viikkovolyymi, laitteet).</li>
+            <li>Seuraava päivä määräytyy kierrosta: viimeksi tehdyn ohjelmapäivän jälkeinen päivä.</li>
+            <li>Kodin ja treenin aloituksen liikelista lasketaan samalla funktiolla, joten ne näyttävät aina samat liikkeet, sarjat ja keston.</li>
+            <li>Ohjelma huomioi salin laitteet, voimassa olevat kipumuistit ja hyväksytyn viikkosuunnitelman, ja liikkeet vaihdetaan tarvittaessa automaattisesti.</li>
+            <li>Käyttäjä voi muokata ohjelmaa: lisätä, poistaa ja järjestää liikkeitä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Kodin päivän treeni ja treenin aloitusnäkymä näyttävät samat liikkeet, sarjamäärät ja arvioidun keston.</li>
+            <li>Kun viimeisin treeni oli ohjelman Päivä A, Koti ehdottaa Päivää B.</li>
+            <li><em>Ota käyttöön</em> vaihtaa aktiivisen ohjelman, ja Koti päivittyy heti.</li>
+            <li>Arvioitu kesto ei ylitä profiilin kestoa, ellei sarjamäärä ole jo haarukan alapäässä.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-ohjelmat" aria-label="Kopioi linkki: Ohjelmat ja päivän treeni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M3 -->
+  <article class="moduuli" id="m-kirjaus" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Treenin kirjaus</h3>
+        <span class="moduuli-tiivis">Sarjat, RIR, lämmittely ja valinnainen palautusajastin.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/treeni">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Jokaisella sarjalla on kentät painolle, toistoille ja RIR:lle (0–4+). RIR kertoo, montako toistoa jäi varalle.</li>
+            <li>Lämmittelysarjat (asetus, oletuksena päällä): ennen ensimmäistä painavaa liikettä 2 sarjaa, 50 % × 8 ja 75 % × 5 työpainosta. Ne eivät kerrytä volyymia, sarjatavoitteita eivätkä Treeniscorea.</li>
+            <li>Palautusajastin on valinnainen ja oletuksena pois. Kun se on päällä, sarjan kuittaus käynnistää ajastimen. Kesto on tavoitteen mukainen tai 60, 90, 120 tai 180 s, ja ajastimen voi ohittaa. Ajan täyttyessä puhelin värisee, jos laite tukee sitä.</li>
+            <li>Kelluva painike <em>Jatka treeniä · mm:ss</em> näkyy muissa näkymissä, ja käynnissä oleva treeni säilyy sivun uudelleenlatauksen yli.</li>
+            <li>Syötteet tarkistetaan: paino ≥ 0 puolen kilon välein ja toistot kokonaisluku 0–100. Virheellinen sarja ei kuittaudu.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Kirjaus toimii ilman verkkoyhteyttä, ja treeni synkronoituu, kun yhteys palaa (ks. <a href="#ei-toiminnalliset">ei-toiminnalliset vaatimukset</a>).</li>
+            <li>Sarjan kirjaus onnistuu yhdellä kädellä muutamalla napautuksella. Kentät esitäytetään ehdotuksella tai edellisellä sarjalla.</li>
+            <li>Palautusajastin toimii myös sovelluksen ollessa taustalla (natiivi ilmoitus ja värinä).</li>
+            <li>Kirjatun sarjan voi muokata ja poistaa. Treenin voi tallentaa jälkikäteen ja muokata historiassa.</li>
+            <li>Kehonpainoliikkeissä voi kirjata lisäpainon. Supersarjat ja aikaan perustuvat sarjat ovat jatkokehitystä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Sarja, jonka paino on negatiivinen tai jonka toistot eivät ole kokonaisluku välillä 0–100, ei kuittaudu, ja käyttäjä näkee syyn.</li>
+            <li>Lämmittelysarjat eivät kasvata treenin volyymia, viikon sarjatavoitteita eivätkä Treeniscorea.</li>
+            <li>Palautusajastin on uudella käyttäjällä pois päältä. Kun se kytketään päälle, se käynnistyy sarjan kuittauksesta valitulla kestolla.</li>
+            <li>Kun sovellus suljetaan kesken treenin ja avataan uudelleen, treeni jatkuu samasta kohdasta.</li>
+            <li>Ilman verkkoyhteyttä kirjattu treeni näkyy historiassa ja synkronoituu, kun yhteys palaa, ilman kaksoiskappaleita.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-kirjaus" aria-label="Kopioi linkki: Treenin kirjaus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M4 -->
+  <article class="moduuli" id="m-progressio" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Progressioehdotukset</h3>
+        <span class="moduuli-tiivis">Tuotteen ydin: perusteltu ehdotus jokaiseen sarjaan.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/treeni">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-progressio">Laskuri ja säännöt</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Jokaisen sarjan kohdalla on ehdotuskortti: paino ja toistot. <em>Hyväksy</em> täyttää kentät, <em>Ohita</em> jättää ehdotuksen käyttämättä ja <em>Miksi?</em> avaa perustelun.</li>
+            <li>Säännöt ovat läpinäkyviä: ensimmäinen kerta, kevennys jumiutuessa, palautuminen, kaksoisprogressio ja RIR-autoregulaatio.</li>
+            <li>Jos liikkeen päälihasryhmä on vielä väsynyt, painoa ei nosteta ja kortti kertoo syyn.</li>
+            <li>Kortissa lukee: <em>Tuotteessa tekoäly personoi nämä säännöt.</em></li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Pohjana on deterministinen sääntömoottori (ks. <a href="#s-progressio">säännöt</a>). Tekoäly personoi parametreja (askel, haarukka, kevennyksen raja) käyttäjän vasteen perusteella, mutta asiantuntijan määrittämien rajojen sisällä.</li>
+            <li>Jokaisella ehdotuksella on koneluettava syy (<code>syy</code>) ja suomenkielinen perustelu, joka nimeää periaatteen ja luvut. Tutkimusviitteitä ei keksitä: viitteet lisätään vain, jos ne on tarkistettu.</li>
+            <li>Ehdotus ja käyttäjän valinta (hyväksytty tai ohitettu) tallennetaan treeniin. Tietoa käytetään oivalluksiin ja personointiin.</li>
+            <li>Painoaskeleet sovitetaan käyttäjän välineisiin (esim. käsipainosarjan porrastus). Korvaavan liikkeen ensimmäinen paino johdetaan alkuperäisen liikkeen voimasta.</li>
+            <li>Sääntöjen arvot validoidaan asiantuntijan kanssa ennen julkaisua.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Kun edellisellä kerralla kaikki sarjat yltivät haarukan yläpäähän ja keskimääräinen RIR oli vähintään 1, ensimmäisen sarjan ehdotus nostaa painoa 2,5 kg (ylävartalo) tai 5 kg (alavartalo), ja toistot palaavat alapäähän.</li>
+            <li>Kun treenin aikana edellinen sarja tehtiin RIR 0:lla ja toistot jäivät haarukan alle, ehdotus laskee painoa 2,5 kg.</li>
+            <li>Kun liike on jumiutunut (3 kertaa samalla painolla ilman e1RM:n nousua), ehdotus on kevennys: noin −10 % ja toistot haarukan alapäästä.</li>
+            <li>Kun liikkeen päälihasryhmä on tilassa <em>väsynyt</em>, ehdotus ei nosta painoa.</li>
+            <li>Jokaisessa ehdotuksessa on Miksi?-perustelu, ja ehdotetut painot ovat 2,5 kg:n kerrannaisia.</li>
+            <li>Hyväksytty ja ohitettu ehdotus tallentuvat treeniin.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-progressio" aria-label="Kopioi linkki: Progressioehdotukset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M5 -->
+  <article class="moduuli" id="m-vaihto" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Liikkeen vaihto</h3>
+        <span class="moduuli-tiivis">Laite puuttuu, on varattu tai kipu estää: vastaava liike perusteluineen.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/koti">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-vaihto">Pisteytys</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Vaihto onnistuu Kodin <em>Tämän päivän treeni</em> -listassa, treenin aloitusnäkymässä ja käynnissä olevan treenin liikkeissä, joista ei ole vielä kirjattu työsarjoja.</li>
+            <li>Liikerivin pyyhkäisy vasemmalle (yli 60 px) paljastaa ja laukaisee <em>⇄ Vaihda</em> -toiminnon. Rivillä on myös aina näkyvä ⇄-painike, joka toimii hiirellä ja näppäimistöllä.</li>
+            <li>Alalaatikossa valitaan ensin syy: <em>Laite puuttuu</em>, <em>Laite varattu</em>, <em>Kipu tai loukkaantuminen</em> (ja kipualue: polvi, alaselkä, olkapää, kyynärpää tai ranne) tai <em>Muu</em>. Sitten näkyy enintään 5 vaihtoehtoa, joissa on perustelu (esim. <em>Sama lihasryhmä ja liikemalli, ei vaadi kyykkytelinettä</em>), <em>▶ Näytä liike</em> ja <em>Valitse</em>. Jos sopivaa ei ole, tarjotaan <em>Ohita liike tänään</em>.</li>
+            <li><em>Laite puuttuu</em> ja <em>Laite varattu</em> jättävät alkuperäisen liikkeen laitteet pois vaihtoehdoista. <em>Laite puuttuu</em> kysyy lopuksi <em>Poistetaanko [laite] salisi laitteista?</em>, ja vastaus <em>Kyllä, poista</em> päivittää laitelistan. <em>Laite varattu</em> ja <em>Muu</em> koskevat vain tätä päivää.</li>
+            <li><em>Kipu</em> näyttää ohjeen hakeutua lääkärin tai fysioterapeutin vastaanotolle, jos kipu jatkuu, ja tallentaa valmentajan muistiin 14 päivän tilapäisen muistin, esim. <em>Vältä polvi: Takakyykky korvattu (19.10.)</em>. Muistin lähde on <code>vaihto</code>. Seuraavat treenit välttävät liikettä ja aluetta automaattisesti.</li>
+            <li>Vaihdetulla rivillä on merkki: käyttäjän vaihdossa esim. <em>Vaihdettu · ei kyykkytelinettä</em> ja <em>Palauta</em>-painike, automaattisessa vaihdossa <em>Vaihdettu automaattisesti · ei levytankoa</em> tai <em>· kipu</em>. Jos automaattiselle vaihdolle ei löydy vaihtoehtoa, liike ohitetaan tältä päivältä (<em>Ei laitteita – ohitetaan tänään</em>).</li>
+            <li>Korvaavan liikkeen ensimmäinen painoehdotus johdetaan alkuperäisen liikkeen arvioidusta voimasta (ks. <a href="#s-vaihto">kaava</a>), ja Miksi?-teksti kertoo sen.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Jokaisella liikkeellä on tarvikkeet (laitteet), liikemalli (kyykky, lantiosarana, vaaka- ja pystytyöntö, vaaka- ja pystyveto, eristävä ylä/ala, keskivartalo) ja kuormitetut nivelalueet (polvi, alaselkä, olkapää, kyynärpää, ranne).</li>
+            <li>Vaihtoehdot pisteytetään ja karsitaan läpinäkyvillä säännöillä (ks. <a href="#s-vaihto">pisteytys</a>), ja tekoäly voi järjestää ehdokkaat uudelleen käyttäjän historian perusteella. Perustelu kirjoitetaan suomeksi.</li>
+            <li>Vaihdon syy tallennetaan. Kertaluonteinen vaihto koskee vain päivää tai treeniä. Puuttuva laite päivittää salin laitelistan vain käyttäjän hyväksynnällä.</li>
+            <li>Kipuun liittyvä vaihto ei ole diagnoosi. Sovellus ohjaa ammattilaiselle ja tallentaa muistin, jonka käyttäjä voi poistaa.</li>
+            <li>Korvaavan liikkeen ensimmäinen paino johdetaan alkuperäisen liikkeen arvioidusta voimasta viitekertoimien suhteessa. Miksi?-teksti kertoo, että paino on johdettu.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Vaihtoehdoissa ei ole liikettä, jonka tarvikkeita salin laitelistassa ei ole, eikä liikettä, joka on jo päivän ohjelmassa.</li>
+            <li>Kipuvaihdossa vaihtoehdoissa ei ole liikettä, joka kuormittaa valittua aluetta, ja valmentajan muistiin syntyy 14 päivän tilapäinen muisti.</li>
+            <li>Vaihtoehdot on järjestetty pisteiden mukaan, ja niitä on enintään 5. Jos sopivaa ei ole, tarjolla on <em>Ohita liike tänään</em>.</li>
+            <li>Kun syy on <em>Laite puuttuu</em> ja käyttäjä vastaa Kyllä, laite poistuu salin laitelistasta.</li>
+            <li>Vaihto onnistuu sekä pyyhkäisyllä että näppäimistöllä käytettävällä ⇄-painikkeella.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-vaihto" aria-label="Kopioi linkki: Liikkeen vaihto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M6 -->
+  <article class="moduuli" id="m-yhteenveto" data-kat="tekoaly" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Tekoäly · Edistyminen <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Treenin yhteenveto ja oivallukset</h3>
+        <span class="moduuli-tiivis">Mikä meni hyvin, mikä kaipaa huomiota ja mitä seuraavaksi.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/historia">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-oivallukset">Säännöt</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li><em>Lopeta treeni</em> avaa yhteenvedon: <em>Hyvä treeni!</em>, kesto, liikkeiden määrä, volyymi ja arvioidut kalorit (~).</li>
+            <li><strong>Edistyit</strong> (1–3 korttia): uusi ennätys, arvioidun voiman nousu, volyymin kasvu, hyväksyttyjen ehdotusten tulos tai jumiutumisen purkautuminen.</li>
+            <li><strong>Kaipaa huomiota</strong> (enintään 2): palautuminen, liian kova kuormitus, jatkuva jumi, jäljessä oleva tavoite tai ohitetut ehdotukset. Muuten näkyy rauhoittava rivi.</li>
+            <li><strong>Seuraavaksi</strong> (aina 1): seuraava ohjelmapäivä ja aikaisin suositeltu ajankohta palautumisen perusteella.</li>
+            <li>Viikkotavoitteen muutos ennen ja jälkeen treenin. Jokaisessa kortissa on Miksi?, ja alareunassa lukee <em>Tuotteessa tekoäly kirjoittaa nämä oivallukset sinun datastasi.</em></li>
+            <li>Haasteet-osio: liitettyjen haasteiden muutos ennen ja jälkeen treenin (esim. <em>Lokakuun 12 treeniä: 9 → 10</em>), suoritetut haasteet, uudet merkit ja ansaitut pisteet eriteltyinä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Sääntömoottori valitsee faktat (ennätykset, muutokset, palautuminen, tavoitteet), ja tekoäly kirjoittaa niistä luontevan tekstin. Tekoäly ei keksi lukuja: jokainen luku tulee moottorilta, ja se tarkistetaan ennen näyttämistä.</li>
+            <li>Oivallukset huomioivat valmentajan muistit. Esimerkiksi padelviikolla ei huomauteta jäljessä olevasta jalkavolyymista.</li>
+            <li>Korttien enimmäismäärät ja järjestys pysyvät (3 edistystä, 2 huomiota, 1 seuraavaksi), jotta näkymä on nopeasti luettava.</li>
+            <li>Sama yhteenveto näkyy myöhemmin historiassa treenin tiedoissa.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Yhteenvedossa on enintään 3 edistyskorttia, enintään 2 huomiokorttia ja täsmälleen 1 seuraavaksi-kortti.</li>
+            <li>Kun huomioitavaa ei ole, näkyy rivi <em>Ei huomioitavaa, palautuminen ja kuormitus kunnossa.</em></li>
+            <li>Seuraavaksi-kortin ajankohta on hetki, jolloin seuraavan päivän päälihasryhmät ovat vähintään 90 %:ssa palautumisesta.</li>
+            <li>Kun vähintään puolet työsarjoista tehtiin RIR 0:lla, näkyy kuormitusta koskeva huomio ja suositus RIR 1–2.</li>
+            <li>Jokaisen kortin Miksi?-teksti nimeää säännön ja luvut, joihin oivallus perustuu.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-yhteenveto" aria-label="Kopioi linkki: Treenin yhteenveto ja oivallukset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M7 -->
+  <article class="moduuli" id="m-treeniscore" data-kat="edistyminen" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Edistyminen <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Treeniscore ja voima</h3>
+        <span class="moduuli-tiivis">Yksi luku voimasta, ryhmät, vertailuliikkeet ja ennätykset.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/edistyminen">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-treeniscore">Laskuri ja kaavat</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Edistyminen → Tulokset: Treeniscore isona lukuna ja 10-palaisena mittarina (asteikko 0–100, 50 = viitetaso).</li>
+            <li>Ryhmät työnnöt, vedot ja jalat avattavina kortteina: luku, trendimerkki ja lihaskohtaiset arvot. Lukitut lihakset näytetään.</li>
+            <li>Treeniscore avautuu vasta, kun kaikkia lihasryhmiä on treenattu (vähintään 6 sarjaa 6 viikossa). Siihen asti näkyy, mitkä lihakset puuttuvat.</li>
+            <li>Vertailuliikkeet (penkkipunnerrus, takakyykky, maastaveto, leuanveto, pystypunnerrus) pyyhkäistävinä kortteina, joissa on arvioitu maksimi ja kaavio. Lisäksi ennätyslista.</li>
+            <li>Tauko heikentää arviota: yli 14 päivän tauon jälkeen 1 % jokaista alkavaa viikkoa kohden, enintään 10 %.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Laskenta on oma ja läpinäkyvä (ks. <a href="#s-treeniscore">kaavat</a>). Jokaisella luvulla on Miksi?-selitys.</li>
+            <li>Viitetasot validoidaan asiantuntijan kanssa, ja niissä huomioidaan vähintään kehonpaino ja tarvittaessa sukupuoli ja ikä. Demossa kerroin on sama kaikille.</li>
+            <li>Ennätystyypit: arvioitu maksimi, volyymi yhdessä treenissä (käsipainoissa paino × 2), eniten toistoja yhdessä sarjassa ja raskain paino.</li>
+            <li>Trendi lasketaan vertaamalla lukua 28 päivää aiempaan.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Lihasryhmä, jolle on kirjattu 5 työsarjaa 6 viikon ikkunassa, on lukittu. Kuudes sarja avaa sen.</li>
+            <li>Treeniscore näkyy vain, kun työnnöillä, vedoilla ja jaloilla kaikilla on luku. Vatsa ei vaikuta lukuun.</li>
+            <li>Kun liikettä ei ole tehty 21 päivään, arvio on 1 % pienempi. Vähennys on enintään 10 %.</li>
+            <li>Käsipainoliikkeen volyymiennätyksessä paino kerrotaan kahdella.</li>
+            <li>Trendimerkki on nousu, kun luku on yli 2 pistettä suurempi kuin 28 päivää aiemmin, ja lasku, kun se on yli 2 pistettä pienempi.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-treeniscore" aria-label="Kopioi linkki: Treeniscore ja voima"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M8 -->
+  <article class="moduuli" id="m-palautuminen" data-kat="edistyminen" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Edistyminen <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Palautuminen ja kehokartta</h3>
+        <span class="moduuli-tiivis">Mitkä lihakset ovat valmiita treeniin ja mitkä vielä väsyneitä.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/edistyminen?tab=palautuminen">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-palautuminen">Laskuri ja kaavat</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Edistyminen → Palautuminen: <em>Viimeisin treeni X h sitten</em> ja <em>Palautuneet lihakset N</em>.</li>
+            <li>Oma, tyylitelty kehokartta, jonka voi kääntää etu- ja takapuolen välillä. Lihakset väritetään tilan mukaan (väsynyt, palautumassa, palautunut), ja napautus näyttää prosentin ja ajan viimeisestä treenistä.</li>
+            <li>Väsynyt päälihasryhmä estää painonnoston progressioehdotuksessa. Hyväksytyn viikkosuunnitelman lajipäivät (esim. padel) lasketaan palautumiseen arviona.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Malli perustuu viimeisten 96 tunnin sarjoihin (ks. <a href="#s-palautuminen">kaavat</a>). Tekoäly personoi palautumisajat käyttäjän vasteen perusteella (esim. toistuvat suorituskyvyn laskut).</li>
+            <li>Tuodut aktiviteetit (kävely, pyöräily) eivät kerrytä palautumista, mutta lajipäivät kerryttävät asiantuntijan määrittämän arvion.</li>
+            <li>Valinnaisesti puettavan laitteen uni- ja palautumistiedot voivat tarkentaa mallia (ks. <a href="#integraatiot">integraatiot</a>). Palautumistieto voi olla terveystietoa (ks. <a href="#ei-toiminnalliset">tietosuoja</a>).</li>
+            <li>Kehokartta on oma grafiikka, eikä muiden sovellusten grafiikkaa kopioida.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Lihas, jolle on tehty 8 sarjaa 24 tuntia sitten, on 33 %:ssa ja tilassa <em>väsynyt</em> (palautumisaika 72 h).</li>
+            <li>Toissijaisena kuormitettu lihas saa puolikkaan sarjan jokaisesta työsarjasta.</li>
+            <li>Yli 96 tuntia vanhat sarjat eivät vaikuta palautumiseen.</li>
+            <li>Kehokartan lihasta napauttamalla näkyvät palautumisprosentti ja aika viimeisestä treenistä. Kartan voi kääntää myös näppäimistöllä.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-palautuminen" aria-label="Kopioi linkki: Palautuminen ja kehokartta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M9 -->
+  <article class="moduuli" id="m-viikkotavoitteet" data-kat="edistyminen" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Edistyminen <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Viikon sarjatavoitteet</h3>
+        <span class="moduuli-tiivis">Montako työsarjaa kullekin lihasryhmälle tällä viikolla.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/tavoitteet">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-viikko">Laskuri ja kaava</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Näkymä <em>Viikon sarjatavoitteet</em> (avataan Kodin kortista): kuusikulmiorengas, jossa jokainen ryhmä täyttää omat sivunsa, ja keskellä kokonaisprosentti.</li>
+            <li>Ryhmäkortit (työnnöt, vedot, jalat): tehty/tavoite ja jäljellä olevat sarjat. Avattuna lihaskohtaiset rivit.</li>
+            <li>Kodissa on pienennetty kuusikulmio ja eniten jäljessä oleva ryhmä, esim. <em>Vedot: 6 sarjaa jäljellä</em>.</li>
+            <li>Hyväksytty viikkosuunnitelma voi kertoa ryhmän tavoitteen kertoimella (merkintä <em>Muokattu viikko</em>).</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Tavoite lasketaan profiilista (ks. <a href="#s-viikko">kaava</a>). Käyttäjä ei muokkaa sitä suoraan, vaan muuttaa tavoitetta, treenimäärää, kestoa tai kokemusta.</li>
+            <li>Vain liikkeen päälihasryhmä kerryttää (1 työsarja = 1). Toissijaiset lihakset, lämmittelysarjat ja tuodut aktiviteetit eivät kerrytä.</li>
+            <li>Viikko alkaa profiilin asetuksen mukaan maanantaina tai sunnuntaina.</li>
+            <li>Tekoäly voi ehdottaa viikon kertoimia (esim. jalat × 0,6 lajiviikolla), mutta vain hyväksytty suunnitelma muuttaa tavoitteita.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Profiililla lihasmassa, keskitaso, 3 treeniä viikossa ja 60 min isojen lihasryhmien tavoite on 7 sarjaa ja pienten 5.</li>
+            <li>Mikään tavoite ei ole alle 4 sarjaa.</li>
+            <li>Ylitys yhdessä lihasryhmässä ei nosta kokonaisprosenttia muiden vajeen yli: prosentti on Σ min(tehty, tavoite) / Σ tavoite.</li>
+            <li>Lämmittelysarjat ja toissijaiset lihakset eivät kerrytä tavoitetta.</li>
+            <li>Kun hyväksytyssä suunnitelmassa jalkojen kerroin on 0,6, jalkalihasten tavoitteet pienenevät samassa suhteessa ja näkymässä lukee <em>Muokattu viikko</em>.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-viikkotavoitteet" aria-label="Kopioi linkki: Viikon sarjatavoitteet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M10 -->
+  <article class="moduuli" id="m-historia" data-kat="edistyminen" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Edistyminen <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Historia, merkkipaalut ja kehonkoostumus</h3>
+        <span class="moduuli-tiivis">Treeniloki, kalenteri, putki, merkit ja kehonpaino.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/historia">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Yhteenveto: treenien määrä, 3 viimeisintä merkkipaalua, viikkotavoite (X/N päivää) ja putki (peräkkäiset viikot, joilla viikkotavoite täyttyi).</li>
+            <li>Viikkonauha ja kuukausikalenteri. Päivän napautus vierittää aikajanan kyseiseen kohtaan.</li>
+            <li>Aikajana: päivämäärä, kesto, pieni kehokuvake treenatuista lihaksista, liikkeet, kalorit, volyymi ja ennätysrivi. Treenin tiedoissa näkyvät sarjat, ennätykset ja kerrytetyt sarjatavoitteet.</li>
+            <li>Tuodut kävelyt ja pyöräilyt (esimerkkidataa) näkyvät linkkimerkillä ja tekstillä <em>Tuotu terveyssovelluksesta</em>.</li>
+            <li>Merkkipaalut: ensimmäinen treeni, 10, 50 ja 100 treeniä, ensimmäinen ennätys, 4 viikon putki ja 10 000 kg yhdessä treenissä.</li>
+            <li>Kehonkoostumus (Edistyminen): kehonpainokortti, lisäys ja pieni kaavio. Perusaineenvaihdunta, rasvaprosentti ja mitat ovat <em>tulossa</em>-kortteja.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Tuodut aktiviteetit (Health Connect, Apple Health) näkyvät aikajanalla ja kerryttävät viikkotavoitteen päiviä, putkea ja treenien määrää, mutta eivät sarjatavoitteita, Treeniscorea eivätkä palautumista.</li>
+            <li>Kalorit: tuoduilla aktiviteeteilla lähteen arvo, voimatreeneillä arvio MET 5,0 × kehonpaino × tunnit, merkittynä ~-merkillä.</li>
+            <li>Viimeisin kehonpaino päivittää profiilin kehonpainon, jota Treeniscore käyttää. Kehonpaino voi tulla myös terveyssovelluksesta.</li>
+            <li>Historian voi viedä (CSV/JSON) osana tietojen siirto-oikeutta.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Viikkotavoite lasketaan eri päivistä, joina on mikä tahansa merkintä. Kaksi aktiviteettia samana päivänä on yksi päivä.</li>
+            <li>Putki laskee peräkkäiset viikot, joilla tavoite täyttyi. Kesken oleva viikko lasketaan mukaan vain, jos tavoite on jo täyttynyt.</li>
+            <li>Tuotu kävely näkyy aikajanalla, mutta ei kasvata viikon sarjatavoitteita.</li>
+            <li>Treeni, jossa syntyi ennätyksiä, näyttää ennätysten määrän, ja rivi avaa treenin tiedot.</li>
+            <li>Uusi kehonpainomerkintä päivittää profiilin kehonpainon.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-historia" aria-label="Kopioi linkki: Historia, merkkipaalut ja kehonkoostumus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M11 -->
+  <article class="moduuli" id="m-liikekirjasto" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Liikekirjasto ja esimerkkivideot</h3>
+        <span class="moduuli-tiivis">46 liikettä, ohjeet ja liikkeen näyttö yhdellä napautuksella.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/liikkeet">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Liikekirjasto avataan Kodin <em>Liikekirjasto</em>-kortista ja treenin liikelinkeistä (reitti <code>#/liikkeet</code>, ei alanavigaatiossa). 46 liikettä: haku, lihasryhmäsirut ja lista. Liikkeen sivulla ovat ohje, lihasryhmät, oma historia ja paras arvioitu maksimi.</li>
+            <li><em>▶ Näytä liike</em> treenissä, ohjelman päivänäkymässä ja liikkeen sivulla avaa alalaatikon: media, ohje ja lihasryhmät. Sulkeminen ei keskeytä treeniä eikä palautusajastinta.</li>
+            <li>Median järjestys: oma animaatio (viidellä vertailuliikkeellä), tarkistettu upotettu video (demossa ei yhtään) ja lopuksi linkki videohakuun. Videotunnisteita ei arvata.</li>
+            <li>Alalaatikossa lukee: <em>Tuotteessa Personal SuperPowerin omat tai lisensoidut liikevideot.</em></li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Jokaisella liikkeellä on oma tai lisensoitu video (lyhyt silmukka ja tarvittaessa pidempi tekniikkavideo). Kolmannen osapuolen videopalveluihin ei nojata, koska videot voivat kadota, laatu vaihtelee ja palvelu voi ohjata käyttäjän pois sovelluksesta.</li>
+            <li>Mediamalli (<code>media</code>) on lähteestä riippumaton, joten lähteen voi vaihtaa muuttamatta näkymiä.</li>
+            <li>Videot toimivat myös heikolla verkolla (esilataus, välimuisti), ja niissä on tekstitys tai kuvaus saavutettavuuden vuoksi.</li>
+            <li>Ohjetekstit tarkistaa asiantuntija. Liikkeillä on tarvikkeet, liikemalli ja kuormitetut alueet liikkeen vaihtoa varten.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Jokaisen liikkeen <em>Näytä liike</em> avaa alalaatikon, jossa on media tai toimiva vaihtoehto.</li>
+            <li>Alalaatikon sulkeminen ei pysäytä palautusajastinta.</li>
+            <li>Liikedatassa ei ole yhtään tarkistamatonta videotunnistetta.</li>
+            <li>Haku löytää liikkeen nimen osalla, ja lihasryhmäsiru rajaa listan.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-liikekirjasto" aria-label="Kopioi linkki: Liikekirjasto ja esimerkkivideot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M12 -->
+  <article class="moduuli" id="m-valmentaja" data-kat="tekoaly" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Tekoäly <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Tekoälyvalmentaja ja muisti</h3>
+        <span class="moduuli-tiivis">Chat, joka muistaa elämän ja ehdottaa viikon muutoksia.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/valmentaja">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#tekoaly">Tekoäly tuotteessa</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Chat on käsikirjoitettu mockup (merkintä <em>Demo: esimerkkivastaukset</em>). Se tunnistaa skenaariot: reissu ja laji, pelkkä reissu, kipu tai vamma, väsymys, kiire, muistikysymys ja muu.</li>
+            <li>Vastaukset täytetään käyttäjän oikealla datalla: nimi, seuraava ohjelmapäivä, palautumistila, viikkotavoite ja päivämäärät.</li>
+            <li>Muistisiru (esim. <em>Muistin: Reissu 13.–19.10., 3 × padel</em>) ja suunnitelmaehdotus, jossa ovat viikon päivät ja sarjatavoitteiden muutokset sekä painikkeet <em>Ota käyttöön</em> ja <em>Hylkää</em>. Mitään ei muuteta ilman hyväksyntää.</li>
+            <li><em>Uusi keskustelu</em> tyhjentää viestit, mutta muistit säilyvät. Profiilin <em>Valmentajan muisti</em> näyttää muistit, voimassaoloajat ja poistopainikkeen.</li>
+            <li>Kipuun vastaus ei diagnosoi. Se kehottaa kääntymään ammattilaisen puoleen ja ehdottaa korvaavia liikkeitä.</li>
+            <li>Haasteskenaario (sanat haaste, kilpailla, kaveri tai kisa): valmentaja ehdottaa haastetta, johon käyttäjä ei vielä ole liittynyt, ja valitsee sen ennusteen ja kokemustason perusteella. Siru <em>Liity haasteeseen</em> liittää haasteeseen suoraan (toiminto <code>liityHaasteeseen</code>).</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Oikea kielimalli korvaa skenaariot samalla rajapinnalla: valmentaja käyttää työkaluja (ks. <a href="#tekoaly">tekoäly tuotteessa</a>), ja muisti- ja suunnitelmarakenne pysyvät ennallaan.</li>
+            <li>Käyttäjälle kerrotaan selvästi, että hän keskustelee tekoälyn kanssa.</li>
+            <li>Muisti on läpinäkyvä: valmentaja käyttää vain muisteja, jotka näkyvät käyttäjälle, ja kertoo, kun se tallentaa uuden. Käyttäjä voi muokata ja poistaa muisteja.</li>
+            <li>Muutokset suunnitelmaan, tavoitteisiin, liikkeisiin tai haasteisiin ehdotetaan aina ehdotuskorttina ja tehdään vasta hyväksynnän jälkeen.</li>
+            <li>Keskusteluhistoria säilyy rajatun ajan, ja käyttäjä voi poistaa sen. Muistit ja keskustelu ovat erillään.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Viestistä <em>Ensi viikolla olen reissussa ma–pe ja pelaan 3 kertaa padelia</em> syntyy muisti, jonka voimassaolo on ensi viikon päivät, ja suunnitelmaehdotus, jossa on 3 padelpäivää.</li>
+            <li>Suunnitelmaehdotus ei muuta tavoitteita eikä viikkonauhaa ennen kuin käyttäjä painaa <em>Ota käyttöön</em>.</li>
+            <li>Uuden keskustelun jälkeen kysymykseen <em>Mitä teen tänään?</em> vastaus viittaa voimassa olevaan muistiin.</li>
+            <li>Kun käyttäjä poistaa muistin, valmentaja ei käytä sitä seuraavissa vastauksissa.</li>
+            <li>Kipua koskeva vastaus ei sisällä diagnoosia ja ohjaa ammattilaiselle.</li>
+            <li>Chatin yläreunassa kerrotaan, että vastaukset tuottaa tekoäly.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-valmentaja" aria-label="Kopioi linkki: Tekoälyvalmentaja ja muisti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M13 -->
+  <article class="moduuli" id="m-yhteiso" data-kat="yhteiso" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Yhteisö <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Yhteisö</h3>
+        <span class="moduuli-tiivis">Haasteet, tasapainotus, merkit, pisteet, tasot, kaverit sekä sali- ja kumppanihaasteet.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/yhteiso">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-haasteet">Laskuri ja kaavat</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li><strong>Navigaatio:</strong> alanavigaatio on Koti, Valmentaja, Yhteisö, Edistyminen ja Historia. Yhteisössä on kolme välilehteä: Haasteet, Merkit ja Kaverit (<code>#/yhteiso?tab=haasteet|merkit|kaverit</code>). Haasteen tiedot avautuvat omaan näkymäänsä (<code>#/yhteiso/haaste/&lt;id&gt;</code>). Kodin Haasteet-kortti näyttää lähimpänä maalia olevan haasteen ja oman sijan kaverihaasteessa.</li>
+            <li><strong>Omat haasteet:</strong> kuukausihaasteet <em>Lokakuun N treeniä</em> (melkein valmis), <em>Lokakuun 60 000 kg</em>, <em>20 aktiivista päivää</em> ja <em>4 viikon putki</em>. Oma edistyminen lasketaan oikeista kirjauksista. Haasteeseen liitytään <em>Liity</em>-painikkeella, ja siitä voi poistua.</li>
+            <li><strong>Kaverihaasteet:</strong> käynnissä oleva <em>Kahden viikon volyymikisa</em> ja päättynyt <em>Viikon sarjakisa</em>, jonka käyttäjä voitti tasapainotettuna. Tulostaulukossa on valitsin <em>Raaka / Tasapainotettu</em>, ja järjestyksen vaihto animoidaan (ei animaatiota, jos käyttäjä on vähentänyt liikettä). Tasapainotettuna näkyy myös jokaisen lähtötaso. Oman kaverihaasteen voi luoda: mittari (treenit, sarjat, volyymi, aktiiviset päivät), kesto 1, 2 tai 4 viikkoa, kutsuttavat kaverit ja tasapainotus (oletuksena päällä).</li>
+            <li><strong>Salihaaste:</strong> kuukauden jäsenhaaste, jonka otsikossa on salin nimi profiilista (oletus <em>Kotisali</em>). Näkyvissä ovat salin yhteinen tavoite 2 000 000 kg ja kertymä, oma tavoite 40 000 kg, oma osuus ja sija jäsenten joukossa.</li>
+            <li><strong>Kumppanihaaste:</strong> kuvitteellinen <em>Kumppani X: 7 treeniä 2 viikossa</em>, palkintona 25 % alennus. Koodi <code>PSP-DEMO-25</code> on lukittu, kunnes haaste on suoritettu. Sen jälkeen <em>Paljasta koodi</em> näyttää koodin, ja sen voi kopioida.</li>
+            <li><strong>Merkit:</strong> taso (alkaa nollasta), pisteet ja niiden erittely (treenit, aktiviteetit, haasteet, merkit), pisteet seuraavaan tasoon, ansaitut ja saatavilla olevat merkit (merkkipaalut ja haastemerkit) sekä pistetaulukko, jossa ovat käyttäjä ja kaverit.</li>
+            <li><strong>Kaverit:</strong> 5 keksittyä kaveria ja aktiviteettisyöte, jossa jokaisen tapahtuman voi tsempata kerran.</li>
+            <li>Kaikki sosiaalinen data on mockup: kaverit, heidän tuloksensa ja salin kertymä on keksitty.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Kaverit lisätään kutsulla (linkki tai koodi), ja molemmat osapuolet hyväksyvät kaveruuden. Kaverin voi poistaa ja estää.</li>
+            <li>Näkyvyysasetukset: mitä kaverit näkevät (treenien määrä, haasteiden edistyminen, merkit). Oletuksena vähän: painoja, kehonpainoa, palautumista ja muisteja ei jaeta.</li>
+            <li>Tasapainotus (ks. <a href="#s-haasteet">kaavat</a>): lähtötaso lasketaan jokaisen omasta historiasta. Tekoäly asettaa henkilökohtaiset tavoitteet ja tasoitukset.</li>
+            <li>Salit (B2B) luovat jäsenhaasteita hallintanäkymässä ja näkevät koottua tietoa. Kumppanit määrittävät haasteen, palkinnon ja etukoodit. Koodit ovat kertakäyttöisiä tai rajattuja, ja niiden lunastus kirjataan.</li>
+            <li>Pisteet: voimatreeni 10, tuotu aktiviteetti 3, suoritettu haaste haasteen pisteet (oletus 50) ja merkki 20. Tasot ja merkit ovat palvelimen laskemia, jotta niitä ei voi väärentää.</li>
+            <li>Väärinkäytön esto: epäuskottavat kirjaukset (esim. äkillinen moninkertainen volyymi) merkitään, eikä niitä lasketa haasteisiin ennen tarkistusta.</li>
+            <li>Tsemppaukset ja syöte ovat kevyitä, eikä kommentointia ole ensimmäisessä versiossa (moderointitarve).</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Mittari <em>aktiiviset päivät</em> laskee eri päivät, joina on mikä tahansa merkintä, myös tuodut aktiviteetit ja kirjatut lajipäivät. Volyymi ja sarjat eivät sisällä lämmittelysarjoja.</li>
+            <li>Tasapainotettu tulos on haasteen ajan mittari jaettuna lähtötasolla × 100 %. Esimerkkidatalla kokenut kaveri johtaa raakana ja käyttäjä on tasapainotettuna kärjessä tai sen tuntumassa.</li>
+            <li>Taso alkaa nollasta, ja taso n saavutetaan, kun pisteitä on kertynyt vähintään 100 × n × (n + 1) / 2. Näkymä kertoo pisteet seuraavaan tasoon.</li>
+            <li>Kumppanihaasteen etukoodi ei näy ennen kuin haaste on suoritettu ja käyttäjä on liittynyt siihen.</li>
+            <li>Saman tapahtuman voi tsempata vain kerran.</li>
+            <li>Kaverit eivät näe käyttäjän painoja, kehonpainoa eivätkä muisteja millään näkyvyysasetuksella.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-yhteiso" aria-label="Kopioi linkki: Yhteisö"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M14 -->
+  <article class="moduuli" id="m-ulkoasu" data-kat="profiili" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Profiili <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Ulkoasu ja teemat</h3>
+        <span class="moduuli-tiivis">Sininen, viininpunainen ja kulta. Vaalea ja tumma teema.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/profiili">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Värimaailma: sininen pääväri (#26548F), viininpunaiset toimintopainikkeet (#763146) ja kulta mittareissa ja ennätyksissä (#C8A42A). Fontti Nunito.</li>
+            <li>Teema: vaalea (oletus), tumma tai järjestelmän mukaan. Valinta on Profiilin asetuksissa.</li>
+            <li>Mobiili ensin: 16 px:n reunat, kiinteä alanavigaatio ja kelluva treenipainike. Isolla näytöllä sisältö on keskitetty.</li>
+            <li>Demon voi lisätä kotinäyttöön, jolloin se aukeaa ilman selaimen osoiteriviä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Brändi ja värit tarkennetaan tuotteen brändityössä. Värit määritellään tokeneina, ja kaikki yhdistelmät täyttävät kontrastivaatimukset kummassakin teemassa.</li>
+            <li>Natiivit komponentit ja alustan käytännöt (iOS ja Android) sekä tuki järjestelmän tekstikoolle.</li>
+            <li>Muiden sovellusten nimiä, logoja, tekstejä tai grafiikkaa ei kopioida.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Tekstin kontrasti on vähintään 4,5:1 ja grafiikan vähintään 3:1 molemmissa teemoissa.</li>
+            <li>Teemavalinta säilyy sovelluksen uudelleenkäynnistyksen yli, ja järjestelmän mukaan -valinta seuraa laitteen asetusta.</li>
+            <li>Näkymät toimivat 320 px:n leveydellä ilman vaakasuuntaista vieritystä ja 200 %:n tekstikoolla.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-ulkoasu" aria-label="Kopioi linkki: Ulkoasu ja teemat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <div class="huomio huomio-sininen vain-esittely vain-js">
+    Haluatko säännöt, laskentakaavat, tietomallin ja hyväksymiskriteerit? <button type="button" class="nappi nappi-ensisijainen" data-vaihda-nakyma="speksi">Avaa toteutusspeksi</button>
+  </div>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section class="osio vain-speksi" id="saannot" data-toc>
+  <h2><span class="osio-numero">5</span>Säännöt ja laskentakaavat</h2>
+  <div class="huomio"><strong>Kaikki luvut ovat demon oletuksia.</strong> Tuotteessa arvot validoidaan asiantuntijan kanssa, ja tekoäly personoi ne käyttäjän datan perusteella asiantuntijan määrittämissä rajoissa. Säännöt nojaavat vakiintuneisiin harjoitteluperiaatteisiin (progressiivinen ylikuormitus, kaksoisprogressio, RIR-autoregulaatio, viikkovolyymi, palautuminen). Tutkimusviitteitä ei esitetä, ennen kuin ne on tarkistettu erikseen.</div>
+  <p>Laskurit ovat yksinkertaistettuja havainnollistuksia samoista kaavoista, joita demo käyttää. Ne on tarkistettu demon laskentamoottoria vastaan.</p>
+
+  <!-- 5.1 -->
+  <div class="saanto" id="s-progressio" data-toc>
+    <h3>5.1 Progressioehdotuksen sääntöjärjestys</h3>
+    <p>Ensimmäinen osuva sääntö voittaa. Järjestys riippuu siitä, onko kyse treenin ensimmäisestä sarjasta (viitteenä edellinen kerta) vai sarjasta treenin aikana (viitteenä tämän treenin edellinen sarja).</p>
+    <div class="taulukko leveä" role="region" aria-label="Progression säännöt" tabindex="0">
+      <table>
+        <thead><tr><th>#</th><th>Sääntö (<code>syy</code>)</th><th>Ehto</th><th>Ehdotus</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Ensimmäinen kerta (<code>first-time</code>)</td><td>Liikkeellä ei ole historiaa eikä tämän treenin sarjoja.</td><td>Liikkeen aloituspaino × kokemuskerroin (aloittelija 0,8, keskitaso 1,0, kokenut 1,2), toistot haarukan alapäästä.</td></tr>
+          <tr><td>2</td><td>Kevennys (<code>deload</code>)</td><td>Liike on jumiutunut (ks. 5.2).</td><td>Paino min(pyöristys(0,9 × paino), paino − 2,5 kg), toistot haarukan alapäästä. Kehonpainoliikkeillä toistoja noin 20 % vähemmän.</td></tr>
+          <tr><td>3</td><td>Palautuminen (<code>recovery</code>)</td><td>Liikkeen päälihasryhmä on tilassa <em>väsynyt</em>.</td><td>Paino pysyy samana, toistot kuten viimeksi (rajattuna haarukkaan).</td></tr>
+          <tr><th colspan="4" scope="rowgroup">Treenin ensimmäinen sarja</th></tr>
+          <tr><td>4</td><td>Kaksoisprogressio (<code>double-progression</code>)</td><td>Edellisellä kerralla kaikki sarjat yltivät haarukan yläpäähän ja keskimääräinen RIR ≥ 1.</td><td>Paino + askel (ylävartalo 2,5 kg, alavartalo 5 kg, aloittelijalla 2 askelta), toistot haarukan alapäähän.</td></tr>
+          <tr><td>5</td><td>Toistovaihe (<code>hold</code>)</td><td>Muuten.</td><td>Sama paino, yksi toisto enemmän kuin viimeksi (enintään yläpää).</td></tr>
+          <tr><th colspan="4" scope="rowgroup">Sarja treenin aikana</th></tr>
+          <tr><td>4</td><td>Uupumus (<code>rir-zero</code>)</td><td>Edellinen sarja RIR 0.</td><td>Jos toistot jäivät haarukan alle: paino − 2,5 kg ja toistot alapäästä. Muuten sama paino.</td></tr>
+          <tr><td>5</td><td>Kevyt kuorma (<code>rir-high</code>)</td><td>Edellisen sarjan RIR on suurempi kuin tavoitteen RIR-yläraja (esim. lihasmassa: RIR ≥ 3).</td><td>Paino + yksi askel.</td></tr>
+          <tr><td>6</td><td>Jatka (<code>hold</code>)</td><td>Muuten.</td><td>Sama paino ja toistot rajattuna haarukkaan.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Painot pyöristetään aina 2,5 kg:n kerrannaisiin. Kehonpainoliikkeillä nousu on aina 2,5 kg lisäpainoa.</p>
+
+    <div class="laskuri" id="l-progressio">
+      <div class="laskuri-otsikko"><h4>Laskuri: progressioehdotus</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <div class="kaava">Ehdotus = ensimmäinen osuva sääntö yllä olevasta taulukosta
+Askel = 2,5 kg (ylävartalo) tai 5 kg (alavartalo)</div>
+      <form class="laskuri-ui" id="f-progressio" onsubmit="return false">
+        <div class="kentat">
+          <label class="kentta">Tilanne
+            <select name="tilanne">
+              <option value="eka">Treenin 1. sarja (edellinen kerta)</option>
+              <option value="aikana">Treenin aikana (edellinen sarja)</option>
+            </select>
+          </label>
+          <label class="kentta">Paino (kg)<input name="paino" type="number" min="0" max="400" step="2.5" value="60" inputmode="decimal"></label>
+          <label class="kentta">Toistot<input name="toistot" type="number" min="1" max="30" step="1" value="12" inputmode="numeric"></label>
+          <label class="kentta">RIR (varalle jääneet toistot)
+            <select name="rir"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4+</option></select>
+          </label>
+          <label class="kentta">Tavoite
+            <select name="tavoite">
+              <option value="lihasmassa">Lihasmassa</option><option value="voima">Voima</option><option value="kiinteytys">Kiinteytys</option>
+              <option value="kunto">Kunto</option><option value="painonpudotus">Painonpudotus</option><option value="voimanosto">Voimanosto (pääliike)</option>
+            </select>
+          </label>
+          <label class="kentta">Liike
+            <select name="alue"><option value="ylä">Ylävartalo (esim. penkki)</option><option value="ala">Alavartalo (esim. kyykky)</option></select>
+          </label>
+          <label class="kentta">Kokemus
+            <select name="kokemus"><option value="aloittelija">Aloittelija</option><option value="keskitaso" selected>Keskitaso</option><option value="kokenut">Kokenut</option></select>
+          </label>
+        </div>
+        <div class="kentat">
+          <label class="valinta"><input type="checkbox" name="jumi"> Jumiutunut (3 kertaa samalla painolla ilman nousua)</label>
+          <label class="valinta"><input type="checkbox" name="vasynyt"> Päälihasryhmä väsynyt</label>
+        </div>
+        <output class="tulos" name="tulos" for="paino toistot rir" aria-live="polite"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> lihasmassa (haarukka 8–12), ylävartalo, keskitaso. Edellisellä kerralla 60 kg × 12, RIR 2 kaikissa sarjoissa → <strong>62,5 kg × 8</strong> (kaksoisprogressio).</p>
+    </div>
+  </div>
+
+  <!-- 5.2 -->
+  <div class="saanto" id="s-e1rm" data-toc>
+    <h3>5.2 Arvioitu maksimi (e1RM) ja jumiutuminen</h3>
+    <div class="kaava">e1RM = paino × (1 + toistot / 30)      (Epleyn kaava; kun toistot ≤ 1, e1RM = paino)</div>
+    <p><strong>Jumiutuminen</strong> on tosi, kun liikkeen kolme viimeisintä kertaa tehtiin samalla suurimmalla työsarjapainolla eikä kummankaan jälkimmäisen kerran paras e1RM ylittänyt ensimmäisen kerran parasta. Painon nosto ikkunan aikana tarkoittaa aina, ettei jumia ole. Kehonpainoliikkeillä ilman lisäpainoa mittarina on paras toistomäärä.</p>
+    <p><strong>Kevennys</strong> laskee painoa noin 10 % (vähintään 2,5 kg) ja palauttaa toistot haarukan alapäähän. Kevennyksen jälkeen jumi-ikkuna alkaa alusta, koska paino muuttui.</p>
+    <p>Laskuri e1RM:lle on kohdassa <a href="#s-treeniscore">5.4 Treeniscore</a>.</p>
+  </div>
+
+  <!-- 5.3 -->
+  <div class="saanto" id="s-tavoitteet" data-toc>
+    <h3>5.3 Tavoitteiden haarukat</h3>
+    <p>Ohjelman sarjat, toistot ja palautus ovat oletuksia, ja tavoitteen haarukat ohittavat ne treeniä aloitettaessa. Keston sovitus voi pudottaa sarjamäärän haarukan alapäähän asti.</p>
+    <div class="taulukko" role="region" aria-label="Tavoitteiden haarukat" tabindex="0">
+      <table>
+        <thead><tr><th>Tavoite</th><th>Toistot</th><th>Sarjat</th><th class="num">Palautus</th><th>RIR-tavoite</th></tr></thead>
+        <tbody>
+          <tr><td>Lihasmassa</td><td>8–12</td><td>3–4</td><td class="num">90 s</td><td>1–2</td></tr>
+          <tr><td>Kiinteytys</td><td>10–15</td><td>3</td><td class="num">60 s</td><td>1–3</td></tr>
+          <tr><td>Voima</td><td>3–6</td><td>4–5</td><td class="num">180 s</td><td>1–2</td></tr>
+          <tr><td>Kunto</td><td>8–15</td><td>3</td><td class="num">60 s</td><td>2–3</td></tr>
+          <tr><td>Painonpudotus</td><td>12–20</td><td>2–3</td><td class="num">45 s</td><td>2–3</td></tr>
+          <tr><td>Voimanosto</td><td>1–5 (pääliikkeet), 6–10 (apuliikkeet)</td><td>3–5</td><td class="num">180 s</td><td>1–3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Voimanoston pääliikkeet ovat demossa takakyykky, penkkipunnerrus ja maastaveto. Lämmittelysarjat: 2 sarjaa (50 % × 8 ja 75 % × 5) ennen ensimmäistä painavaa liikettä, palautus 60 s.</p>
+  </div>
+
+  <!-- 5.4 -->
+  <div class="saanto" id="s-treeniscore" data-toc>
+    <h3>5.4 Treeniscoren viitetaso ja lukitus</h3>
+    <div class="kaava">Arvioitu voima = paras e1RM 6 viikon ikkunassa (kehonpainoliikkeet: paras toistomäärä)
+Taukovähennys = 1 % per alkava viikko 14 päivän jälkeen, enintään 10 %
+Viitearvo = viitekerroin × kehonpaino   (kehonpainoliikkeet: viitetoistot)
+mVoima = arvioitu voima / viitearvo × 50, rajattuna 0–100, pyöristettynä
+Lihasryhmän arvo = ryhmän liikkeiden mVoima-arvojen keskiarvo
+Ryhmä (työnnöt, vedot, jalat) = lihasten keskiarvo, jos jokaisella lihaksella on arvo
+Treeniscore = kolmen ryhmän keskiarvo, jos kaikilla kolmella on arvo</div>
+    <div class="taulukko" role="region" aria-label="Treeniscoren säännöt" tabindex="0">
+      <table>
+        <thead><tr><th>Sääntö</th><th>Arvo (demon oletus)</th></tr></thead>
+        <tbody>
+          <tr><td>Lukitus</td><td>Lihasryhmä avautuu, kun sille on kirjattu vähintään 6 työsarjaa päälihasryhmänä 6 viikon (42 päivän) ikkunassa.</td></tr>
+          <tr><td>Ryhmät</td><td>Työnnöt: rinta, olkapäät, ojentajat. Vedot: selkä, hauis. Jalat: etureidet, takareidet, pakarat, pohkeet. Vatsa ei ole mukana.</td></tr>
+          <tr><td>Viitekertoimia</td><td>Penkkipunnerrus 1,0 · takakyykky 1,25 · maastaveto 1,5 · pystypunnerrus 0,6 · jalkaprässi 2,0 · käsipainoliikkeet per käsi 0,1–0,4 · leuanveto 10 toistoa</td></tr>
+          <tr><td>Asteikko</td><td>50 = viitetaso, 100 = kaksinkertainen viitetaso. Kerroin on demossa sama sukupuolesta riippumatta.</td></tr>
+          <tr><td>Trendi</td><td>Luku nyt verrattuna 28 päivää aiempaan: ero &gt; +2 nousu, &lt; −2 lasku, muuten tasainen.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="laskuri" id="l-treeniscore">
+      <div class="laskuri-otsikko"><h4>Laskuri: e1RM ja lihasvoima</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <div class="kaava">e1RM = paino × (1 + toistot / 30)
+mVoima = e1RM × (1 − vähennys) / (viitekerroin × kehonpaino) × 50</div>
+      <form class="laskuri-ui" id="f-treeniscore" onsubmit="return false">
+        <div class="kentat">
+          <label class="kentta">Liike
+            <select name="liike">
+              <option value="1.0">Penkkipunnerrus (1,0)</option>
+              <option value="1.25">Takakyykky (1,25)</option>
+              <option value="1.5">Maastaveto (1,5)</option>
+              <option value="0.6">Pystypunnerrus (0,6)</option>
+              <option value="0.8">Kulmasoutu (0,8)</option>
+              <option value="2.0">Jalkaprässi (2,0)</option>
+              <option value="0.4">Käsipainopenkki, per käsi (0,4)</option>
+            </select>
+          </label>
+          <label class="kentta">Paino (kg)<input name="paino" type="number" min="0" max="400" step="0.5" value="80" inputmode="decimal"></label>
+          <label class="kentta">Toistot<input name="toistot" type="number" min="1" max="30" step="1" value="8" inputmode="numeric"></label>
+          <label class="kentta">Kehonpaino (kg)<input name="kehonpaino" type="number" min="30" max="250" step="0.5" value="80" inputmode="decimal"></label>
+          <label class="kentta">Tauko (päivää)<input name="tauko" type="number" min="0" max="41" step="1" value="0" inputmode="numeric"></label>
+        </div>
+        <output class="tulos" name="tulos" aria-live="polite"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> penkkipunnerrus 80 kg × 8, kehonpaino 80 kg → e1RM 80 × (1 + 8/30) = <strong>101,3 kg</strong>, viitearvo 1,0 × 80 = 80 kg, mVoima = 101,3 / 80 × 50 = <strong>63</strong>.</p>
+    </div>
+  </div>
+
+  <!-- 5.5 -->
+  <div class="saanto" id="s-palautuminen" data-toc>
+    <h3>5.5 Palautumisajat</h3>
+    <div class="kaava">Sarjakuorma = Σ viimeisen 96 h työsarjat (päälihasryhmä 1, toissijainen 0,5)
+Palautuminen % = min(100, tunnit viimeisimmästä kuormituksesta / palautumisaika × 100)</div>
+    <div class="taulukko" role="region" aria-label="Palautumisajat" tabindex="0">
+      <table>
+        <thead><tr><th>Sarjakuorma 96 h:ssa</th><th class="num">Palautumisaika</th></tr></thead>
+        <tbody>
+          <tr><td>alle 6 sarjaa</td><td class="num">48 h</td></tr>
+          <tr><td>6–10 sarjaa</td><td class="num">72 h</td></tr>
+          <tr><td>yli 10 sarjaa</td><td class="num">96 h</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Tila: alle 50 % <em>väsynyt</em>, 50–89 % <em>palautumassa</em>, vähintään 90 % <em>palautunut</em>. Lajipäivä (padel) arvioidaan 4 sarjaksi etureisille, pohkeille ja olkapäille. Tuodut kävelyt ja pyöräilyt eivät kerrytä palautumista.</p>
+
+    <div class="laskuri" id="l-palautuminen">
+      <div class="laskuri-otsikko"><h4>Laskuri: palautuminen</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <form class="laskuri-ui" id="f-palautuminen" onsubmit="return false">
+        <div class="kentat">
+          <label class="kentta"><span>Sarjakuorma: <span data-arvo="sarjat">8</span> sarjaa</span><input name="sarjat" type="range" min="0" max="20" step="0.5" value="8"></label>
+          <label class="kentta"><span>Aikaa treenistä: <span data-arvo="tunnit">24</span> h</span><input name="tunnit" type="range" min="0" max="120" step="1" value="24"></label>
+        </div>
+        <output class="tulos" name="tulos" aria-live="polite"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> 8 sarjaa → palautumisaika 72 h. 24 h treenin jälkeen 24 / 72 = <strong>33 %</strong>, tila <em>väsynyt</em>. Palautunut-tila (≥ 90 %) noin 65 h kohdalla.</p>
+    </div>
+  </div>
+
+  <!-- 5.6 -->
+  <div class="saanto" id="s-viikko" data-toc>
+    <h3>5.6 Viikon sarjatavoitteiden kaava</h3>
+    <div class="kaava">Raaka tavoite = perustaso(tavoite) × kokemuskerroin × (0,75 pienille lihaksille)
+Kapasiteetti = treenit viikossa × kesto (min) / 3 min
+Jos Σ raaka &gt; kapasiteetti: kaikki × (kapasiteetti / Σ raaka)
+Lopuksi × viikkosuunnitelman ryhmäkerroin, pyöristys, vähintään 4</div>
+    <div class="taulukko" role="region" aria-label="Viikkotavoitteen kertoimet" tabindex="0">
+      <table>
+        <thead><tr><th>Tekijä</th><th>Arvot</th></tr></thead>
+        <tbody>
+          <tr><td>Perustaso per lihasryhmä</td><td>lihasmassa 12 · voimanosto 10 · kiinteytys 10 · voima 8 · kunto 8 · painonpudotus 8</td></tr>
+          <tr><td>Kokemuskerroin</td><td>aloittelija 0,75 · keskitaso 1,0 · kokenut 1,25</td></tr>
+          <tr><td>Pienet lihasryhmät</td><td>hauis, ojentajat, pohkeet, vatsa × 0,75</td></tr>
+          <tr><td>Kerryttäminen</td><td>vain päälihasryhmä, 1 työsarja = 1. Lämmittelyt, toissijaiset ja tuodut aktiviteetit eivät kerrytä.</td></tr>
+          <tr><td>Edistymisprosentti</td><td>Σ min(tehty, tavoite) / Σ tavoite</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="laskuri" id="l-viikko">
+      <div class="laskuri-otsikko"><h4>Laskuri: viikon sarjatavoite</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <form class="laskuri-ui" id="f-viikko" onsubmit="return false">
+        <div class="kentat">
+          <label class="kentta">Tavoite
+            <select name="tavoite">
+              <option value="lihasmassa">Lihasmassa</option><option value="voimanosto">Voimanosto</option><option value="kiinteytys">Kiinteytys</option>
+              <option value="voima">Voima</option><option value="kunto">Kunto</option><option value="painonpudotus">Painonpudotus</option>
+            </select>
+          </label>
+          <label class="kentta">Kokemus
+            <select name="kokemus"><option value="aloittelija">Aloittelija</option><option value="keskitaso" selected>Keskitaso</option><option value="kokenut">Kokenut</option></select>
+          </label>
+          <label class="kentta">Treenejä viikossa
+            <select name="treenit"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+          </label>
+          <label class="kentta">Kesto (min)
+            <select name="kesto"><option>30</option><option>45</option><option selected>60</option><option>75</option><option>90</option></select>
+          </label>
+        </div>
+        <output class="tulos" name="tulos" aria-live="polite"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> lihasmassa, keskitaso, 3 × 60 min. Raaka summa 6 × 12 + 4 × 9 = 108 sarjaa, kapasiteetti 3 × 60 / 3 = 60 sarjaa → skaala 0,56. Isot lihasryhmät <strong>7</strong> sarjaa, pienet <strong>5</strong> sarjaa viikossa.</p>
+    </div>
+  </div>
+
+  <!-- 5.7 -->
+  <div class="saanto" id="s-oivallukset" data-toc>
+    <h3>5.7 Oivallusten säännöt</h3>
+    <div class="taulukko leveä" role="region" aria-label="Oivallusten säännöt" tabindex="0">
+      <table>
+        <thead><tr><th>Tyyppi</th><th>Sääntö</th><th>Ehto</th></tr></thead>
+        <tbody>
+          <tr><td>Edistys (≤ 3)</td><td>Uusi ennätys</td><td>Mikä tahansa ennätystyyppi (arvioitu maksimi, raskain paino, volyymi, toistot).</td></tr>
+          <tr><td>Edistys</td><td>Arvioitu voima nousi</td><td>e1RM nousi yli 1 % edelliskerrasta.</td></tr>
+          <tr><td>Edistys</td><td>Volyymi kasvoi</td><td>Yli 5 % saman ohjelmapäivän edelliseen kertaan.</td></tr>
+          <tr><td>Edistys</td><td>Ehdotukset tuottivat tulosta</td><td>Vähintään 2 hyväksyttyä painonnostoehdotusta, ja tavoitetoistot saavutettiin.</td></tr>
+          <tr><td>Edistys</td><td>Jumiutuminen purkautui</td><td>Jumiutunut liike ylitti aiemman parhaan.</td></tr>
+          <tr><td>Huomio (≤ 2)</td><td>Palautuminen</td><td>Lihas jää väsyneeksi ja seuraava ohjelmapäivä kuormittaa sitä, tai treeni aloitettiin päälihasryhmän ollessa väsynyt.</td></tr>
+          <tr><td>Huomio</td><td>Kuormitus liian kova</td><td>Vähintään puolet sarjoista RIR 0:lla → suositus RIR 1–2.</td></tr>
+          <tr><td>Huomio</td><td>Jumi jatkuu</td><td>Jumiutuminen on edelleen tosi → seuraavaksi kevennys.</td></tr>
+          <tr><td>Huomio</td><td>Tavoite jäljessä</td><td>Viikkoa jäljellä ≤ 2 päivää ja jokin ryhmä alle 50 %. Ei näytetä, jos muisti selittää (esim. lajiviikko).</td></tr>
+          <tr><td>Huomio</td><td>Ehdotuksia ohitettiin</td><td>Vähintään 3 ohitettua ehdotusta → kysytään, onko syynä kipu tai rajoite.</td></tr>
+          <tr><td>Seuraavaksi (= 1)</td><td>Seuraava treeni</td><td>Seuraava ohjelmapäivä, kun sen päälihasryhmät ovat ≥ 90 %:ssa palautumisesta.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Kalorit: voimatreeni MET 5,0 × kehonpaino × tunnit (arvio, merkintä ~). Merkkipaalut: ensimmäinen treeni, 10/50/100 treeniä, ensimmäinen ennätys, 4 viikon putki ja 10 000 kg yhdessä treenissä.</p>
+  </div>
+
+  <!-- 5.8 -->
+  <div class="saanto" id="s-haasteet" data-toc>
+    <h3>5.8 Haasteiden tasapainotus, pisteet ja tasot</h3>
+    <div class="kaava">Tasapainotettu tulos = haasteen ajan mittari / lähtötaso × 100 %
+Lähtötaso = oma mittari 4 edellisen viikon (28 pv) ajalta × haasteen pituus (pv) / 28
+Taso alkaa nollasta. Taso n saavutetaan, kun pisteitä on ≥ 100 × n × (n + 1) / 2</div>
+    <div class="taulukko leveä" role="region" aria-label="Haasteiden mittarit ja pisteet" tabindex="0">
+      <table>
+        <thead><tr><th>Mittari</th><th>Laskenta haasteen aikaväliltä</th></tr></thead>
+        <tbody>
+          <tr><td><code>treenit</code></td><td>voimatreenien määrä</td></tr>
+          <tr><td><code>volyymi</code></td><td>työsarjojen kilot (paino × toistot, käsipainot × 2)</td></tr>
+          <tr><td><code>sarjat</code></td><td>työsarjojen määrä (ei lämmittelyjä)</td></tr>
+          <tr><td><code>aktiivisetPaivat</code></td><td>eri päivät, joina on mikä tahansa merkintä, myös tuodut aktiviteetit ja kirjatut lajipäivät</td></tr>
+          <tr><td><code>putki</code></td><td>peräkkäiset viikot, joina viikkotavoite täyttyi</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="taulukko" role="region" aria-label="Pisteet ja tasot" tabindex="0">
+      <table>
+        <thead><tr><th>Pisteiden lähde</th><th class="num">Pisteet</th></tr></thead>
+        <tbody>
+          <tr><td>Voimatreeni</td><td class="num">10</td></tr>
+          <tr><td>Tuotu aktiviteetti (kävely, pyöräily)</td><td class="num">3</td></tr>
+          <tr><td>Suoritettu haaste, johon on liitytty</td><td class="num">haasteen pisteet (oletus 50)</td></tr>
+          <tr><td>Ansaittu merkki</td><td class="num">20</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="taulukko" role="region" aria-label="Tasojen pisterajat" tabindex="0">
+      <table>
+        <thead><tr><th>Taso</th><th class="num">0</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th></tr></thead>
+        <tbody>
+          <tr><td>Pisteitä vähintään</td><td class="num">0</td><td class="num">100</td><td class="num">300</td><td class="num">600</td><td class="num">1 000</td><td class="num">1 500</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Kaverihaaste on suoritettu, kun se päättyy. Muut haasteet ovat suoritettuja, kun mittari yltää tavoitteeseen. Kavereiden tulokset ovat demossa deterministisesti keksittyjä heidän lähtötasonsa ja profiilinsa perusteella.</p>
+
+    <div class="laskuri" id="l-tasapainotus">
+      <div class="laskuri-otsikko"><h4>Laskuri: tasapainotus</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <form class="laskuri-ui" id="f-tasapainotus" onsubmit="return false">
+        <p class="himmea" style="font-size:0.9rem">Mittarina treenien määrä kahden viikon haasteessa. Lähtötaso on henkilön oma keskiarvo vastaavalta jaksolta.</p>
+        <div class="vertailu">
+          <fieldset class="henkilo">
+            <legend>Sinä (aloittelija)</legend>
+            <label class="kentta"><span>Lähtötaso: <span data-arvo="aLahto">4</span> treeniä</span><input name="aLahto" type="range" min="1" max="20" step="1" value="4"></label>
+            <label class="kentta"><span>Haasteen tulos: <span data-arvo="aTulos">6</span> treeniä</span><input name="aTulos" type="range" min="0" max="20" step="1" value="6"></label>
+          </fieldset>
+          <fieldset class="henkilo">
+            <legend>Kaveri (kokenut)</legend>
+            <label class="kentta"><span>Lähtötaso: <span data-arvo="bLahto">8</span> treeniä</span><input name="bLahto" type="range" min="1" max="20" step="1" value="8"></label>
+            <label class="kentta"><span>Haasteen tulos: <span data-arvo="bTulos">9</span> treeniä</span><input name="bTulos" type="range" min="0" max="20" step="1" value="9"></label>
+          </fieldset>
+        </div>
+        <output class="tulos" name="tulos" aria-live="polite" style="margin-top:12px"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> sinä 6 treeniä lähtötasolla 4 = <strong>150 %</strong>, kaveri 9 treeniä lähtötasolla 8 = <strong>113 %</strong>. Raakana kaveri johtaa (9 vs. 6), tasapainotettuna sinä.</p>
+    </div>
+  </div>
+
+  <!-- 5.9 -->
+  <div class="saanto" id="s-vaihto" data-toc>
+    <h3>5.9 Liikkeen vaihtoehtojen pisteytys</h3>
+    <div class="taulukko" role="region" aria-label="Vaihtoehtojen pisteytys" tabindex="0">
+      <table>
+        <thead><tr><th>Pisteytys</th><th class="num">Pisteet</th></tr></thead>
+        <tbody>
+          <tr><td>Sama päälihasryhmä</td><td class="num">+50</td></tr>
+          <tr><td>Sama liikemalli</td><td class="num">+30</td></tr>
+          <tr><td>Toissijaisten lihasten päällekkäisyys</td><td class="num">+5 / lihas</td></tr>
+          <tr><td>Käyttäjällä on liikkeestä historiaa (tuttu liike)</td><td class="num">+10</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Kelpaa ehdokkaaksi:</strong> liike, jolla on sama päälihasryhmä, tai liike, jolla on sama liikemalli ja jossa alkuperäisen liikkeen päälihasryhmä työskentelee avustajana (toissijaisena).</p>
+    <p><strong>Karsitaan:</strong> liikkeet, joiden tarvikkeita salilla ei ole, vältettävät liikkeet (kipumuistit), kipuvaihdossa ja voimassa olevien kipumuistien alueita kuormittavat liikkeet sekä liikkeet, jotka ovat jo päivän ohjelmassa. Syillä <em>Laite puuttuu</em> ja <em>Laite varattu</em> alkuperäisen liikkeen laitteet jätetään pois käytettävistä laitteista. Tuloksena on enintään 5 vaihtoehtoa paras ensin. Tasapisteillä järjestys on liikekirjaston järjestys. Tyhjä tulos → <em>Ohita liike tänään</em>.</p>
+    <p><strong>Automaattinen vaihto</strong> tehdään päivän ohjelmalle, kun liikkeen laitteita ei ole (syy <code>laite</code>) tai liike on kipumuistissa vältettävä (syy <code>kipu</code>). Korvaajaksi valitaan paras vaihtoehto, joka ei ole jo päivän ohjelmassa eikä toisen vaihdon korvaajana. Jos sellaista ei ole, liike ohitetaan tältä päivältä.</p>
+    <p><strong>Laitepohjat:</strong> täysi kuntosali (kaikki 19), kotisali (levytanko, kyykkyteline, penkki, käsipainot, leuanvetotanko, vastuskuminauhat), hotellisali (käsipainot, penkki, ylätalja, alatalja) ja vain kehonpaino (ei laitteita).</p>
+    <h4>Esimerkki: penkkipunnerrus hotellisalilla</h4>
+    <p>Penkkipunnerrus (rinta, vaakatyöntö, toissijaiset ojentajat ja olkapäät) vaatii levytangon, jota hotellisalilla ei ole.</p>
+    <div class="taulukko leveä" role="region" aria-label="Esimerkki vaihtoehtojen pisteytyksestä" tabindex="0">
+      <table>
+        <thead><tr><th>Vaihtoehto</th><th>Pisteytys</th><th class="num">Pisteet</th><th>Perustelu sovelluksessa</th></tr></thead>
+        <tbody>
+          <tr><td>Vinopenkkipunnerrus käsipainoilla</td><td>ryhmä 50 + malli 30 + 2 × 5</td><td class="num">90</td><td>Sama lihasryhmä ja liikemalli, ei vaadi levytankoa</td></tr>
+          <tr><td>Käsipainopenkkipunnerrus</td><td>ryhmä 50 + malli 30 + 2 × 5</td><td class="num">90</td><td>Sama lihasryhmä ja liikemalli, ei vaadi levytankoa</td></tr>
+          <tr><td>Punnerrus</td><td>ryhmä 50 + malli 30 + 2 × 5</td><td class="num">90</td><td>Sama lihasryhmä ja liikemalli, ei vaadi levytankoa</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Takakyykyn vaihtoehdot ilman kyykkytelinettä ovat jalkaprässi, askelkyykky käsipainoilla, bulgarialainen askelkyykky ja kyykky kehonpainolla (kukin 85 = 50 + 30 + 5) sekä reiden ojennus (50). Polvikivussa takakyykylle ei löydy vaihtoehtoa, koska kaikki etureisiliikkeet kuormittavat polvea, joten liike ohitetaan.</p>
+
+    <h4>Johdettu aloituspaino</h4>
+    <div class="kaava">Johdettu paino = pyöristys2,5( korvaavan viitekerroin / alkuperäisen viitekerroin
+                × alkuperäisen arvioitu voima (e1RM)
+                × 1 / (1 + (haarukan alapää + RIR-yläraja) / 30) )
+Toistot = haarukan alapää</div>
+    <p>Kaava on käytössä, kun korvaavalla liikkeellä ei ole historiaa ja molemmilla liikkeillä on viitekerroin. Viimeinen tekijä on Epleyn kaava käännettynä haarukan alapäähän niin, että RIR-varaus jää (lihasmassa: 8 + 2 → 0,75). Muuten käytetään liikkeen omaa aloituspainoa.</p>
+
+    <div class="laskuri" id="l-johdettu">
+      <div class="laskuri-otsikko"><h4>Laskuri: johdettu aloituspaino</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <form class="laskuri-ui" id="f-johdettu" onsubmit="return false">
+        <div class="kentat">
+          <label class="kentta">Alkuperäinen liike
+            <select name="alkup">
+              <option value="penkkipunnerrus">Penkkipunnerrus (1,0)</option>
+              <option value="takakyykky">Takakyykky (1,25)</option>
+              <option value="maastaveto">Maastaveto (1,5)</option>
+              <option value="pystypunnerrus">Pystypunnerrus (0,6)</option>
+              <option value="kulmasoutu">Kulmasoutu levytangolla (0,8)</option>
+            </select>
+          </label>
+          <label class="kentta">Korvaava liike
+            <select name="korvaava">
+              <option value="kasipainopenkkipunnerrus">Käsipainopenkkipunnerrus, per käsi (0,4)</option>
+              <option value="rintaprassi-laite">Rintaprässi laitteessa (0,8)</option>
+              <option value="jalkaprassi">Jalkaprässi (2,0)</option>
+              <option value="askelkyykky-kasipainot">Askelkyykky käsipainoilla, per käsi (0,25)</option>
+              <option value="romanialainen-maastaveto">Romanialainen maastaveto (1,0)</option>
+              <option value="kasipainopystypunnerrus">Käsipainopystypunnerrus, per käsi (0,25)</option>
+              <option value="alataljasoutu">Alataljasoutu (0,7)</option>
+            </select>
+          </label>
+          <label class="kentta">Alkuperäisen e1RM (kg)<input name="voima" type="number" min="1" max="500" step="0.5" value="100" inputmode="decimal"></label>
+          <label class="kentta">Tavoite
+            <select name="tavoite">
+              <option value="lihasmassa">Lihasmassa</option><option value="voima">Voima</option><option value="kiinteytys">Kiinteytys</option>
+              <option value="kunto">Kunto</option><option value="painonpudotus">Painonpudotus</option><option value="voimanosto">Voimanosto (apuliike)</option>
+            </select>
+          </label>
+        </div>
+        <output class="tulos" name="tulos" aria-live="polite"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> penkkipunnerruksen e1RM 100 kg, korvaavana käsipainopenkkipunnerrus, lihasmassa: 0,4 / 1,0 × 100 × 0,75 = 30 → <strong>30 kg × 8</strong> (per käsi).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section class="osio vain-speksi" id="tietomalli" data-toc>
+  <h2><span class="osio-numero">6</span>Tietomalli</h2>
+  <p>Pääentiteetit ja keskeiset kentät demon mukaan. Tuotteessa jokaisella tietueella on lisäksi yksilöivä tunniste, omistaja (käyttäjä), luonti- ja muokkausaika sekä synkronointitieto. Painot tallennetaan aina kiloina ja päivämäärät ISO-muodossa.</p>
+  <div class="taulukko leveä" role="region" aria-label="Tietomalli" tabindex="0">
+    <table>
+      <thead><tr><th>Entiteetti</th><th>Keskeiset kentät</th><th>Huomio tuotteeseen</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Käyttäjä ja profiili</strong></td><td><code>nimi</code>, <code>tavoite</code>, <code>kokemus</code>, <code>treenitViikossa</code> (2–6), <code>kesto</code> (min), <code>jako</code>, <code>laitteet</code> [laiteId], <code>lammittelysarjat</code>, <code>palautusajastin</code>, <code>palautusKesto</code>, <code>kehonpaino</code>, <code>yksikko</code> (kg/lb), <code>viikonAlku</code>, <code>sali</code>, <code>teema</code></td><td>Tili ja tunnistautuminen, suostumukset, näkyvyysasetukset. Kehonpaino voi olla terveystietoa.</td></tr>
+        <tr><td><strong>Liike</strong></td><td><code>id</code>, <code>nimi</code>, <code>lihasryhma</code>, <code>toissijaiset</code> [], <code>valine</code>, <code>alue</code> (ylä/ala), <code>tarvikkeet</code> [laiteId], <code>kaava</code> (liikemalli), <code>kuormittaa</code> [alue], <code>viitekerroin</code> tai <code>viitetoistot</code>, <code>aloituspaino</code>, <code>ohje</code>, <code>media</code> {animaatio, videoId, hakusana}</td><td>Sisältö hallitaan sisällönhallinnassa ja lokalisoidaan.</td></tr>
+        <tr><td><strong>Laite</strong></td><td><code>id</code>, <code>nimi</code>, <code>ryhma</code> (vapaat, laitteet, taljat, kehonpaino). Demossa 19 laitetta. Laitepohja: <code>id</code>, <code>nimi</code>, <code>laitteet</code> []</td><td>Salin laitelista voi tulla salilta (B2B).</td></tr>
+        <tr><td><strong>Ohjelma</strong></td><td><code>id</code>, <code>nimi</code>, <code>kuvaus</code>, <code>tasot</code>, <code>paivat</code> [{ <code>nimi</code>, <code>liikkeet</code> [{ liikeId, sarjat, toistoMin, toistoMax, palautusS }] }]</td><td>Kirjasto-ohjelmat ja käyttäjän tai tekoälyn muokkaamat ohjelmat erotetaan.</td></tr>
+        <tr><td><strong>Treeni</strong></td><td><code>id</code>, <code>pvm</code>, <code>aloitus</code>, <code>kestoS</code>, <code>ohjelmaId</code>, <code>paivaNimi</code>, <code>lahde</code> (psp/terveys), <code>tyyppi</code> (voima/kävely/pyöräily), <code>kcal</code>, <code>nimi</code>, <code>matkaKm</code>, <code>liikkeet</code> [{ liikeId, sarjat [], vaihdettu? { alkuperainen, syy } }], <code>ehdotukset</code> []</td><td>Tuoduille aktiviteeteille lähteen tunniste kaksoiskappaleiden estoon. Päivän vaihdot: <code>paivanVaihdot</code> { pvm: { alkuperainen: korvaava | null (ohitettu) } } ja syyt <code>paivanVaihtoSyyt</code> { pvm: { alkuperainen: { syy, kipualue? } } }.</td></tr>
+        <tr><td><strong>Sarja</strong></td><td><code>paino</code> (kg), <code>toistot</code>, <code>rir</code> (0–4+), <code>lammittely</code> (bool)</td><td>Tuotteessa myös kuittausaika ja tarvittaessa aikasarjat.</td></tr>
+        <tr><td><strong>Ehdotus</strong></td><td><code>liikeId</code>, <code>sarjaIndeksi</code>, <code>ehdotus</code> { paino, toistot, syy, miksi }, <code>hyvaksytty</code> (bool)</td><td>Tuotteessa myös säännön ja mallin versio jäljitettävyyttä varten.</td></tr>
+        <tr><td><strong>Muisti</strong></td><td><code>id</code>, <code>teksti</code>, <code>tyyppi</code> (tilapäinen/pysyvä), <code>voimassaAlku</code>, <code>voimassaLoppu</code>, <code>luotu</code>, <code>lahde</code> (chat/vaihto), <code>kipualue</code>?, <code>valtettava</code>? (liikeId)</td><td>Käyttäjä näkee, muokkaa ja poistaa. Kipumuistit voivat olla terveystietoa.</td></tr>
+        <tr><td><strong>Viikkosuunnitelma</strong></td><td><code>viikonAlku</code>, <code>paivat</code> [{ pvm, tyyppi (treeni/laji/lepo/matka), ohjelmaPaiva?, laji?, kestoMin?, laitteet?, huomio? }], <code>sarjatavoiteKertoimet</code> { tyonnot, vedot, jalat }, <code>perustelu</code></td><td>Vain hyväksytyt tallennetaan. Hylätyt ehdotukset voi kirjata personointia varten.</td></tr>
+        <tr><td><strong>Haaste</strong></td><td><code>id</code>, <code>tyyppi</code> (oma/kaveri/sali/kumppani), <code>nimi</code>, <code>kuvaus</code>, <code>mittari</code>, <code>tavoite</code>, <code>alku</code>, <code>loppu</code>, <code>osallistujat</code> [], <code>tasapainotus</code>, <code>palkinto</code> { pisteet, merkkiId?, etu? { kumppani, teksti, koodi } }, <code>saliTavoite</code>?, <code>liittynyt</code>, <code>luoja</code></td><td>Sali- ja kumppanihaasteet hallitaan B2B-näkymässä. Etukoodit säilytetään palvelimella.</td></tr>
+        <tr><td><strong>Kaveri</strong></td><td><code>id</code>, <code>nimi</code>, <code>nimikirjaimet</code>, <code>vari</code>, <code>taso</code>, <code>pisteet</code>, <code>lahtotasot</code> { mittari: arvo }, <code>profiili</code></td><td>Demossa keksittyjä. Tuotteessa kaksisuuntainen kaveruus ja näkyvyysasetukset.</td></tr>
+        <tr><td><strong>Merkki</strong></td><td><code>id</code>, <code>nimi</code>, <code>kuvake</code>, <code>ehto</code>. Ansaittu: { <code>id</code>, <code>pvm</code> }</td><td>Ansaitseminen lasketaan palvelimella.</td></tr>
+        <tr><td><strong>Kehonpainomittaus</strong></td><td><code>pvm</code>, <code>kg</code></td><td>Voi tulla terveyssovelluksesta.</td></tr>
+        <tr><td><strong>Yhteisön tila</strong></td><td><code>tsempit</code> [tapahtumaId], <code>ansaitutMerkit</code> [{ id, pvm }], <code>lunastetutEdut</code> [haasteId]</td><td>Tapahtumasyöte palvelimelta.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section class="osio vain-speksi" id="tekoaly" data-toc>
+  <h2><span class="osio-numero">7</span>Tekoäly tuotteessa</h2>
+  <div class="huomio"><strong>Demossa tekoäly on mockup.</strong> Valmentajan vastaukset ovat käsikirjoitettuja malleja, joihin täytetään käyttäjän data, ja ehdotukset ja oivallukset tuottaa sääntömoottori. Säännöt ovat läpinäkyviä: jokainen niistä näkyy käyttäjälle Miksi?-tekstinä ja tässä dokumentissa kohdassa 5.</div>
+
+  <h3>Valmentajan rooli ja rajat</h3>
+  <ul>
+    <li>Personal SuperPowerin valmentaja vastaa suomeksi, tiiviisti ja käytännöllisesti. Vastaukset perustuvat käyttäjän dataan, jonka valmentaja hakee työkaluilla, sekä vakiintuneisiin harjoitteluperiaatteisiin. Tutkimusviitteitä ei keksitä.</li>
+    <li>Valmentaja ei diagnosoi. Kivun tai vamman kohdalla se kehottaa kääntymään lääkärin tai fysioterapeutin puoleen ja ehdottaa kipua välttäviä vaihtoehtoja.</li>
+    <li>Valmentaja ei anna ravitsemus- tai lääkehoito-ohjeita eikä ohjeita sairauksien hoitoon. Rajatapauksissa se ohjaa ammattilaiselle.</li>
+    <li>Ohjeviestissä ovat tämän päivän päivämäärä ja viikonpäivä, jotta esimerkiksi "ensi viikko" tulkitaan oikein.</li>
+  </ul>
+
+  <h3>Muisti</h3>
+  <ul>
+    <li>Valmentaja tallentaa asiat, joilla on merkitystä tulevalle treenille (tilapäiset: matkat, poikkeavat viikot, lyhytaikaiset vaivat; pysyvät: säännölliset lajit, esteet, mieltymykset), ja kertoo tallentaneensa ne.</li>
+    <li>Muisti on läpinäkyvä: vastauksissa käytetään vain muisteja, jotka näkyvät käyttäjälle. Käyttäjä voi muokata ja poistaa niitä. Vanhentuneita tilapäisiä muisteja käytetään vain 14 päivää päättymisen jälkeen ("miten reissu meni?").</li>
+    <li>Muisti ja keskustelu ovat erillään: keskustelun tyhjentäminen ei poista muisteja.</li>
+  </ul>
+
+  <h3>Työkalut, joita tekoäly voi kutsua</h3>
+  <div class="taulukko leveä" role="region" aria-label="Tekoälyn työkalut" tabindex="0">
+    <table>
+      <thead><tr><th>Työkalu</th><th>Tekee</th><th>Palauttaa</th></tr></thead>
+      <tbody>
+        <tr><td><code>haeKonteksti</code></td><td>Lukee profiilin, aktiivisen ohjelman päivät, tämän ja ensi viikon tavoitteet ja edistymisen, palautumistilan, 5 viimeisintä treeniä tiivistettynä sekä voimassa olevat muistit.</td><td>JSON (pieni, alle 8 kt demossa)</td></tr>
+        <tr><td><code>tallennaMuisti</code></td><td>{ teksti, tyyppi, voimassaAlku?, voimassaLoppu? } → lisää muistin ja näyttää muistisirun.</td><td>{ id }</td></tr>
+        <tr><td><code>poistaMuisti</code></td><td>{ id }, kun käyttäjä kertoo tiedon vanhentuneen.</td><td>{ ok }</td></tr>
+        <tr><td><code>ehdotaViikkosuunnitelma</code></td><td>Viikkosuunnitelma (päivät, kertoimet, perustelu) → näyttää ehdotuskortin, ei ota käyttöön.</td><td>{ naytetty: true }</td></tr>
+        <tr><td><code>ehdotaLiikkeenVaihto</code></td><td>{ liikeId, syy, kipualue? } → hakee vaihtoehdot pisteytyksellä ja näyttää ne valittaviksi.</td><td>{ naytetty: true }</td></tr>
+        <tr><td><code>liityHaasteeseen</code></td><td>{ haasteId } → näyttää haasteen ja sirun <em>Liity haasteeseen</em>. Liittyminen tapahtuu vasta, kun käyttäjä napauttaa sirua.</td><td>{ naytetty: true }</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="himmea">Demossa valmentajan haastevastaus palauttaa jo toiminnon <code>liityHaasteeseen</code>, joka näkyy siruna. <code>ehdotaLiikkeenVaihto</code> on tuotetta varten ehdotettu laajennus: demossa vaihto tehdään käyttöliittymän alalaatikossa samalla pisteytyksellä.</p>
+
+  <h3>Hyväksyntä ennen muutoksia</h3>
+  <p>Tekoäly ei koskaan muuta suunnitelmaa, tavoitteita, ohjelmaa, salin laitteita tai haasteita suoraan. Muutokset esitetään aina ehdotuskorttina, jossa on perustelu sekä <em>Ota käyttöön</em> ja <em>Hylkää</em>. Muistin tallennus on poikkeus: se näytetään heti muistisiruna, ja käyttäjä voi poistaa sen.</p>
+
+  <h3>Progressiomallin personointi</h3>
+  <ul>
+    <li>Sääntömoottori on turvaraja ja selitettävä pohja. Tekoäly säätää parametreja (painoaskel, haarukka, RIR-tavoite, kevennyksen raja, palautumisajat) käyttäjän vasteen perusteella: miten ehdotukset toteutuivat, mitä ohitettiin ja miten e1RM kehittyi.</li>
+    <li>Säädöille on asiantuntijan määrittämät ylä- ja alarajat. Muutos näkyy Miksi?-tekstissä ("askel pienennetty, koska…").</li>
+  </ul>
+
+  <h3>Oivallusten tuotanto</h3>
+  <p>Moottori valitsee oivallukset ja luvut säännöillä (kohta 5.7), ja kielimalli kirjoittaa tekstin. Tuotettu teksti tarkistetaan: luvut verrataan moottorin arvoihin, eikä tekstiä näytetä, jos tarkistus epäonnistuu. Silloin käytetään valmista mallipohjaa.</p>
+
+  <h3>Laadunvarmistus</h3>
+  <ul>
+    <li>Arviointiaineisto: demon skenaariot (reissu ja laji, kipu, väsymys, kiire, muistikysymys, haaste) sekä reunatapaukset. Ajetaan jokaisen malli- tai ohjemuutoksen yhteydessä.</li>
+    <li>Turvallisuustestit: kipu, vammat, syömishäiriöviitteet ja ylikuormitus. Vastaus ei saa diagnosoida eikä kannustaa vaaralliseen kuormitukseen.</li>
+    <li>Työkalukutsujen tarkistus: muutokset vain ehdotuskorttien kautta, ja muisti vain näkyvänä.</li>
+    <li>Käyttäjäpalaute vastauksista (peukku ylös/alas ja syy), lokit ilman tarpeetonta henkilötietoa sekä mallin ja ohjeen versiointi.</li>
+  </ul>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section class="osio vain-speksi" id="integraatiot" data-toc>
+  <h2><span class="osio-numero">8</span>Integraatiot</h2>
+  <div class="taulukko leveä" role="region" aria-label="Integraatiot" tabindex="0">
+    <table>
+      <thead><tr><th>Integraatio</th><th>Data</th><th>Käyttö</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Health Connect</strong> (Android) ja <strong>Apple Health</strong> (iOS)</td><td>Askeleet, kävelyt, pyöräilyt (kesto, matka, kalorit), kehonpaino. Valinnaisesti voimatreenien vienti terveyssovellukseen.</td><td>Aikajana, viikkotavoitteen päivät, putki, aktiivisten päivien haasteet, profiilin kehonpaino. Tuonti vain käyttäjän luvalla ja tietotyypeittäin.</td></tr>
+        <tr><td><strong>Puettavat laitteet</strong> (mahdollinen)</td><td>Syke, uni, palautumisarvio.</td><td>Palautumismallin tarkentaminen ja treenin kaloriarvio. Toteutetaan ensisijaisesti terveysalustojen kautta.</td></tr>
+        <tr><td><strong>Salijärjestelmät</strong> (B2B)</td><td>Salin laitelista, jäsenhaasteet, jäsenyyden tunnistus.</td><td>Ohjelma vastaa heti salin laitteita, ja jäsenhaasteet näkyvät jäsenille. Salit saavat koottua tietoa.</td></tr>
+        <tr><td><strong>Kumppanien etukoodit</strong></td><td>Haasteen määritys, palkinto, koodipooli.</td><td>Koodi luovutetaan haasteen suorittaneelle kerran. Lunastuksen raportointi kumppanille koottuna.</td></tr>
+        <tr><td><strong>Videokirjasto</strong></td><td>Omat tai lisensoidut liikevideot.</td><td>Liikkeen näyttö. Mediamalli on lähteestä riippumaton.</td></tr>
+        <tr><td><strong>Kielimalli</strong></td><td>Valmentajan keskustelu ja oivallusten teksti.</td><td>Palveluntarjoaja valitaan toteutusvaiheessa (EU-tietojenkäsittely, käsittelijäsopimus).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section class="osio vain-speksi" id="ei-toiminnalliset" data-toc>
+  <h2><span class="osio-numero">9</span>Ei-toiminnalliset vaatimukset</h2>
+  <div class="ruudukko">
+    <div class="kortti">
+      <h3>Alustat</h3>
+      <p>Natiivisovellus iOS:lle ja Androidille. Tuetut käyttöjärjestelmäversiot sovitaan toteutusvaiheessa. Salien ja kumppanien hallintanäkymä toteutetaan verkkosovelluksena.</p>
+    </div>
+    <div class="kortti">
+      <h3>Offline ja synkronointi</h3>
+      <p>Treenin kirjaus, ehdotukset ja palautusajastin toimivat ilman verkkoyhteyttä. Data synkronoituu, kun yhteys palaa. Ristiriidat ratkaistaan ilman tietojen katoamista, eikä kaksoiskappaleita synny.</p>
+    </div>
+    <div class="kortti">
+      <h3>Suorituskyky</h3>
+      <p>Sarjan kuittaus ja seuraava ehdotus näkyvät viiveettä (paikallinen laskenta). Sovellus käynnistyy nopeasti keskitason puhelimella. Valmentajan vastaus alkaa näkyä muutamassa sekunnissa.</p>
+    </div>
+    <div class="kortti">
+      <h3>Saavutettavuus</h3>
+      <p>WCAG 2.1 AA: kontrastit, ruudunlukijatuki, järjestelmän tekstikoko, kosketusalueet vähintään 44 × 44 pt, eleille aina painikevaihtoehto (esim. liikkeen vaihto) ja liikkeen vähentäminen.</p>
+    </div>
+    <div class="kortti">
+      <h3>Lokalisointi</h3>
+      <p>Ensimmäinen kieli on suomi. Rakenne tukee muita kieliä (tekstit erillään koodista, päivämäärä- ja lukumuodot, kg/lb). Liikkeiden nimet ja ohjeet lokalisoidaan.</p>
+    </div>
+    <div class="kortti">
+      <h3>Tietoturva</h3>
+      <p>Salattu tiedonsiirto ja tallennus, vahva tunnistautuminen, pääsynhallinta, lokitus ja haavoittuvuustestaus ennen julkaisua. Etukoodit ja B2B-rajapinnat suojataan.</p>
+    </div>
+  </div>
+
+  <h3>Tietosuoja</h3>
+  <ul>
+    <li>Sovellus käsittelee henkilötietoja: profiili, treenit, kaverit ja keskustelut. Osa tiedoista voi olla <strong>terveystietoja</strong> (tietosuoja-asetuksen 9 artikla): kehonpaino, palautumistiedot ja kipua tai vammoja koskevat muistit. Niiden käsittely edellyttää todennäköisesti nimenomaista suostumusta. Tulkinta ja tarvittava vaikutustenarviointi tehdään toteutusvaiheessa.</li>
+    <li><strong>Suostumus</strong> pyydetään erikseen ja tarkoituksittain (esim. terveysdatan tuonti, valmentajan muisti), ja sen voi perua.</li>
+    <li><strong>Minimointi:</strong> kerätään vain tarvittava. Tekoälylle lähetetään vain tehtävään tarvittava konteksti.</li>
+    <li><strong>Oikeudet:</strong> käyttäjä voi ladata tietonsa koneluettavassa muodossa ja poistaa tilinsä ja kaikki tietonsa sovelluksesta.</li>
+    <li><strong>Käsittelijät:</strong> pilvipalvelun, kielimallin ja analytiikan tarjoajien kanssa tehdään käsittelijäsopimukset. Tietojen siirrot EU:n ulkopuolelle arvioidaan.</li>
+    <li><strong>Sosiaaliset ominaisuudet:</strong> näkyvyysasetukset (mitä kaverit näkevät), oletuksena suppea näkyvyys. Kaverin tietoja näytetään vain kaveruuden ja asetusten sallimissa rajoissa, eikä niitä käytetä muuhun tarkoitukseen. Salit ja kumppanit saavat vain koottua tietoa, ellei käyttäjä erikseen suostu muuhun.</li>
+  </ul>
+
+  <h3>EU:n tekoälyasetus</h3>
+  <p>Valmentaja on chatbot, joten käyttäjälle kerrotaan, että hän on vuorovaikutuksessa tekoälyn kanssa (tekoälyasetuksen 50 artiklan avoimuusvelvoite). Velvoitteiden tarkka soveltaminen ja järjestelmän luokittelu selvitetään toteutusvaiheessa.</p>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section class="osio vain-speksi" id="avoimet" data-toc>
+  <h2><span class="osio-numero">10</span>Avoimet kysymykset ja seuraavat askeleet</h2>
+  <div class="taulukko leveä" role="region" aria-label="Avoimet kysymykset" tabindex="0">
+    <table>
+      <thead><tr><th>Aihe</th><th>Kysymys</th><th>Ehdotettu seuraava askel</th></tr></thead>
+      <tbody>
+        <tr><td>Viitearvot</td><td>Ovatko haarukat, askeleet, viitekertoimet, palautumisajat ja viikkotavoitteet oikealla tasolla eri käyttäjäryhmille?</td><td>Validointi asiantuntijan (valmentaja, liikuntafysiologi) kanssa ja tarkistettujen lähteiden kirjaus.</td></tr>
+        <tr><td>Tekoälymalli</td><td>Mikä kielimalli ja palveluntarjoaja (laatu suomeksi, hinta, EU-käsittely)?</td><td>Vertailu demon skenaarioilla ja arviointiaineistolla.</td></tr>
+        <tr><td>Sisällöntuotanto</td><td>Omat vai lisensoidut liikevideot? Kuka tarkistaa ohjeet?</td><td>Kustannusarvio ja pilottierä vertailuliikkeistä.</td></tr>
+        <tr><td>Hinnoittelu</td><td>Mitä maksuton taso sisältää ja mikä on tilauksen hinta?</td><td>Hinnoittelutesti ja kilpailija-analyysi ilman sitoumuksia.</td></tr>
+        <tr><td>B2B-pilotti</td><td>Mikä sali kokeilee jäsenhaasteita ja laitelistaa ja millä mittareilla?</td><td>Pilottisopimus, onnistumisen mittarit (osallistuminen, aktiivisuus).</td></tr>
+        <tr><td>Kumppanit</td><td>Mitkä kumppanit ja millä ehdoilla etukoodit luovutetaan?</td><td>Kumppanimallin luonnos ja sopimuspohja.</td></tr>
+        <tr><td>Tietosuoja</td><td>Mitkä tiedot ovat terveystietoja ja millä perusteella niitä käsitellään?</td><td>Tietosuoja-arvio ja tarvittaessa vaikutustenarviointi ennen toteutusta.</td></tr>
+        <tr><td>Toteutuksen laajuus</td><td>Mitkä moduulit kuuluvat ensimmäiseen julkaisuun?</td><td>Priorisointi hyväksymiskriteerien pohjalta ja aikataulutus ohjelmistotalon kanssa.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section class="osio" id="versiot" data-toc>
+  <h2><span class="osio-numero">11</span>Versiohistoria</h2>
+  <div class="taulukko" role="region" aria-label="Versiohistoria" tabindex="0">
+    <table>
+      <thead><tr><th>Päivä</th><th>Muutos</th></tr></thead>
+      <tbody>
+        <tr><td>9.10.2026</td><td>Perusversio: progressiomoottori, kirjaus, yhteenveto ja oivallukset, Treeniscore, palautuminen, viikkotavoitteet, historia, liikekirjasto, valmentajachat ja muisti. Julkaisu verkossa.</td></tr>
+        <tr><td>9.10.2026</td><td>Uusi värimaailma (sininen, viininpunainen ja kulta) ja valinnainen palautusajastin.</td></tr>
+        <tr><td>9.10.2026</td><td>Vaalea teema oletukseksi ja palautuspalkin asettelu.</td></tr>
+        <tr><td>19.10.2026</td><td>Yhteisö (haasteet, tasapainotus, merkit, pisteet, tasot, kaverit sekä sali- ja kumppanihaasteet), salin laitteet (19 laitetta, laitepohjat), liikkeen vaihto (pyyhkäisy, syyt, automaattinen vaihto, johdettu aloituspaino), liikekirjasto 46 liikkeeseen ja tämä ominaisuusdokumentti (linkki Profiilin Tietoa-osiosta).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+  </main>
+</div>
+
+<a class="ylos vain-js" href="#toc">↑ Sisällys</a>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<footer class="alapalkki">
+  <div class="sisa">
+    <a class="demolinkki" href="./">Takaisin demoon <span aria-hidden="true">→</span></a>
+    <p>Personal SuperPower · konseptidemo, versio 19.10.2026. Konseptidokumentti: arvot ovat demon oletuksia, ja tuotteen vaatimukset tarkentuvat toteutusvaiheessa. Demossa ja tällä sivulla data tallentuu vain omaan selaimeesi.</p>
+  </div>
+</footer>
+
+<script id="laskentasaannot">
+/* Laskurien kaavat: yksinkertaistetut kopiot demon laskentamoottorista (engine/*.js).
+   Ei riippuvuuksia sovelluksen moduuleihin. Demon oletusarvot – tuotteessa tekoäly personoi. */
+(function (juuri) {
+  'use strict';
+  var L = {};
+  L.round25 = function (kg) { return Math.round(kg / 2.5) * 2.5 + 0; };
+  L.e1rm = function (paino, toistot) { return toistot <= 1 ? paino : paino * (1 + toistot / 30); };
+  L.rajaa = function (n, min, max) { return Math.min(max, Math.max(min, n)); };
+  L.TAVOITTEET = {
+    lihasmassa: { toistoMin: 8, toistoMax: 12, rirMax: 2 },
+    kiinteytys: { toistoMin: 10, toistoMax: 15, rirMax: 3 },
+    voima: { toistoMin: 3, toistoMax: 6, rirMax: 2 },
+    kunto: { toistoMin: 8, toistoMax: 15, rirMax: 3 },
+    painonpudotus: { toistoMin: 12, toistoMax: 20, rirMax: 3 },
+    voimanosto: { toistoMin: 1, toistoMax: 5, rirMax: 3 }
+  };
+  L.SAANTONIMET = {
+    'deload': 'Kevennys',
+    'recovery': 'Palautuminen',
+    'double-progression': 'Kaksoisprogressio: painonnosto',
+    'hold': 'Kaksoisprogressio: toistovaihe',
+    'rir-zero': 'RIR-autoregulaatio: uupumus',
+    'rir-high': 'RIR-autoregulaatio: kevyt kuorma'
+  };
+
+  // o: { tilanne: 'eka'|'aikana', paino, toistot, rir, tavoite, alue: 'ylä'|'ala', kokemus, jumi, vasynyt }
+  // Edellisen kerran kaikki sarjat oletetaan samanlaisiksi (paino × toistot, RIR).
+  L.ehdotus = function (o) {
+    var t = L.TAVOITTEET[o.tavoite] || L.TAVOITTEET.lihasmassa;
+    var min = t.toistoMin, max = t.toistoMax;
+    var askel = o.alue === 'ala' ? 5 : 2.5;
+    var p = o.paino, r = o.toistot, rir = o.rir;
+    function ulos(paino, toistot, syy, miksi) {
+      return { paino: Math.max(0, L.round25(paino)), toistot: Math.max(1, Math.round(toistot)), syy: syy, nimi: L.SAANTONIMET[syy], miksi: miksi };
+    }
+    if (o.jumi) {
+      return ulos(Math.min(L.round25(p * 0.9), p - 2.5), min, 'deload',
+        'Paras arvioitu maksimi ei ole noussut kolmeen viimeiseen kertaan samalla painolla. Paino laskee noin 10 % ja toistot haarukan alapäähän, jotta keho ehtii palautua ja kehitys lähtee taas liikkeelle.');
+    }
+    if (o.vasynyt) {
+      return ulos(p, L.rajaa(r, min, max), 'recovery',
+        'Päälihasryhmä on vielä väsynyt edellisestä treenistä, joten painoa ei nosteta tänään. Kuorma pysyy ennallaan.');
+    }
+    if (o.tilanne === 'aikana') {
+      if (rir === 0) {
+        if (r < min) return ulos(p - 2.5, min, 'rir-zero', 'Edellinen sarja meni uupumukseen asti (RIR 0), ja toistot jäivät haarukan (' + min + '–' + max + ') alle. Paino laskee 2,5 kg, jotta seuraava sarja osuu haarukkaan.');
+        return ulos(p, L.rajaa(r, min, max), 'rir-zero', 'Edellinen sarja meni uupumukseen asti (RIR 0). Paino pysyy samana, ja seuraavassa sarjassa kannattaa jättää 1–2 toistoa varalle.');
+      }
+      if (rir > t.rirMax) {
+        return ulos(p + askel, L.rajaa(r, min, max), 'rir-high', 'Varalle jäi ' + rir + ' toistoa, kun tavoitteesi mukainen varaus on enintään ' + t.rirMax + '. Kuorma oli kevyt, joten paino nousee yhden askeleen (' + String(askel).replace('.', ',') + ' kg).');
+      }
+      var tt = L.rajaa(r, min, max);
+      return ulos(p, tt, 'hold', 'Edellinen sarja osui sopivaan rasitukseen, joten jatka samalla painolla. Tavoitteena on ' + tt + ' toistoa.');
+    }
+    if (r >= max && rir >= 1) {
+      var nousu = askel * (o.kokemus === 'aloittelija' ? 2 : 1);
+      return ulos(p + nousu, min, 'double-progression', 'Viime kerralla kaikki sarjat yltivät haarukan yläpäähän (' + max + ') ja varaa jäi. Paino nousee ' + String(nousu).replace('.', ',') + ' kg ja toistot palaavat alapäähän (' + min + ').');
+    }
+    var t2 = L.rajaa(r + 1, min, max);
+    var alku = r >= max ? 'Viime kerralla yllit yläpäähän, mutta sarjat menivät uupumukseen asti, joten paino pysyy vielä samana. ' : 'Viime kerralla tuli ' + r + ' toistoa. ';
+    return ulos(p, t2, 'hold', alku + 'Paino pysyy samana ja tavoitteena on yksi toisto enemmän (' + t2 + '). Kun kaikki sarjat yltävät ' + max + ' toistoon, paino nousee.');
+  };
+
+  // Taukovähennys: yli 14 päivän tauon jälkeen 1 % per alkava viikko, enintään 10 %.
+  L.taukovahennys = function (taukoPv) { return taukoPv > 14 ? Math.min(10, Math.ceil((taukoPv - 14) / 7)) : 0; };
+  // o: { paino, toistot, kehonpaino, viitekerroin, tauko }
+  L.voima = function (o) {
+    var e1 = L.e1rm(o.paino, o.toistot);
+    var vah = L.taukovahennys(o.tauko || 0);
+    var arvio = e1 * (1 - vah / 100);
+    var viite = o.viitekerroin * o.kehonpaino;
+    var mVoima = viite > 0 ? Math.round(Math.min(100, Math.max(0, arvio / viite * 50))) : null;
+    return { e1rm: Math.round(e1 * 10) / 10, arvio: Math.round(arvio * 10) / 10, vahennysPros: vah, viite: viite, mVoima: mVoima };
+  };
+
+  L.palautumisaika = function (sarjat) { return sarjat < 6 ? 48 : (sarjat <= 10 ? 72 : 96); };
+  L.palautumistila = function (pros) { return pros < 50 ? 'väsynyt' : (pros < 90 ? 'palautumassa' : 'palautunut'); };
+  // Yhden kuormituksen palautuminen: sarjat (painotettu kuorma) ja tunnit kuormituksesta.
+  L.palautuminen = function (sarjat, tunnit) {
+    var aika = L.palautumisaika(sarjat);
+    var pros = (sarjat > 0 && tunnit <= 96) ? Math.min(100, Math.round(tunnit / aika * 100)) : 100;
+    return { aikaH: aika, pros: pros, tila: L.palautumistila(pros), palautunutH: Math.round(aika * 0.9 * 10) / 10 };
+  };
+
+  L.LIHAKSET = ['rinta', 'selkä', 'olkapäät', 'hauis', 'ojentajat', 'etureidet', 'takareidet', 'pakarat', 'pohkeet', 'vatsa'];
+  L.PIENET = ['hauis', 'ojentajat', 'pohkeet', 'vatsa'];
+  L.PERUSTASO = { lihasmassa: 12, voimanosto: 10, kiinteytys: 10, voima: 8, kunto: 8, painonpudotus: 8 };
+  L.KOKEMUSKERROIN = { aloittelija: 0.75, keskitaso: 1.0, kokenut: 1.25 };
+  // o: { tavoite, kokemus, treenitViikossa, kesto }
+  L.viikkotavoitteet = function (o) {
+    var perus = L.PERUSTASO[o.tavoite] || L.PERUSTASO.lihasmassa;
+    var kok = L.KOKEMUSKERROIN[o.kokemus] || 1;
+    var raaka = {}, summa = 0;
+    L.LIHAKSET.forEach(function (l) { raaka[l] = perus * kok * (L.PIENET.indexOf(l) >= 0 ? 0.75 : 1); summa += raaka[l]; });
+    var kapasiteetti = o.treenitViikossa * o.kesto / 3;
+    var skaala = summa > kapasiteetti ? kapasiteetti / summa : 1;
+    var tavoitteet = {}, yhteensa = 0;
+    L.LIHAKSET.forEach(function (l) { tavoitteet[l] = Math.max(4, Math.round(raaka[l] * skaala)); yhteensa += tavoitteet[l]; });
+    return { tavoitteet: tavoitteet, raakaSumma: summa, kapasiteetti: kapasiteetti, skaala: skaala, yhteensa: yhteensa };
+  };
+
+  L.tasapainotettu = function (tulos, lahtotaso) { return lahtotaso > 0 ? Math.round(tulos / lahtotaso * 100) : (tulos > 0 ? 100 : 0); };
+  // henkilot: [{ nimi, lahtotaso, tulos }] → { raaka: [...], tasapainotettu: [...] } järjestettynä, sija jaettu tasapelissä
+  L.tulostaulukko = function (henkilot) {
+    function jarjesta(arvo) {
+      var lista = henkilot.map(function (h) { return { nimi: h.nimi, arvo: arvo(h), kayttaja: !!h.kayttaja }; })
+        .sort(function (a, b) { return b.arvo - a.arvo; });
+      lista.forEach(function (h, i) { h.sija = (i > 0 && lista[i - 1].arvo === h.arvo) ? lista[i - 1].sija : i + 1; });
+      return lista;
+    }
+    return {
+      raaka: jarjesta(function (h) { return h.tulos; }),
+      tasapainotettu: jarjesta(function (h) { return L.tasapainotettu(h.tulos, h.lahtotaso); })
+    };
+  };
+  L.tasonRaja = function (n) { return 100 * n * (n + 1) / 2; };
+
+  // Liikkeen vaihto: viitekertoimet (data.js) ja johdettu aloituspaino (engine/progression.js).
+  L.VIITEKERTOIMET = {
+    penkkipunnerrus: 1.0, takakyykky: 1.25, maastaveto: 1.5, pystypunnerrus: 0.6, kulmasoutu: 0.8,
+    kasipainopenkkipunnerrus: 0.4, 'rintaprassi-laite': 0.8, jalkaprassi: 2.0, 'askelkyykky-kasipainot': 0.25,
+    'romanialainen-maastaveto': 1.0, kasipainopystypunnerrus: 0.25, alataljasoutu: 0.7
+  };
+  // o: { alkup, korvaava (liikeId), voima (alkuperäisen e1RM), tavoite }. Korvaava on apuliike.
+  L.johdettuPaino = function (o) {
+    var t = L.TAVOITTEET[o.tavoite] || L.TAVOITTEET.lihasmassa;
+    var toistoMin = o.tavoite === 'voimanosto' ? 6 : t.toistoMin;
+    var kk = L.VIITEKERTOIMET[o.korvaava], lk = L.VIITEKERTOIMET[o.alkup];
+    var tyopainokerroin = 1 / (1 + (toistoMin + t.rirMax) / 30);
+    var paino = Math.max(0, L.round25(kk / lk * o.voima * tyopainokerroin));
+    return { paino: paino, toistot: toistoMin, suhde: kk / lk, tyopainokerroin: tyopainokerroin, rirMax: t.rirMax };
+  };
+
+  juuri.PSPLaskurit = L;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var doc = document.documentElement;
+  var L = window.PSPLaskurit;
+  var vahennaLiiketta = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var moduulit = Array.prototype.slice.call(document.querySelectorAll('article.moduuli'));
+  var nakyma = 'esittely';
+
+  function fmt(n, des) {
+    if (n === null || n === undefined || !isFinite(n)) return '–';
+    return Number(n).toLocaleString('fi-FI', { maximumFractionDigits: des === undefined ? 1 : des });
+  }
+  function el(tag, attrs, sisalto) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); });
+    (Array.isArray(sisalto) ? sisalto : (sisalto === undefined ? [] : [sisalto])).forEach(function (c) {
+      e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return e;
+  }
+
+  /* ---------- Toast ---------- */
+  var toast = document.getElementById('toast');
+  var toastAjastin;
+  function ilmoita(teksti) {
+    toast.textContent = teksti;
+    toast.hidden = false;
+    clearTimeout(toastAjastin);
+    toastAjastin = setTimeout(function () { toast.hidden = true; }, 2200);
+  }
+
+  /* ---------- Lukijanäkymä ja hash ---------- */
+  function lueHash() {
+    var h = location.hash.replace(/^#/, '');
+    try { h = decodeURIComponent(h); } catch (e) { /* jätetään ennalleen */ }
+    if (!h) return {};
+    if (h.indexOf('=') >= 0) {
+      var p = new URLSearchParams(h);
+      return { nakyma: p.get('nakyma'), kohta: p.get('kohta') };
+    }
+    return { kohta: h };
+  }
+  function vainSpeksi(e) { return !!(e && e.closest('.vain-speksi')); }
+  function asetaNakyma(v) {
+    nakyma = v === 'speksi' ? 'speksi' : 'esittely';
+    doc.classList.toggle('nakyma-esittely', nakyma === 'esittely');
+    doc.classList.toggle('nakyma-speksi', nakyma === 'speksi');
+    var radio = document.getElementById('nakyma-' + nakyma);
+    if (radio) radio.checked = true;
+    paivitaHaku();
+  }
+  function kirjoitaHash(kohta, uusi) {
+    var h = '#nakyma=' + nakyma + (kohta ? '&kohta=' + encodeURIComponent(kohta) : '');
+    try { history[uusi ? 'pushState' : 'replaceState'](null, '', h); } catch (e) { /* file:// tai rajoitus */ }
+  }
+  function linkkiKohtaan(kohta) {
+    return location.href.split('#')[0] + '#nakyma=' + nakyma + '&kohta=' + encodeURIComponent(kohta);
+  }
+  function siirry(kohta, pehmea) {
+    var kohde = document.getElementById(kohta);
+    if (!kohde) return;
+    if (vainSpeksi(kohde) && nakyma !== 'speksi') asetaNakyma('speksi');
+    var moduuli = kohde.closest('article.moduuli');
+    if (moduuli) {
+      if (moduuli.hidden) { haku.value = ''; valitseKategoria('kaikki'); }
+      var d = moduuli.querySelector('details');
+      if (d) d.open = true;
+    }
+    if (kohde.id === 'toc') { tocDetails.open = true; }
+    kohde.scrollIntoView({ behavior: pehmea && !vahennaLiiketta ? 'smooth' : 'auto', block: 'start' });
+    if (!kohde.hasAttribute('tabindex')) kohde.setAttribute('tabindex', '-1');
+    kohde.focus({ preventScroll: true });
+  }
+  function kasitteleHash() {
+    var h = lueHash();
+    if (h.nakyma === 'speksi' || h.nakyma === 'esittely') asetaNakyma(h.nakyma);
+    else if (h.kohta && vainSpeksi(document.getElementById(h.kohta))) asetaNakyma('speksi');
+    if (h.kohta) siirry(h.kohta, false);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="nakyma"]'), function (r) {
+    r.addEventListener('change', function () { if (r.checked) { asetaNakyma(r.value); kirjoitaHash(null, false); } });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-vaihda-nakyma]'), function (b) {
+    b.addEventListener('click', function () {
+      asetaNakyma(b.getAttribute('data-vaihda-nakyma'));
+      kirjoitaHash('saannot', true);
+      siirry('saannot', true);
+    });
+  });
+  // Sivun sisäiset linkit: näkymä säilyy osoitteessa.
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id || id.indexOf('=') >= 0 || !document.getElementById(id)) return;
+    e.preventDefault();
+    if (a.closest('#toc') && !tocLeveä.matches) tocDetails.open = false;
+    if (id === 'toc') { tocDetails.open = true; }
+    kirjoitaHash(id === 'toc' ? null : id, true);
+    siirry(id, true);
+  });
+  window.addEventListener('popstate', kasitteleHash);
+  window.addEventListener('hashchange', kasitteleHash);
+
+  /* ---------- Sisällysluettelo ---------- */
+  var tocDetails = document.getElementById('toc');
+  var tocLeveä = window.matchMedia('(min-width: 1100px)');
+  function tocTila() { tocDetails.open = tocLeveä.matches; }
+  if (tocLeveä.addEventListener) tocLeveä.addEventListener('change', tocTila); else tocLeveä.addListener(tocTila);
+  tocTila();
+  tocDetails.addEventListener('toggle', function () { if (tocLeveä.matches && !tocDetails.open) tocDetails.open = true; });
+
+  var tocLinkit = {};
+  Array.prototype.forEach.call(tocDetails.querySelectorAll('a[href^="#"]'), function (a) { tocLinkit[a.getAttribute('href').slice(1)] = a; });
+  var seurattavat = Array.prototype.slice.call(document.querySelectorAll('[data-toc]')).filter(function (e) { return tocLinkit[e.id]; });
+  var aktiivinen = null;
+  function paivitaAktiivinen() {
+    var raja = window.innerHeight * 0.3;
+    var valittu = null;
+    for (var i = 0; i < seurattavat.length; i++) {
+      var s = seurattavat[i];
+      if (!s.offsetParent && s.getClientRects().length === 0) continue;
+      if (s.getBoundingClientRect().top <= raja) valittu = s; else break;
+    }
+    if (!valittu) valittu = seurattavat[0];
+    if (valittu === aktiivinen) return;
+    if (aktiivinen && tocLinkit[aktiivinen.id]) { tocLinkit[aktiivinen.id].classList.remove('aktiivinen'); tocLinkit[aktiivinen.id].removeAttribute('aria-current'); }
+    aktiivinen = valittu;
+    var a = tocLinkit[valittu.id];
+    a.classList.add('aktiivinen');
+    a.setAttribute('aria-current', 'location');
+  }
+  if ('IntersectionObserver' in window) {
+    var havainnoija = new IntersectionObserver(paivitaAktiivinen, { rootMargin: '0px 0px -60% 0px', threshold: [0, 1] });
+    seurattavat.forEach(function (s) { havainnoija.observe(s); });
+  }
+  window.addEventListener('scroll', function () { if (!paivitaAktiivinen.odottaa) { paivitaAktiivinen.odottaa = true; requestAnimationFrame(function () { paivitaAktiivinen.odottaa = false; paivitaAktiivinen(); }); } }, { passive: true });
+
+  /* ---------- Haku ja suodatus ---------- */
+  var haku = document.getElementById('haku');
+  var hakuTulos = document.getElementById('haku-tulos');
+  var eiOsumia = document.getElementById('ei-osumia');
+  var kategoria = 'kaikki';
+  var sirut = Array.prototype.slice.call(document.querySelectorAll('.siru'));
+  function valitseKategoria(k) {
+    kategoria = k;
+    sirut.forEach(function (s) { s.setAttribute('aria-pressed', String(s.getAttribute('data-kat') === k)); });
+    paivitaHaku();
+  }
+  sirut.forEach(function (s) { s.addEventListener('click', function () { valitseKategoria(s.getAttribute('data-kat')); }); });
+
+  function tekstisolmut(juuri) {
+    var tulos = [];
+    var kulkija = document.createTreeWalker(juuri, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (p.closest('.kopioi, .hk-tila, .moduuli-toiminnot')) return NodeFilter.FILTER_REJECT;
+        if (nakyma === 'esittely' && p.closest('.vain-speksi')) return NodeFilter.FILTER_REJECT;
+        if (nakyma === 'speksi' && p.closest('.vain-esittely')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    while (kulkija.nextNode()) tulos.push(kulkija.currentNode);
+    return tulos;
+  }
+  function poistaKorostukset() {
+    Array.prototype.forEach.call(document.querySelectorAll('mark.osuma'), function (m) {
+      var p = m.parentNode;
+      p.replaceChild(document.createTextNode(m.textContent), m);
+      p.normalize();
+    });
+  }
+  function korosta(solmut, q) {
+    solmut.forEach(function (n) {
+      var t = n.nodeValue, lt = t.toLowerCase(), i = lt.indexOf(q);
+      if (i < 0) return;
+      var frag = document.createDocumentFragment(), pos = 0;
+      while (i >= 0) {
+        frag.appendChild(document.createTextNode(t.slice(pos, i)));
+        frag.appendChild(el('mark', { class: 'osuma' }, t.slice(i, i + q.length)));
+        pos = i + q.length;
+        i = lt.indexOf(q, pos);
+      }
+      frag.appendChild(document.createTextNode(t.slice(pos)));
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+  function paivitaHaku() {
+    if (!haku) return;
+    poistaKorostukset();
+    var q = haku.value.trim().toLowerCase();
+    var n = 0;
+    moduulit.forEach(function (m) {
+      var katOk = kategoria === 'kaikki' || m.getAttribute('data-kat') === kategoria;
+      var solmut = q ? tekstisolmut(m) : [];
+      var osuu = !q || solmut.some(function (s) { return s.nodeValue.toLowerCase().indexOf(q) >= 0; });
+      var nayta = katOk && osuu;
+      m.hidden = !nayta;
+      if (nayta) {
+        n += 1;
+        if (q) { korosta(solmut, q); m.querySelector('details').open = true; }
+      }
+    });
+    hakuTulos.textContent = n === moduulit.length ? n + ' moduulia' : n + ' / ' + moduulit.length + ' moduulia';
+    eiOsumia.hidden = n > 0;
+    paivitaAktiivinen();
+  }
+  var hakuAjastin;
+  if (haku) haku.addEventListener('input', function () { clearTimeout(hakuAjastin); hakuAjastin = setTimeout(paivitaHaku, 150); });
+
+  /* ---------- Avaa ja sulje kaikki ---------- */
+  function asetaKaikki(auki) { moduulit.forEach(function (m) { if (!m.hidden) m.querySelector('details').open = auki; }); }
+  document.getElementById('avaa-kaikki').addEventListener('click', function () { asetaKaikki(true); });
+  document.getElementById('sulje-kaikki').addEventListener('click', function () { asetaKaikki(false); });
+
+  /* ---------- Linkin kopiointi ---------- */
+  function kopioi(teksti) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(teksti);
+    return new Promise(function (ok, virhe) {
+      var ta = el('textarea', { readonly: '', 'aria-hidden': 'true' });
+      ta.value = teksti;
+      ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var onnistui = false;
+      try { onnistui = document.execCommand('copy'); } catch (e) { onnistui = false; }
+      ta.remove();
+      if (onnistui) ok(); else virhe(new Error('copy'));
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.kopioi'), function (b) {
+    b.addEventListener('click', function () {
+      var linkki = linkkiKohtaan(b.getAttribute('data-kohta'));
+      kopioi(linkki).then(function () { ilmoita('Linkki kopioitu'); }, function () { ilmoita('Kopiointi ei onnistunut. Linkki: ' + linkki); });
+    });
+  });
+
+  /* ---------- Hyväksymiskriteerien tarkistuslista ---------- */
+  var AVAIN = 'psp-ominaisuudet-hk-v1';
+  var valinnat = {};
+  try { valinnat = JSON.parse(localStorage.getItem(AVAIN) || '{}') || {}; } catch (e) { valinnat = {}; }
+  function tallenna() { try { localStorage.setItem(AVAIN, JSON.stringify(valinnat)); } catch (e) { /* tila elää muistissa */ } }
+  var kriteerit = [];
+  moduulit.forEach(function (m) {
+    var lista = m.querySelector('ol.hk-lista');
+    if (!lista) return;
+    var otsikko = m.querySelector('h3').textContent.trim();
+    Array.prototype.forEach.call(lista.children, function (li, i) {
+      var id = m.id + '-' + (i + 1);
+      var cb = el('input', { type: 'checkbox', id: 'hk-' + id });
+      cb.checked = !!valinnat[id];
+      var lab = el('label', { for: 'hk-' + id });
+      while (li.firstChild) lab.appendChild(li.firstChild);
+      li.appendChild(cb);
+      li.appendChild(lab);
+      li.classList.toggle('tehty', cb.checked);
+      var k = { id: id, moduuli: m, moduuliNimi: otsikko, nro: i + 1, li: li, cb: cb };
+      kriteerit.push(k);
+      cb.addEventListener('change', function () {
+        if (cb.checked) valinnat[id] = true; else delete valinnat[id];
+        li.classList.toggle('tehty', cb.checked);
+        tallenna();
+        paivitaLaskurit();
+      });
+    });
+  });
+  var hkProgress = document.getElementById('hk-progress');
+  var hkYhteensa = document.getElementById('hk-yhteensa');
+  function paivitaLaskurit() {
+    var tehty = kriteerit.filter(function (k) { return k.cb.checked; }).length;
+    hkYhteensa.textContent = tehty + '/' + kriteerit.length;
+    hkProgress.max = kriteerit.length || 1;
+    hkProgress.value = tehty;
+    moduulit.forEach(function (m) {
+      var omat = kriteerit.filter(function (k) { return k.moduuli === m; });
+      var span = m.querySelector('.hk-tila');
+      if (!span || !omat.length) return;
+      var t = omat.filter(function (k) { return k.cb.checked; }).length;
+      span.textContent = t + '/' + omat.length + ' kriteeriä';
+      span.classList.toggle('valmis', t === omat.length);
+    });
+  }
+  paivitaLaskurit();
+  document.getElementById('hk-tyhjenna').addEventListener('click', function () {
+    if (!window.confirm('Tyhjennetäänkö kaikki tarkistuslistan valinnat?')) return;
+    valinnat = {};
+    tallenna();
+    kriteerit.forEach(function (k) { k.cb.checked = false; k.li.classList.remove('tehty'); });
+    paivitaLaskurit();
+    ilmoita('Tarkistuslista tyhjennetty');
+  });
+  document.getElementById('hk-vie').addEventListener('click', function () {
+    function solu(s) { return '"' + String(s).replace(/\s+/g, ' ').trim().replace(/"/g, '""') + '"'; }
+    var rivit = [['Moduuli', 'Nro', 'Kriteeri', 'Tarkistettu'].map(solu).join(';')];
+    kriteerit.forEach(function (k) {
+      rivit.push([k.moduuliNimi, k.nro, k.li.querySelector('label').textContent, k.cb.checked ? 'kyllä' : 'ei'].map(solu).join(';'));
+    });
+    var blob = new Blob(['﻿' + rivit.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = el('a', { href: url, download: 'psp-hyvaksymiskriteerit-' + new Date().toISOString().slice(0, 10) + '.csv' });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    ilmoita('Tarkistuslista viety CSV-tiedostoon');
+  });
+
+  /* ---------- Laskurit ---------- */
+  function lomake(id, piirra) {
+    var f = document.getElementById(id);
+    if (!f) return;
+    function aja() {
+      Array.prototype.forEach.call(f.querySelectorAll('[data-arvo]'), function (s) {
+        var i = f.elements[s.getAttribute('data-arvo')];
+        if (i) s.textContent = fmt(Number(i.value));
+      });
+      var tulos = f.querySelector('output');
+      tulos.replaceChildren.apply(tulos, piirra(f.elements));
+    }
+    f.addEventListener('input', aja);
+    f.addEventListener('change', aja);
+    aja();
+  }
+  function luku(i, oletus) { var n = Number(String(i.value).replace(',', '.')); return isFinite(n) ? n : oletus; }
+
+  lomake('f-progressio', function (e) {
+    var paino = Math.max(0, luku(e.paino, 0));
+    var toistot = Math.max(1, Math.round(luku(e.toistot, 1)));
+    var r = L.ehdotus({
+      tilanne: e.tilanne.value, paino: paino, toistot: toistot, rir: Number(e.rir.value),
+      tavoite: e.tavoite.value, alue: e.alue.value, kokemus: e.kokemus.value,
+      jumi: e.jumi.checked, vasynyt: e.vasynyt.checked
+    });
+    return [
+      el('span', { class: 'tulos-iso' }, 'Ehdotus: ' + fmt(r.paino) + ' kg × ' + r.toistot),
+      el('br'), el('span', { class: 'saantonimi' }, r.nimi + ' (' + r.syy + ')'),
+      el('p', { style: 'margin:4px 0 0' }, [el('strong', null, 'Miksi? '), r.miksi])
+    ];
+  });
+
+  lomake('f-treeniscore', function (e) {
+    var r = L.voima({
+      paino: Math.max(0, luku(e.paino, 0)), toistot: Math.max(1, Math.round(luku(e.toistot, 1))),
+      kehonpaino: Math.max(1, luku(e.kehonpaino, 80)), viitekerroin: Number(e.liike.value),
+      tauko: Math.min(41, Math.max(0, Math.round(luku(e.tauko, 0))))
+    });
+    var mittari = el('div', { class: 'mittari', role: 'img', 'aria-label': 'Lihasvoima ' + r.mVoima + '/100' });
+    for (var i = 0; i < 10; i++) {
+      var tayttö = Math.max(0, Math.min(1, (r.mVoima - i * 10) / 10));
+      var pala = el('span');
+      var sisus = el('i');
+      sisus.style.width = (tayttö * 100) + '%';
+      pala.appendChild(sisus);
+      mittari.appendChild(pala);
+    }
+    return [
+      el('span', { class: 'tulos-iso' }, 'e1RM ≈ ' + fmt(r.e1rm) + ' kg'),
+      el('p', { style: 'margin:4px 0' }, r.vahennysPros ? 'Taukovähennys ' + r.vahennysPros + ' % → arvioitu voima ' + fmt(r.arvio) + ' kg.' : 'Ei taukovähennystä.'),
+      el('p', { style: 'margin:0' }, ['Viitearvo ' + fmt(r.viite) + ' kg → lihasvoima (mVoima) ', el('strong', null, String(r.mVoima)), ' / 100 (50 = viitetaso).']),
+      mittari,
+      el('small', null, 'Sovelluksessa lihasryhmän arvo on sen liikkeiden keskiarvo, ja ryhmä vaatii 6 työsarjaa 6 viikossa.')
+    ];
+  });
+
+  lomake('f-palautuminen', function (e) {
+    var sarjat = luku(e.sarjat, 0), tunnit = luku(e.tunnit, 0);
+    var r = L.palautuminen(sarjat, tunnit);
+    var luokka = { 'väsynyt': 'tila-vasynyt', 'palautumassa': 'tila-palautumassa', 'palautunut': 'tila-palautunut' }[r.tila];
+    return [
+      el('span', { class: 'tulos-iso' }, fmt(r.pros, 0) + ' % palautunut'),
+      el('br'), el('span', { class: 'tilamerkki ' + luokka }, r.tila),
+      el('p', { style: 'margin:6px 0 0' }, sarjat > 0
+        ? 'Palautumisaika ' + r.aikaH + ' h. Palautunut-tila (≥ 90 %) noin ' + fmt(r.palautunutH, 0) + ' h kohdalla.' + (tunnit > 96 ? ' Yli 96 h vanhat sarjat eivät enää vaikuta.' : '')
+        : 'Ei kuormitusta 96 tunnin ikkunassa.')
+    ];
+  });
+
+  lomake('f-viikko', function (e) {
+    var r = L.viikkotavoitteet({ tavoite: e.tavoite.value, kokemus: e.kokemus.value, treenitViikossa: Number(e.treenit.value), kesto: Number(e.kesto.value) });
+    var maks = Math.max.apply(null, L.LIHAKSET.map(function (l) { return r.tavoitteet[l]; }));
+    var palkit = el('div', { class: 'palkit' });
+    L.LIHAKSET.forEach(function (l) {
+      var pal = el('span', { class: 'palkki', 'aria-hidden': 'true' });
+      var i = el('i'); i.style.width = (r.tavoitteet[l] / maks * 100) + '%';
+      pal.appendChild(i);
+      palkit.appendChild(el('div', { class: 'palkki-rivi' }, [el('span', null, l.charAt(0).toUpperCase() + l.slice(1)), pal, el('strong', null, r.tavoitteet[l] + ' sarjaa')]));
+    });
+    return [
+      el('span', { class: 'tulos-iso' }, r.yhteensa + ' sarjaa viikossa'),
+      el('p', { style: 'margin:4px 0' }, 'Raaka summa ' + fmt(r.raakaSumma) + ' sarjaa, kapasiteetti ' + fmt(r.kapasiteetti) + ' sarjaa' +
+        (r.skaala < 1 ? ' → kaikki skaalataan kertoimella ' + fmt(r.skaala, 2) + '.' : ' → mahtuu sellaisenaan.')),
+      palkit
+    ];
+  });
+
+  lomake('f-tasapainotus', function (e) {
+    var t = L.tulostaulukko([
+      { nimi: 'Sinä', lahtotaso: luku(e.aLahto, 1), tulos: luku(e.aTulos, 0), kayttaja: true },
+      { nimi: 'Kaveri', lahtotaso: luku(e.bLahto, 1), tulos: luku(e.bTulos, 0) }
+    ]);
+    function taulu(otsikko, lista, yksikko) {
+      var maks = Math.max.apply(null, lista.map(function (h) { return h.arvo; })) || 1;
+      var rivit = lista.map(function (h) {
+        var pal = el('span', { class: 'palkki', 'aria-hidden': 'true' });
+        var i = el('i'); i.style.width = (h.arvo / maks * 100) + '%';
+        pal.appendChild(i);
+        return el('div', { class: 'palkki-rivi' + (h.kayttaja ? ' sina' : '') }, [el('span', null, h.sija + '. ' + h.nimi), pal, el('strong', null, h.arvo + yksikko)]);
+      });
+      return el('div', null, [el('h5', null, otsikko), el('div', { class: 'palkit' }, rivit)]);
+    }
+    var raakaJohtaja = t.raaka[0], tasJohtaja = t.tasapainotettu[0];
+    var huom = raakaJohtaja.nimi !== tasJohtaja.nimi && raakaJohtaja.sija !== (t.raaka[1] && t.raaka[1].sija)
+      ? 'Järjestys vaihtuu: raakana johtaa ' + raakaJohtaja.nimi.toLowerCase() + ', tasapainotettuna ' + tasJohtaja.nimi.toLowerCase() + '.'
+      : 'Järjestys on sama molemmilla tavoilla.';
+    return [
+      el('div', { class: 'vertailu' }, [taulu('Raaka', t.raaka, ' treeniä'), taulu('Tasapainotettu', t.tasapainotettu, ' %')]),
+      el('p', { style: 'margin:8px 0 0' }, huom)
+    ];
+  });
+
+  lomake('f-johdettu', function (e) {
+    var o = { alkup: e.alkup.value, korvaava: e.korvaava.value, voima: Math.max(1, luku(e.voima, 100)), tavoite: e.tavoite.value };
+    var r = L.johdettuPaino(o);
+    var perKasi = /kasipaino|askelkyykky/.test(o.korvaava) ? ' (per käsi)' : '';
+    return [
+      el('span', { class: 'tulos-iso' }, 'Aloituspaino: ' + fmt(r.paino) + ' kg × ' + r.toistot + perKasi),
+      el('p', { style: 'margin:4px 0 0' }, 'Viitekertoimien suhde ' + fmt(r.suhde, 3) + ' × ' + fmt(o.voima) + ' kg × työpainokerroin ' +
+        fmt(r.tyopainokerroin, 3) + ' (haarukan alapää ' + r.toistot + ' + RIR ' + r.rirMax + '), pyöristettynä 2,5 kg:aan.')
+    ];
+  });
+
+  /* ---------- Tulostus ---------- */
+  var tulostusTila = null;
+  window.addEventListener('beforeprint', function () {
+    tulostusTila = moduulit.map(function (m) { return m.querySelector('details').open; });
+    moduulit.forEach(function (m) { m.querySelector('details').open = true; });
+  });
+  window.addEventListener('afterprint', function () {
+    if (!tulostusTila) return;
+    moduulit.forEach(function (m, i) { m.querySelector('details').open = tulostusTila[i]; });
+    tulostusTila = null;
+  });
+
+  /* ---------- Käynnistys ---------- */
+  asetaNakyma('esittely');
+  // Moduulikortit suljetaan JS:llä, jotta ilman JS:ää kaikki sisältö näkyy auki.
+  moduulit.forEach(function (m) { m.querySelector('details').open = false; });
+  kasitteleHash();
+  paivitaAktiivinen();
+})();
+</script>
+</body>
+</html>

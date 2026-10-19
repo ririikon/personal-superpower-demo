@@ -9,12 +9,12 @@
 // syöttökentän kohdistus säilyy. Näkymä piirtää viestilistan itse ja purkaa kuuntelijan
 // ja ajastimet siivousfunktiossa.
 
-import { getState, update } from '../store.js?v=270067f';
-import { LIIKKEET, OHJELMAT } from '../data.js?v=270067f';
-import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=270067f';
-import { tanaanPvm } from '../seed.js?v=270067f';
-import { el, svgEl } from './ui.js?v=270067f';
-import { avaaMuistit } from './profiili.js?v=270067f';
+import { getState, update } from '../store.js?v=6612722';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=6612722';
+import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=6612722';
+import { tanaanPvm } from '../seed.js?v=6612722';
+import { el, svgEl } from './ui.js?v=6612722';
+import { avaaMuistit } from './profiili.js?v=6612722';
 
 export const omaPaivitys = true;
 
@@ -66,7 +66,14 @@ function konteksti(s, nyt) {
     liikkeet: LIIKKEET,
     muistit: s.muistit || [],
     viikkosuunnitelmat: s.viikkosuunnitelmat || [],
+    yhteiso: s.yhteiso,
   };
+}
+
+const LIITY_SIRU = 'Liity haasteeseen';
+
+function liittymisToiminto(v) {
+  return v && v.toiminto && v.toiminto.tyyppi === 'liityHaasteeseen' && v.toiminto.haasteId ? v.toiminto : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,7 +273,29 @@ export function render(root) {
         if (v) v.ehdotusTila = 'hylatty';
       });
     },
+    // Siru "Liity haasteeseen": liitytään suoraan, tekstiä ei lähetetä.
+    liity(viesti) {
+      const t = liittymisToiminto(viesti);
+      if (!t) return;
+      update((s) => {
+        const h = s.yhteiso && Array.isArray(s.yhteiso.haasteet) ? s.yhteiso.haasteet.find((x) => x && x.id === t.haasteId) : null;
+        if (h) h.liittynyt = true;
+        const v = (s.chat || []).find((x) => x.id === viesti.id);
+        if (v && v.toiminto) v.toiminto = { ...v.toiminto, tehty: true };
+      });
+    },
   };
+
+  function liittymisVahvistus(v) {
+    const t = liittymisToiminto(v);
+    if (!t || !t.tehty) return null;
+    const s = getState();
+    const h = s.yhteiso && Array.isArray(s.yhteiso.haasteet) ? s.yhteiso.haasteet.find((x) => x && x.id === t.haasteId) : null;
+    const nimi = h ? h.nimi : 'haasteeseen';
+    return el('div', { class: 'chat-attach' },
+      el('div', { class: 'yh-chat-ok', role: 'status' }, h ? `Liityit haasteeseen ”${nimi}” ✓` : 'Liityit haasteeseen ✓'),
+      el('a', { class: 'yh-chat-link', href: '#/yhteiso' }, 'Avaa Yhteisö ›'));
+  }
 
   function piirraLista() {
     const chat = getState().chat || [];
@@ -281,7 +310,9 @@ export function render(root) {
         return el('div', { class: 'chat-msg chat-msg-user' }, el('div', { class: 'bubble bubble-user' }, v.teksti));
       }
       const muistit = Array.isArray(v.muistit) ? v.muistit : [];
-      const sirut = i === viimeinenValmentaja && !pending && Array.isArray(v.sirut) ? v.sirut : [];
+      const toiminto = liittymisToiminto(v);
+      const sirut = (i === viimeinenValmentaja && !pending && Array.isArray(v.sirut) ? v.sirut : [])
+        .filter((t) => !(t === LIITY_SIRU && toiminto && toiminto.tehty));
       return el('div', { class: 'chat-turn' },
         valmentajanKupla(muotoile(v.teksti)),
         muistit.length
@@ -290,9 +321,11 @@ export function render(root) {
           }, ikoni(IKONIT.muisti, 16), el('span', null, `Muistin: ${m.teksti}`))))
           : null,
         v.ehdotus ? el('div', { class: 'chat-attach' }, ehdotusKortti(v, toiminnot)) : null,
+        liittymisVahvistus(v),
         sirut.length
           ? el('div', { class: 'chips chat-followups' }, ...sirut.map((t) => el('button', {
-            class: 'chip', type: 'button', onClick: () => laheta(t),
+            class: 'chip', type: 'button',
+            onClick: () => (t === LIITY_SIRU && toiminto ? toiminnot.liity(v) : laheta(t)),
           }, t)))
           : null);
     }));
@@ -372,6 +405,7 @@ export function render(root) {
       ehdotus: v.ehdotus || null,
       ehdotusTila: v.ehdotus ? 'odottaa' : null,
       sirut: Array.isArray(v.sirut) ? v.sirut : [],
+      toiminto: v.toiminto || null,
     };
     pendingSlot.replaceChildren();
     update((s) => {

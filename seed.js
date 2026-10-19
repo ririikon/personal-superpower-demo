@@ -1,4 +1,4 @@
-// Esimerkkidata (speksi 3, 4b-2, 4e ja 5): demon alkutila noin 120 treenin historialla.
+// Esimerkkidata (speksi 3, 4b-2, 4e, 4i ja 5): demon alkutila noin 120 treenin historialla.
 // Puhdas moduuli: ei DOMia, ei windowia, ei localStoragea eikä Date.now()-kutsuja.
 // Aika annetaan parametrina (`nyt`: ISO-merkkijono). Sama `nyt` tuottaa aina saman tilan,
 // koska satunnaisuus tulee siemenellisestä generaattorista (mulberry32).
@@ -14,7 +14,8 @@
 // - Vanhemmat merkinnät ovat kevyitä voimamerkintöjä (kokonaismäärä ja merkkipaalut).
 // - Viimeisille 3 viikolle 7 tuotua kävelyä tai pyöräilyä, joista kaksi samana päivänä.
 
-import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=270067f';
+import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=6612722';
+import { onVoimatreeni } from './engine/util.js?v=6612722';
 
 export const SEED_OHJELMA_ID = 'koko-kroppa-3';
 
@@ -272,6 +273,140 @@ function kehonpainoHistoria(rng, tanaan) {
   });
 }
 
+// --- Yhteisö (speksi 4i) -------------------------------------------------------
+// Kaikki sosiaalinen data on keksittyä. Kaverien lähtötasot (`lahtotasot`) ovat viikkoarvoja;
+// engine/challenges.js skaalaa ne haasteen pituudelle ja generoi edistymisen niistä.
+// Jari on kokenut ja raakaluvuissa selvästi vahvin; tasapainotettuna käyttäjä on kärjessä
+// tai toisena (Mia on aloittelija ja kehittyy suhteessa nopeimmin).
+
+const KUUKAUDET_GEN = ['Tammikuun', 'Helmikuun', 'Maaliskuun', 'Huhtikuun', 'Toukokuun', 'Kesäkuun',
+  'Heinäkuun', 'Elokuun', 'Syyskuun', 'Lokakuun', 'Marraskuun', 'Joulukuun'];
+
+const KAVERIT = [
+  {
+    id: 'kaveri-jari', nimi: 'Jari L.', nimikirjaimet: 'JL', vari: '#3B5BDB', taso: 10, pisteet: 5840,
+    profiili: 'kokenut',
+    lahtotasot: { treenit: 5, volyymi: 52000, sarjat: 105, aktiivisetPaivat: 6, putki: 1 },
+  },
+  {
+    id: 'kaveri-mia', nimi: 'Mia K.', nimikirjaimet: 'MK', vari: '#E8590C', taso: 2, pisteet: 410,
+    profiili: 'aloittelija',
+    lahtotasot: { treenit: 2, volyymi: 6500, sarjat: 34, aktiivisetPaivat: 3, putki: 0.5 },
+  },
+  {
+    id: 'kaveri-aino', nimi: 'Aino S.', nimikirjaimet: 'AS', vari: '#0CA678', taso: 4, pisteet: 1190,
+    profiili: 'keskitaso',
+    lahtotasot: { treenit: 3, volyymi: 15500, sarjat: 58, aktiivisetPaivat: 5, putki: 0.9 },
+  },
+  {
+    id: 'kaveri-martti', nimi: 'Martti H.', nimikirjaimet: 'MH', vari: '#F59F00', taso: 5, pisteet: 1730,
+    profiili: 'keskitaso',
+    lahtotasot: { treenit: 3, volyymi: 21000, sarjat: 64, aktiivisetPaivat: 4, putki: 0.8 },
+  },
+  {
+    id: 'kaveri-laura', nimi: 'Laura V.', nimikirjaimet: 'LV', vari: '#AE3EC9', taso: 6, pisteet: 2360,
+    profiili: 'keskitaso',
+    lahtotasot: { treenit: 4, volyymi: 24000, sarjat: 76, aktiivisetPaivat: 5, putki: 1 },
+  },
+];
+
+/**
+ * seedYhteiso(tanaan, historia) → { kaverit, haasteet, tsempit, ansaitutMerkit, lunastetutEdut }
+ * Haasteiden päivämäärät ja osa tavoitteista lasketaan `tanaan`-päivästä ja seed-historiasta:
+ * - kuukauden treenihaaste on melkein valmis (tavoite = kuun treenit + 1, vähintään 4),
+ * - kumppanihaasteessa on 5/7 treeniä tehty (~70 %) ja aikaa jäljellä 2 treenille,
+ * - aktiivinen kaverihaaste alkoi 6 päivää sitten (2 viikkoa), päättynyt kaverihaaste oli
+ *   toissa viikolla (ma–su) ja käyttäjä voitti sen tasapainotettuna.
+ */
+function seedYhteiso(tanaan, historia) {
+  const [y, m] = tanaan.split('-').map(Number);
+  const kuu = KUUKAUDET_GEN[m - 1];
+  const kuuAlku = `${y}-${pad(m)}-01`;
+  const kuuLoppu = addDays(m === 12 ? `${y + 1}-01-01` : `${y}-${pad(m + 1)}-01`, -1);
+  const voima = historia.filter((t) => onVoimatreeni(t) && t.pvm <= tanaan).map((t) => t.pvm).sort();
+  const kuunTreenit = voima.filter((p) => p >= kuuAlku).length;
+  const lahella = Math.max(4, kuunTreenit + 1);
+  const kumppaniAlku = voima[voima.length - 5];
+  const edellinenViikko = addDays(maanantai(tanaan), -14);
+
+  const haasteet = [
+    {
+      id: 'oma-kuu-treenit', tyyppi: 'oma', nimi: `${kuu} ${lahella} treeniä`,
+      kuvaus: `Tee ${lahella} voimatreeniä tämän kuukauden aikana.`,
+      mittari: 'treenit', tavoite: lahella, alku: kuuAlku, loppu: kuuLoppu,
+      palkinto: { pisteet: 50, merkkiId: 'kuukauden-haaste' }, liittynyt: true, luoja: 'demo',
+    },
+    {
+      id: 'oma-kuu-volyymi', tyyppi: 'oma', nimi: `${kuu} 60 000 kg`,
+      kuvaus: 'Nosta kuukauden aikana yhteensä 60 000 kg työsarjoissa.',
+      mittari: 'volyymi', tavoite: 60000, alku: kuuAlku, loppu: kuuLoppu,
+      palkinto: { pisteet: 75, merkkiId: 'kuukauden-haaste' }, liittynyt: true, luoja: 'demo',
+    },
+    {
+      id: 'oma-kuu-aktiiviset', tyyppi: 'oma', nimi: `${kuu} 20 aktiivista päivää`,
+      kuvaus: 'Liiku 20 eri päivänä. Myös kävelyt, pyöräilyt ja kirjatut lajipäivät lasketaan.',
+      mittari: 'aktiivisetPaivat', tavoite: 20, alku: kuuAlku, loppu: kuuLoppu,
+      palkinto: { pisteet: 50, merkkiId: 'kuukauden-haaste' }, liittynyt: false, luoja: 'demo',
+    },
+    {
+      id: 'oma-kuu-putki', tyyppi: 'oma', nimi: '4 viikon putki',
+      kuvaus: 'Täytä viikkotavoitteesi neljänä peräkkäisenä viikkona tämän kuukauden aikana.',
+      mittari: 'putki', tavoite: 4, alku: kuuAlku, loppu: kuuLoppu,
+      palkinto: { pisteet: 60, merkkiId: 'kuukauden-haaste' }, liittynyt: false, luoja: 'demo',
+    },
+    {
+      id: 'kaveri-volyymi-2vk', tyyppi: 'kaveri', nimi: 'Kahden viikon volyymikisa',
+      kuvaus: 'Kuka nostaa eniten kiloja kahdessa viikossa? Tasapainotus vertaa jokaista omaan lähtötasoonsa.',
+      mittari: 'volyymi', tavoite: null, alku: addDays(tanaan, -6), loppu: addDays(tanaan, 7),
+      osallistujat: ['kaveri-jari', 'kaveri-mia', 'kaveri-aino', 'kaveri-laura'], tasapainotus: true,
+      palkinto: { pisteet: 100 }, liittynyt: true, luoja: 'kayttaja',
+    },
+    {
+      id: 'kaveri-sarjat-1vk', tyyppi: 'kaveri', nimi: 'Viikon sarjakisa',
+      kuvaus: 'Eniten työsarjoja viikossa, tasapainotettuna omaan lähtötasoon.',
+      mittari: 'sarjat', tavoite: null, alku: edellinenViikko, loppu: addDays(edellinenViikko, 6),
+      osallistujat: ['kaveri-jari', 'kaveri-aino', 'kaveri-martti'], tasapainotus: true,
+      palkinto: { pisteet: 100, merkkiId: 'voitettu-kaverihaaste' }, liittynyt: true, luoja: 'demo',
+    },
+    {
+      id: 'sali-kuu', tyyppi: 'sali', nimi: `${kuu} jäsenhaaste`,
+      kuvaus: 'Salin jäsenet nostavat kuukauden aikana yhdessä 2 000 000 kg. Oma tavoitteesi on 40 000 kg. '
+        + 'Salit voivat järjestää omia jäsenhaasteitaan.',
+      mittari: 'volyymi', tavoite: 40000, saliTavoite: 2000000, saliPaivassa: 62000, saliJasenia: 148,
+      alku: kuuAlku, loppu: kuuLoppu, osallistujat: ['kaveri-martti', 'kaveri-laura'],
+      palkinto: { pisteet: 50 }, liittynyt: false, luoja: 'demo',
+    },
+    {
+      // Kumppani on keksitty: geneerinen nimi, jotta mikään oikea yritys ei sekoitu demoon.
+      id: 'kumppani-x', tyyppi: 'kumppani', nimi: 'Kumppani X: 7 treeniä 2 viikossa',
+      kuvaus: 'Tee 7 voimatreeniä 14 päivässä ja saat 25 % alennuksen Kumppani X:n verkkokaupasta. '
+        + 'Demo: kuvitteellinen kumppani.',
+      mittari: 'treenit', tavoite: 7, alku: kumppaniAlku, loppu: addDays(kumppaniAlku, 13),
+      palkinto: {
+        pisteet: 50,
+        merkkiId: 'kumppanihaaste',
+        etu: { kumppani: 'Kumppani X', teksti: '25 % alennus Kumppani X:n verkkokaupasta', koodi: 'PSP-DEMO-25' },
+      },
+      liittynyt: true, luoja: 'demo',
+    },
+  ];
+
+  // Ansaittuja merkkejä ei tallenneta seediin: badges() johtaa ne tilasta (esim. päättyneen
+  // kaverihaasteen voitto), joten migraatio ei voi antaa merkkiä, jota käyttäjän historia ei tue.
+  return {
+    kaverit: structuredClone(KAVERIT),
+    haasteet,
+    tsempit: [],
+    ansaitutMerkit: [],
+    lunastetutEdut: [],
+  };
+}
+
+// Demon kuukausihaasteiden nimissä käytetty kuukausi (genetiivi), esim. 'Marraskuun'.
+export function kuukausiGen(pvm) {
+  return KUUKAUDET_GEN[Number(String(pvm).slice(5, 7)) - 1];
+}
+
 /**
  * seedHistory(nyt) → { historia, kehonpainoHistoria }
  * Historia on aikajärjestyksessä (vanhin ensin).
@@ -384,6 +519,8 @@ export function seedState(nyt) {
     viikkosuunnitelmat: [],
     chat: [],
     kaynnissa: null,
+    paivanVaihdot: {}, // { [pvm]: { [alkuperainenId]: korvaavaId | null } } (speksi 4j)
     asetukset: { teema: 'vaalea' }, // vaalea | tumma | auto (auto = laitteen asetus)
+    yhteiso: seedYhteiso(tanaanPvm(nyt), historia),
   };
 }

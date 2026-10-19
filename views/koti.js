@@ -1,14 +1,20 @@
 // Koti (speksi 6.1, 4d, 4h): tervehdys, tämän päivän treeni, viikkonauha, viikkotavoite,
 // muistirivi, progressiovinkki, valmentaja-, ohjelma- ja ravintokortit.
-import { getState } from '../store.js?v=270067f';
-import { tanaanPvm } from '../seed.js?v=270067f';
-import { LIIKKEET } from '../data.js?v=270067f';
-import { el, svgEl, card, sectionTitle, hexRing, whyButton, formatWeight } from './ui.js?v=270067f';
-import { weeklyTargets, weeklyProgress } from '../engine/targets.js?v=270067f';
-import { recovery } from '../engine/recovery.js?v=270067f';
-import { suggestNextSet } from '../engine/progression.js?v=270067f';
-import { weekStart, addDays } from '../engine/util.js?v=270067f';
-import { rakennaPaiva } from './paiva.js?v=270067f';
+import { getState } from '../store.js?v=6612722';
+import { tanaanPvm } from '../seed.js?v=6612722';
+import { LIIKKEET } from '../data.js?v=6612722';
+import { el, svgEl, card, sectionTitle, hexRing, whyButton, formatWeight } from './ui.js?v=6612722';
+import { weeklyTargets, weeklyProgress } from '../engine/targets.js?v=6612722';
+import { recovery } from '../engine/recovery.js?v=6612722';
+import { suggestNextSet } from '../engine/progression.js?v=6612722';
+import { weekStart, addDays } from '../engine/util.js?v=6612722';
+import { rakennaPaiva } from './paiva.js?v=6612722';
+import { challengeProgress, leaderboard } from '../engine/challenges.js?v=6612722';
+import { palkki, edistysTeksti, kisaNimi } from './yhteiso.js?v=6612722';
+import {
+  openSwapSheet, swipeRow, vihjaaPyyhkaisy, vaihtoNappi, vaihtoRivi, taydennaVaihdettu,
+  tallennaPaivanVaihto, palautaPaivanVaihto, ohitetutLista, kaytetytLiikkeet, kaikkiOhitettu,
+} from './vaihto.js?v=6612722';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {
@@ -95,15 +101,46 @@ function muistirivit(muistit, tanaan) {
     tulevat.slice(0, 2).map((m) => muistirivi(m, true)));
 }
 
+// Liikkeen vaihto (speksi 4j): pyyhkäisy tai ⇄-painike avaa vaihtolaatikon; vaihto tallentuu
+// päivän vaihtoihin (paivanVaihdot). Käynnissä olevan treenin aikana Kodin lista on vain luku.
+function treeniLista({ p, state, tanaan, kaynnissa, vihjeet }) {
+  // Vaihtoehdoista karsitaan sekä nykyiset että vaihdettujen rivien alkuperäiset liikkeet.
+  const paivanLiikkeet = kaytetytLiikkeet(p.rivit);
+  const rivit = p.rivit.map((r, i) => {
+    const alkuperainen = r.vaihdettu ? r.vaihdettu.alkuperainen : r.liikeId;
+    const vaihdettu = taydennaVaihdettu(r.vaihdettu, state, tanaan);
+    const avaa = () => openSwapSheet({
+      liikeId: r.liikeId, pvm: tanaan, konteksti: 'koti', paivanLiikkeet, laitteet: p.laitteet,
+      onValittu: (korvaava, tieto) => tallennaPaivanVaihto(tanaan, alkuperainen, korvaava, tieto),
+    });
+    const merkki = vaihtoRivi({
+      vaihdettu, liike: r.liike, laitteet: p.laitteet, eiVaihtoehtoa: r.eiVaihtoehtoa,
+      onPalauta: !kaynnissa && vaihdettu && vaihdettu.syy === 'kayttaja' ? () => palautaPaivanVaihto(tanaan, alkuperainen, p.rivit) : null,
+    });
+    const rivi = el('div', { class: `t8-today-item${r.eiVaihtoehtoa ? ' is-skip' : ''}` },
+      el('span', { class: 't8-today-num' }, String(i + 1)),
+      el('span', { class: 't8-today-main' },
+        el('span', { class: 't8-today-name' }, r.liike.nimi),
+        merkki),
+      el('span', { class: 't8-today-sets' }, `${r.tavoite.sarjat} × ${r.tavoite.toistoMin}–${r.tavoite.toistoMax}`),
+      kaynnissa ? null : vaihtoNappi(r.liike.nimi, avaa, `koti:${alkuperainen}`));
+    if (kaynnissa) return el('li', { class: 'vx-li' }, rivi);
+    const kaare = swipeRow(rivi, avaa);
+    if (i === 0) vihjeet.push(vihjaaPyyhkaisy(kaare));
+    return el('li', { class: 'vx-li' }, kaare);
+  });
+  return [
+    el('ol', { class: 't8-today-list' }, rivit),
+    kaynnissa ? null : ohitetutLista({ state, pvm: tanaan, ohjelmassa: p.paiva.liikkeet.map((x) => x.liikeId), rivit: p.rivit }),
+  ];
+}
+
 // p = rakennaPaiva(): samat liikkeet, sarjat, toistot ja kesto kuin Treenin aloituksessa.
-function treeniKortti({ p, tanaan, historia, kaynnissa, suunnitelmaTanaan }) {
+function treeniKortti({ p, state, tanaan, historia, kaynnissa, suunnitelmaTanaan, vihjeet }) {
   const { ohjelma, paiva } = p;
   const treenattuTanaan = historia.some((t) => t.pvm === tanaan && (t.tyyppi == null || t.tyyppi === 'voima'));
   const otsikko = treenattuTanaan ? 'Seuraava treeni' : 'Tämän päivän treeni';
-  const lista = el('ol', { class: 't8-today-list' }, p.rivit.map((r, i) => el('li', { class: 't8-today-item' },
-    el('span', { class: 't8-today-num' }, String(i + 1)),
-    el('span', { class: 't8-today-name' }, r.liike.nimi),
-    el('span', { class: 't8-today-sets' }, `${r.tavoite.sarjat} × ${r.tavoite.toistoMin}–${r.tavoite.toistoMax}`))));
+  const lista = treeniLista({ p, state, tanaan, kaynnissa, vihjeet });
   let suunnitelmaHuomio = null;
   if (suunnitelmaTanaan && suunnitelmaTanaan.tyyppi && suunnitelmaTanaan.tyyppi !== 'treeni') {
     const teksti = suunnitelmaTanaan.tyyppi === 'laji'
@@ -124,9 +161,12 @@ function treeniKortti({ p, tanaan, historia, kaynnissa, suunnitelmaTanaan }) {
       el('span', null, `noin ${p.arvioMin} min`)),
     suunnitelmaHuomio,
     lista,
-    el('a', { class: 'btn btn-primary t8-hero-btn', href: '#/treeni' },
-      svgEl('svg', { viewBox: '0 0 24 24', width: 20, height: 20, 'aria-hidden': 'true' }, svgEl('path', { d: 'M8 5.5v13l10.5-6.5z', fill: 'currentColor' })),
-      kaynnissa ? 'Jatka treeniä' : 'Aloita treeni'));
+    // Kaikki liikkeet ohitettu (tai ilman vaihtoehtoa): ei Aloita-painiketta, vaan palautus.
+    !kaynnissa && !p.rivit.some((r) => !r.eiVaihtoehtoa)
+      ? kaikkiOhitettu({ state, pvm: tanaan, rivit: p.rivit })
+      : el('a', { class: 'btn btn-primary t8-hero-btn', href: '#/treeni' },
+        svgEl('svg', { viewBox: '0 0 24 24', width: 20, height: 20, 'aria-hidden': 'true' }, svgEl('path', { d: 'M8 5.5v13l10.5-6.5z', fill: 'currentColor' })),
+        kaynnissa ? 'Jatka treeniä' : 'Aloita treeni'));
 }
 
 function viikkonauha({ otsikko, alku, tanaan, historia, suunnitelma, oikea }) {
@@ -179,6 +219,56 @@ function tavoiteKortti(edistys, muokattu) {
       el('div', { class: 't8-eyebrow' }, muokattu ? 'Viikkotavoite · muokattu' : 'Viikkotavoite'),
       el('div', { class: 't8-goal-pct' }, String(edistys.kokonaisPros), el('span', { class: 't8-goal-pct-unit' }, ' %')),
       el('div', { class: 't8-goal-sub' }, ali)),
+    chevron());
+}
+
+// Haasteet (speksi 4i): lähimpänä maalia oleva liitetty haaste ja oma sija aktiivisessa kaverihaasteessa.
+function haasteetKortti(state, nyt) {
+  const haasteet = (state.yhteiso && Array.isArray(state.yhteiso.haasteet) ? state.yhteiso.haasteet : [])
+    .filter((h) => h && h.liittynyt);
+  const aktiiviset = haasteet.map((h) => ({ h, p: challengeProgress(h, state, nyt) }))
+    .filter((x) => x.p.alkanut && !x.p.paattynyt);
+  if (!aktiiviset.length) {
+    return el('a', { class: 'card t8-link-card', href: '#/yhteiso' },
+      el('span', { class: 't8-link-ico' }, ikoni('M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M15.5 4.6a3.5 3.5 0 0 1 0 6.8M17.5 13.8a6.5 6.5 0 0 1 4 6.2', 20)),
+      el('div', { class: 't8-link-body' },
+        el('div', { class: 't8-eyebrow' }, 'Haasteet'),
+        el('div', { class: 't8-link-title' }, 'Liity haasteeseen'),
+        el('div', { class: 't8-link-sub' }, 'Kisaa kavereiden kanssa ja kerää merkkejä.')),
+      chevron());
+  }
+  const tavoitteelliset = aktiiviset.filter((x) => x.h.tyyppi !== 'kaveri');
+  const kesken = tavoitteelliset.filter((x) => !x.p.suoritettu);
+  const lahin = (kesken.length ? kesken : tavoitteelliset).slice().sort((a, b) => b.p.pros - a.p.pros)[0] || null;
+  const kaveri = aktiiviset.find((x) => x.h.tyyppi === 'kaveri');
+  let sija = null;
+  if (kaveri) {
+    const lauta = leaderboard(kaveri.h, state, nyt, { tasapainotettu: !!kaveri.h.tasapainotus });
+    const oma = lauta.find((r) => r.kayttaja);
+    if (oma) sija = { teksti: `${kisaNimi(kaveri.h)}: ${oma.sija}./${lauta.length}`, karki: oma.sija === 1, tasap: !!kaveri.h.tasapainotus };
+  }
+  return el('a', { class: 'card yh-home', href: '#/yhteiso' },
+    el('div', { class: 'yh-home-head' },
+      el('span', { class: 't8-eyebrow t8-eyebrow-accent' }, 'Haasteet'),
+      el('span', { class: 'yh-home-count' }, `${aktiiviset.length} käynnissä`),
+      chevron()),
+    lahin ? el('div', { class: 'yh-home-row' },
+      el('span', { class: 'yh-home-name' }, lahin.h.nimi),
+      el('span', { class: 'yh-home-value' }, lahin.p.suoritettu ? '✓' : edistysTeksti(lahin.h.mittari, lahin.p.arvo, lahin.p.tavoite))) : null,
+    lahin ? palkki(lahin.p.pros, { valmis: lahin.p.suoritettu, label: `${lahin.h.nimi}: ${lahin.p.pros} %` }) : null,
+    sija ? el('div', { class: `yh-home-rank${sija.karki ? ' is-first' : ''}` },
+      ikoni('M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7', 16),
+      el('span', null, sija.teksti),
+      sija.tasap ? el('span', { class: 'yh-home-rank-sub' }, 'tasapainotettu') : null) : null);
+}
+
+function liikekirjastoKortti() {
+  return el('a', { class: 'card t8-link-card', href: '#/liikkeet' },
+    el('span', { class: 't8-link-ico' }, ikoni('M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11', 20)),
+    el('div', { class: 't8-link-body' },
+      el('div', { class: 't8-eyebrow' }, 'Liikekirjasto'),
+      el('div', { class: 't8-link-title' }, 'Kaikki liikkeet'),
+      el('div', { class: 't8-link-sub' }, `${LIIKKEET.length} liikettä ohjeineen ja omine ennätyksineen`)),
     chevron());
 }
 
@@ -299,10 +389,11 @@ export function render(root) {
   const paivia = new Set(historia.filter((t) => t.pvm >= alku && t.pvm < loppu).map((t) => t.pvm)).size;
   const tavoitePaivat = Number.isFinite(profiili.treenitViikossa) ? profiili.treenitViikossa : 3;
 
-  lisaa(root, 
+  const vihjeet = [];
+  lisaa(root,
     ylarivi(profiili, tanaan),
     muistirivit(state.muistit || [], tanaan),
-    treeniKortti({ p, tanaan, historia, kaynnissa: !!state.kaynnissa, suunnitelmaTanaan }),
+    treeniKortti({ p, state, tanaan, historia, kaynnissa: !!state.kaynnissa, suunnitelmaTanaan, vihjeet }),
     sectionTitle('Tämä viikko'),
     viikkonauha({
       otsikko: tamaSuunnitelma ? 'Viikkosi · muokattu' : 'Viikkosi',
@@ -313,10 +404,13 @@ export function render(root) {
       ? viikkonauha({ otsikko: 'Ensi viikko · suunnitelma', alku: ensiAlku, tanaan, historia, suunnitelma: ensiSuunnitelma, oikea: `${pv(ensiAlku)}–${pv(addDays(ensiAlku, 6))}` })
       : null,
     tavoiteKortti(edistys, !!tamaSuunnitelma),
+    haasteetKortti(state, new Date().toISOString()),
     sectionTitle('Sinulle'),
     vinkkiKortti({ p, historia, profiili, palautuminen }),
     valmentajaKortti(),
     ohjelmaKortti(ohjelma),
+    liikekirjastoKortti(),
     ravintoKortti(),
   );
+  return () => vihjeet.forEach((peru) => peru());
 }

@@ -1,7 +1,7 @@
 // Progressiomoottori: e1RM, tavoitteen parametrit, jumiutumisen tunnistus ja
 // seuraavan sarjan ehdotus. Puhdas moduuli: aika ja data tulevat parametreina.
 
-import { round25, onVoimatreeni, onTyosarja } from './util.js?v=270067f';
+import { round25, onVoimatreeni, onTyosarja } from './util.js?v=6612722';
 
 // Voimanoston pääliikkeet: näille haarukka 1–5, muille liikkeille apuliikkeiden 6–10.
 export const VOIMANOSTO_PAALIIKKEET = ['takakyykky', 'penkkipunnerrus', 'maastaveto'];
@@ -135,6 +135,26 @@ function toistoHaarukka(tp, liike) {
   return tp.apuliikkeet && !paaliike ? tp.apuliikkeet : tp;
 }
 
+// Johdettu aloituspaino korvaavalle liikkeelle (speksi 4j): korvaavan viitekerroin / lähteen
+// viitekerroin × lähteen arvioitu voima (e1RM) × työpainokerroin. Työpainokerroin on Epleyn
+// käänteinen toistohaarukan alapäälle RIR-varauksen kanssa: 1 / (1 + (toistoMin + rirMax) / 30),
+// esim. lihasmassa 8 + 2 → 0,75. Vain, kun molemmilla liikkeillä on viitekerroin.
+function johdettuAloituspaino(liike, lahde, toistoMin, rirMax) {
+  if (!liike || !lahde || !lahde.liike) return null;
+  const kk = liike.viitekerroin;
+  const lk = lahde.liike.viitekerroin;
+  if (!(Number.isFinite(kk) && kk > 0 && Number.isFinite(lk) && lk > 0)) return null;
+  const voima = lahde.arvioituVoima && typeof lahde.arvioituVoima === 'object'
+    ? lahde.arvioituVoima.arvo
+    : lahde.arvioituVoima;
+  if (!(Number.isFinite(voima) && voima > 0)) return null;
+  const varaus = Number.isFinite(rirMax) ? rirMax : 0;
+  const tyopainokerroin = 1 / (1 + (toistoMin + varaus) / 30);
+  const paino = round25((kk / lk) * voima * tyopainokerroin);
+  if (!(paino > 0)) return null;
+  return { paino, voima: Math.round(voima * 10) / 10, lahdeNimi: lahde.liike.nimi || lahde.liike.id };
+}
+
 // Ehdottaa seuraavan sarjan painon ja toistot. Ensimmäinen osuva sääntö voittaa.
 // Treenin aikana (tämän kerran työsarjoja on jo): first-time → deload → recovery →
 // rir-zero → rir-high → hold (jatka viimeisen sarjan painolla).
@@ -150,6 +170,7 @@ export function suggestNextSet({
   kokemus = 'keskitaso',
   lihasTila,
   valineet, // hyväksytään rajapinnassa; POC:ssa ei vaikuta ehdotukseen
+  johdettuLahde, // { liike, arvioituVoima }: korvatun liikkeen arvioitu voima (speksi 4j)
 } = {}) {
   const tp = tavoiteParametrit(tavoite);
   const { toistoMin, toistoMax } = toistoHaarukka(tp, liike);
@@ -170,6 +191,14 @@ export function suggestNextSet({
 
   // 1. first-time: ei historiaa eikä tämän kerran sarjoja.
   if (!edellinen && !viimeSarja) {
+    const johdettu = johdettuAloituspaino(liike, johdettuLahde, toistoMin, rirMax);
+    if (johdettu) {
+      return ulos(johdettu.paino, toistoMin, 'first-time',
+        `Ensimmäinen kerta tällä liikkeellä: aloituspaino (${fmt(johdettu.paino)} kg) on johdettu korvatun liikkeen ` +
+        `(${johdettu.lahdeNimi}) arvioidusta voimasta (${fmt(johdettu.voima)} kg) liikkeiden viitekertoimien suhteella ` +
+        `ja mitoitettu tavoitteesi toistohaarukan alapäähän (${toistoMin} toistoa) niin, että varaa jää. ` +
+        'Kaksoisprogressio alkaa seuraavasta kerrasta, kun tiedämme lähtötasosi tässä liikkeessä.');
+    }
     const perus = liike && Number.isFinite(liike.aloituspaino)
       ? liike.aloituspaino
       : VALINEOLETUS[liike && liike.valine] ?? 20;

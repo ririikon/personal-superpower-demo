@@ -1,14 +1,14 @@
 // Edistyminen (speksi 6.4, 4b ja 4b-2): välilehdet Tulokset ja Palautuminen.
 // Tulokset: Treeniscore-mittari, ryhmäkortit, vertailuliikkeet, kehonkoostumus ja ennätykset.
 // Palautuminen: käännettävä kehokartta ja lihaskohtainen palautumistieto.
-import { getState, update } from '../store.js?v=270067f';
-import { tanaanPvm } from '../seed.js?v=270067f';
-import { LIIKKEET, VERTAILULIIKKEET, RYHMAT, LIHASRYHMAT, liike as haeLiike } from '../data.js?v=270067f';
+import { getState, update } from '../store.js?v=6612722';
+import { tanaanPvm } from '../seed.js?v=6612722';
+import { LIIKKEET, VERTAILULIIKKEET, RYHMAT, LIHASRYHMAT, liike as haeLiike } from '../data.js?v=6612722';
 import {
   muscleStrength, treeniscore, scoreTrend, estimatedStrength, exerciseRecords, recovery, addDays,
-} from '../engine.js?v=270067f';
-import { el, svgEl, card, sectionTitle, sheet, whyButton, segmented, formatWeight } from './ui.js?v=270067f';
-import { bodyMap, PUOLET } from './bodymap.js?v=270067f';
+} from '../engine.js?v=6612722';
+import { el, svgEl, card, sectionTitle, sheet, whyButton, segmented, formatWeight } from './ui.js?v=6612722';
+import { bodyMap, PUOLET } from './bodymap.js?v=6612722';
 
 const KG_LB = 2.20462;
 
