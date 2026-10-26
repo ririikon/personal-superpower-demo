@@ -1,8 +1,8 @@
 // Liikkeen vaihtoehdot ja automaattinen vaihto (speksi 4j): laitekarsinta, kipukarsinta,
 // pisteytys ja suomenkielinen perustelu. Puhdas moduuli: aika ja data tulevat parametreina.
 
-import { LIIKKEET, LAITTEET } from '../data.js?v=31a36ec';
-import { onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
+import { LIIKKEET, LAITTEET } from '../data.js?v=19a48e7';
+import { onVoimatreeni, onTyosarja } from './util.js?v=19a48e7';
 
 const MAKSIMI = 5;
 const PISTEET = { lihasryhma: 50, kaava: 30, toissijainen: 5, tuttu: 10 };

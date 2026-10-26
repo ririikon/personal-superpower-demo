@@ -1,21 +1,24 @@
-// Koti (speksi 6.1, 4d, 4h, 4k C): tervehdys, tavoitetapahtuman aikajana, tämän päivän treeni,
-// viikkonauha, viikkotavoite, muistirivi, progressiovinkki, valmentaja-, ohjelma- ja ravintokortit.
-import { getState } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET } from '../data.js?v=31a36ec';
-import { el, svgEl, card, sectionTitle, hexRing, whyButton, formatWeight } from './ui.js?v=31a36ec';
-import { viikonTavoitteet, weeklyProgress } from '../engine/targets.js?v=31a36ec';
-import { recovery } from '../engine/recovery.js?v=31a36ec';
-import { suggestNextSet } from '../engine/progression.js?v=31a36ec';
-import { weekStart, addDays } from '../engine/util.js?v=31a36ec';
-import { eventPlan } from '../engine/event.js?v=31a36ec';
-import { rakennaPaiva } from './paiva.js?v=31a36ec';
-import { challengeProgress, leaderboard } from '../engine/challenges.js?v=31a36ec';
-import { palkki, edistysTeksti, kisaNimi } from './yhteiso.js?v=31a36ec';
+// Koti (speksi 6.1, 4d, 4h, 4k C, 4l): tervehdys, tavoitetapahtuman aikajana, tämän päivän treeni,
+// kalenterikortti, viikkonauha, viikkotavoite, liiga- ja haastekortit, kuukausikooste, muistirivi,
+// progressiovinkki, valmentaja-, ohjelma- ja ravintokortit.
+import { getState } from '../store.js?v=19a48e7';
+import { seuraavaVaraus } from '../engine/schedule.js?v=19a48e7';
+import { leagueWeek } from '../engine/league.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET } from '../data.js?v=19a48e7';
+import { el, svgEl, card, sectionTitle, hexRing, whyButton, formatWeight } from './ui.js?v=19a48e7';
+import { viikonTavoitteet, weeklyProgress } from '../engine/targets.js?v=19a48e7';
+import { recovery } from '../engine/recovery.js?v=19a48e7';
+import { suggestNextSet } from '../engine/progression.js?v=19a48e7';
+import { weekStart, addDays } from '../engine/util.js?v=19a48e7';
+import { eventPlan } from '../engine/event.js?v=19a48e7';
+import { rakennaPaiva } from './paiva.js?v=19a48e7';
+import { challengeProgress, leaderboard } from '../engine/challenges.js?v=19a48e7';
+import { palkki, edistysTeksti, kisaNimi } from './yhteiso.js?v=19a48e7';
 import {
   openSwapSheet, swipeRow, vihjaaPyyhkaisy, vaihtoNappi, vaihtoRivi, taydennaVaihdettu,
   tallennaPaivanVaihto, palautaPaivanVaihto, ohitetutLista, kaytetytLiikkeet, kaikkiOhitettu,
-} from './vaihto.js?v=31a36ec';
+} from './vaihto.js?v=19a48e7';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {
@@ -347,6 +350,175 @@ function haasteetKortti(state, nyt) {
       sija.tasap ? el('span', { class: 'yh-home-rank-sub' }, 'tasapainotettu') : null) : null);
 }
 
+// --- Kalenteri, liiga ja kuukausikooste (speksi 4l) -----------------------------------
+
+const VKP_LYHYT = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
+const KUUKAUSI_SI = ['Tammikuusi', 'Helmikuusi', 'Maaliskuusi', 'Huhtikuusi', 'Toukokuusi', 'Kesäkuusi',
+  'Heinäkuusi', 'Elokuusi', 'Syyskuusi', 'Lokakuusi', 'Marraskuusi', 'Joulukuusi'];
+
+/**
+ * kalenteriKorttiTiedot(state, nyt) → { varaus, teksti: 'Seuraava treeni: to 17.30 · Päivä B (kalenterissa)' } | null
+ * Seuraava toteutumaton treenivaraus (seuraavaVaraus). Ilman varausta null ("Suunnittele viikkosi").
+ */
+export function kalenteriKorttiTiedot(state, nyt) {
+  const v = seuraavaVaraus(state, nyt);
+  if (!v) return null;
+  const m = /T(\d{2}):(\d{2})/.exec(String(v.alku));
+  const klo = m ? `${Number(m[1])}.${m[2]}` : '';
+  const vkp = VKP_LYHYT[viikonpaiva(v.pvm)];
+  return { varaus: v, teksti: `Seuraava treeni: ${vkp} ${klo}${v.ohjelmaPaiva ? ` · ${v.ohjelmaPaiva}` : ''} (kalenterissa)` };
+}
+
+/**
+ * liigaAlue(viikko) → 'Nousualue' | 'Turvassa' | 'Putoamisalue'
+ * Sijat 1–5 nousualueella ja 16–20 putoamisalueella. Ylimmästä tasosta ei nousta eikä alimmasta pudota,
+ * ja käytössä oleva putkisuoja estää pudotuksen, joten silloin käyttäjä on turvassa.
+ */
+export function liigaAlue(viikko) {
+  const sija = viikko && viikko.omaSija;
+  if (!Number.isFinite(sija)) return null;
+  if (sija <= viikko.nousuRaja && !viikko.ylinTaso) return 'Nousualue';
+  if (sija >= viikko.putoamisRaja && !viikko.alinTaso && !viikko.suojaKaytossa) return 'Putoamisalue';
+  return 'Turvassa';
+}
+
+const TASO_NIMI = { pronssi: 'Pronssi', hopea: 'Hopea', kulta: 'Kulta', platina: 'Platina', superpower: 'SuperPower' };
+const TASO_INE = { pronssi: 'Pronssissa', hopea: 'Hopeassa', kulta: 'Kullassa', platina: 'Platinassa', superpower: 'SuperPowerissa' };
+const TASO_ILL = { pronssi: 'Pronssiin', hopea: 'Hopeaan', kulta: 'Kultaan', platina: 'Platinaan', superpower: 'SuperPoweriin' };
+
+/**
+ * liigaTulosKortti(rivi) → { tyyppi: 'nousu'|'pysyi'|'putosi', otsikko, ali, alue } | null
+ * Kodin "viikko vaihtui" -kortti liiga.odottavaTulos-rivistä ({ taso, uusiTaso, sija, pisteet, tulos,
+ * suojattu, simuloitu? }). Esim. 'Nousit Kulta-liigaan! 🎉', 'Pysyit Hopeassa' tai
+ * 'Putosit Pronssiin – uusi viikko, uusi mahdollisuus'.
+ */
+export function liigaTulosKortti(rivi) {
+  if (!rivi || typeof rivi !== 'object') return null;
+  const taso = TASO_NIMI[rivi.uusiTaso] ? rivi.uusiTaso : (TASO_NIMI[rivi.taso] ? rivi.taso : 'pronssi');
+  let tyyppi = 'pysyi';
+  let otsikko = rivi.suojattu ? `Putkisuoja piti sinut ${TASO_INE[taso]}` : `Pysyit ${TASO_INE[taso]}`;
+  let alue = 'Pysyit';
+  if (rivi.tulos === 'nousu') {
+    tyyppi = 'nousu';
+    otsikko = `Nousit ${TASO_NIMI[taso]}-liigaan! 🎉`;
+    alue = 'Nousu';
+  } else if (rivi.tulos === 'putosi') {
+    tyyppi = 'putosi';
+    otsikko = `Putosit ${TASO_ILL[taso]} – uusi viikko, uusi mahdollisuus`;
+    alue = 'Pudotus';
+  }
+  const osat = ['Viikko vaihtui'];
+  if (Number.isFinite(rivi.sija)) osat.push(`sija ${rivi.sija}.`);
+  if (Number.isFinite(rivi.pisteet)) osat.push(`${rivi.pisteet} pistettä`);
+  if (rivi.simuloitu) osat.push('demo');
+  return { tyyppi, otsikko, ali: `${osat.join(' · ')} – katso tulos`, alue };
+}
+
+/**
+ * koosteKorttiTiedot(state, tanaan) → { kk: 'YYYY-MM', otsikko: 'Syyskuusi on valmis', ali, nahty, href }
+ * Demossa kortti näkyy aina edellisestä kuukaudesta; nähdyllä kuukaudella ali = 'Katso uudelleen'.
+ */
+export function koosteKorttiTiedot(state, tanaan) {
+  const [y, m] = String(tanaan).split('-').map(Number);
+  const ey = m === 1 ? y - 1 : y;
+  const em = m === 1 ? 12 : m - 1;
+  const kk = `${ey}-${String(em).padStart(2, '0')}`;
+  const nahty = !!(state && state.koosteetNahty && state.koosteetNahty[kk]);
+  return {
+    kk,
+    otsikko: `${KUUKAUSI_SI[em - 1]} on valmis`,
+    ali: nahty ? 'Katso uudelleen' : 'Katso Treenikuukautesi',
+    nahty,
+    href: `#/kooste?kk=${kk}`,
+  };
+}
+
+function kalenteriKortti(state, nyt) {
+  const tieto = kalenteriKorttiTiedot(state, nyt);
+  const ico = el('span', { class: 't8-link-ico' }, ikoni('M4 6.5h16v14H4zM4 10.5h16M8.5 3.5v4M15.5 3.5v4M8 14.5h3', 20));
+  if (!tieto) {
+    return el('a', { class: 'card t8-link-card kal-home', href: '#/kalenteri' },
+      ico,
+      el('div', { class: 't8-link-body' },
+        el('div', { class: 't8-eyebrow' }, 'Kalenteri'),
+        el('div', { class: 't8-link-title' }, 'Suunnittele viikkosi kalenteriin'),
+        el('div', { class: 't8-link-sub' }, 'Valmentaja etsii kalenteristasi vapaat raot treeneille.')),
+      chevron());
+  }
+  return el('a', { class: 'card t8-link-card kal-home is-booked', href: '#/kalenteri' },
+    ico,
+    el('div', { class: 't8-link-body' },
+      el('div', { class: 't8-eyebrow t8-eyebrow-accent' }, 'Kalenteri'),
+      el('div', { class: 't8-link-title kal-home-title' }, tieto.teksti),
+      el('div', { class: 't8-link-sub' }, `${tieto.varaus.kestoMin} min${tieto.varaus.tiivistetty ? ' · tiivistetty' : ''}${tieto.varaus.siirretty ? ' · siirretty' : ''}`)),
+    chevron());
+}
+
+function liigaKortti(state, nyt) {
+  // Viikko vaihtui: tulos odottaa näyttämistä. Kortti avaa Liiga-välilehden, jossa koko ruudun
+  // näkymä näytetään ja tulos tyhjennetään.
+  const tulos = liigaTulosKortti(state && state.liiga && state.liiga.odottavaTulos);
+  if (tulos) {
+    const luokka = tulos.tyyppi === 'nousu' ? 'is-up' : tulos.tyyppi === 'putosi' ? 'is-down' : 'is-safe';
+    return el('a', {
+      class: `card t8-link-card lg-home lg-home-result is-${tulos.tyyppi}`, href: '#/yhteiso?tab=liiga',
+      'aria-label': `${tulos.otsikko} ${tulos.ali}. Avaa liiga.`,
+    },
+    el('span', { class: 't8-link-ico' }, ikoni('M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7', 20)),
+    el('div', { class: 't8-link-body' },
+      el('div', { class: 'lg-home-row' },
+        el('span', { class: 't8-eyebrow t8-eyebrow-accent' }, 'Treeniliiga'),
+        el('span', { class: `lg-home-zone ${luokka}` }, tulos.alue)),
+      el('div', { class: 't8-link-title' }, tulos.otsikko),
+      el('div', { class: 't8-link-sub' }, tulos.ali)),
+    chevron());
+  }
+  let viikko = null;
+  try {
+    viikko = leagueWeek(state, nyt);
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+  const ico = el('span', { class: 't8-link-ico' }, ikoni('M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7', 20));
+  if (!viikko.osallistuu || !Number.isFinite(viikko.omaSija)) {
+    return el('a', { class: 'card t8-link-card', href: '#/yhteiso?tab=liiga' },
+      ico,
+      el('div', { class: 't8-link-body' },
+        el('div', { class: 't8-eyebrow' }, 'Treeniliiga'),
+        el('div', { class: 't8-link-title' }, 'Et osallistu liigaan'),
+        el('div', { class: 't8-link-sub' }, 'Viikkoliigan voi ottaa käyttöön Profiilissa.')),
+      chevron());
+  }
+  const alue = liigaAlue(viikko);
+  const luokka = alue === 'Nousualue' ? 'is-up' : alue === 'Putoamisalue' ? 'is-down' : 'is-safe';
+  const pisteet = viikko.omatPisteet ? viikko.omatPisteet.yhteensa : 0;
+  const [, lm, ld] = viikko.loppuu.split('-').map(Number);
+  return el('a', {
+    class: 'card t8-link-card lg-home', href: '#/yhteiso?tab=liiga',
+    'aria-label': `Treeniliiga ${viikko.tasoNimi}: sija ${viikko.omaSija}/${viikko.sijoitukset.length}, ${alue.toLowerCase()}. Avaa liiga.`,
+  },
+  ico,
+  el('div', { class: 't8-link-body' },
+    el('div', { class: 't8-eyebrow t8-eyebrow-accent' }, `Treeniliiga · ${viikko.tasoNimi}`),
+    el('div', { class: 'lg-home-row' },
+      el('span', { class: 't8-link-title' }, `Sija ${viikko.omaSija}/${viikko.sijoitukset.length}`),
+      el('span', { class: `lg-home-zone ${luokka}` }, alue)),
+    el('div', { class: 't8-link-sub' }, `${pisteet} pistettä · viikko päättyy ${VKP_LYHYT[viikonpaiva(viikko.loppuu)]} ${ld}.${lm}.${viikko.suojaKaytossa ? ' · putkisuoja käytössä' : ''}`)),
+  chevron());
+}
+
+function koosteKortti(state, tanaan) {
+  const t = koosteKorttiTiedot(state, tanaan);
+  return el('a', { class: `card t8-link-card rc-home${t.nahty ? ' is-seen' : ''}`, href: t.href },
+    el('span', { class: 't8-link-ico rc-home-ico' }, ikoni('M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z', 20)),
+    el('div', { class: 't8-link-body' },
+      el('div', { class: 't8-eyebrow t8-eyebrow-accent' }, 'Treenikuukautesi'),
+      el('div', { class: 't8-link-title' }, t.otsikko),
+      el('div', { class: 't8-link-sub' }, t.ali)),
+    chevron());
+}
+
 function liikekirjastoKortti() {
   return el('a', { class: 'card t8-link-card', href: '#/liikkeet' },
     el('span', { class: 't8-link-ico' }, ikoni('M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11', 20)),
@@ -483,13 +655,17 @@ export function render(root) {
     console.error(err);
   }
 
+  const nyt = new Date().toISOString();
   const vihjeet = [];
+  // Järjestys: tavoitetapahtuma ja tämän päivän treeni ylimpänä, sitten viikko (kalenteri, viikkonauha,
+  // viikkotavoite, liiga ja haasteet) ja lopuksi kuukausikooste, valmentaja ja muut kortit.
   lisaa(root,
     ylarivi(profiili, tanaan),
     tapahtumaPlan && tapahtumaPlan.nykyinen ? tapahtumaKortti(tapahtumaPlan) : null,
     muistirivit(state.muistit || [], tanaan),
     treeniKortti({ p, state, tanaan, historia, kaynnissa: !!state.kaynnissa, suunnitelmaTanaan, vihjeet }),
     sectionTitle('Tämä viikko'),
+    kalenteriKortti(state, nyt),
     viikkonauha({
       otsikko: tamaSuunnitelma ? 'Viikkosi · muokattu' : 'Viikkosi',
       alku, tanaan, historia, suunnitelma: tamaSuunnitelma,
@@ -499,11 +675,13 @@ export function render(root) {
       ? viikkonauha({ otsikko: 'Ensi viikko · suunnitelma', alku: ensiAlku, tanaan, historia, suunnitelma: ensiSuunnitelma, oikea: `${pv(ensiAlku)}–${pv(addDays(ensiAlku, 6))}` })
       : null,
     tavoiteKortti(edistys, !!tamaSuunnitelma, tavoiteJakso),
-    haasteetKortti(state, new Date().toISOString()),
+    liigaKortti(state, nyt),
+    haasteetKortti(state, nyt),
     sectionTitle('Sinulle'),
+    koosteKortti(state, tanaan),
+    valmentajaKortti(),
     tapahtumaPlan && tapahtumaPlan.nykyinen ? null : tapahtumaKehotus(),
     vinkkiKortti({ p, historia, profiili, palautuminen }),
-    valmentajaKortti(),
     ohjelmaKortti(ohjelma),
     liikekirjastoKortti(),
     ravintoKortti(),

@@ -1,25 +1,26 @@
 // Treeni-näkymä (speksi 6.2, 4c, 4b-2, 4f, 4h): aloitus, sarjojen kirjaus, ehdotuskortti,
 // palautusajastin ja lopetus. Näkymä päivittää itsensä (omaPaivitys), jotta syötekenttien
 // kohdistus säilyy; render palauttaa siivousfunktion, joka purkaa ajastimen ja kuuntelijan.
-import { getState, update } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET, liike as haeLiike, liikeTaiJuoksu } from '../data.js?v=31a36ec';
+import { getState, update } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET, liike as haeLiike, liikeTaiJuoksu } from '../data.js?v=19a48e7';
 import {
   suggestNextSet, recovery, round25, onTyosarja, onVoimatreeni, estimatedStrength, goalParams, inviteReward, KUTSU_PISTEET,
-} from '../engine.js?v=31a36ec';
-import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=31a36ec';
-import { parseSet, palautusKestoS } from './treeni-input.js?v=31a36ec';
+  markDone,
+} from '../engine.js?v=19a48e7';
+import { el, svgEl, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=19a48e7';
+import { parseSet, palautusKestoS } from './treeni-input.js?v=19a48e7';
 import {
   rakennaPaiva, liikkeenKerrat, liikkeenTavoite, onKehonpaino, LAMMITTELY, LAMMITTELY_PALAUTUS_S,
   kaikkiOhjelmat, kunnioitaOhjelmanSarjoja,
-} from './paiva.js?v=31a36ec';
+} from './paiva.js?v=19a48e7';
 import {
   openSwapSheet, swipeRow, vihjaaPyyhkaisy, vaihtoNappi, vaihtoRivi, taydennaVaihdettu,
   tallennaPaivanVaihto, palautaPaivanVaihto, ohitetutLista, normalisoiVaihdettu,
   kaytetytLiikkeet, palautusEstetty, kaikkiOhitettu, PALAUTUS_ESTETTY,
-} from './vaihto.js?v=31a36ec';
+} from './vaihto.js?v=19a48e7';
 // Nimetty uudelleen: näkymässä on oma ilmoitus-muuttuja (tauon päättymisilmoitus).
-import { ilmoitus as naytaIlmoitus } from './yhteiso.js?v=31a36ec';
+import { ilmoitus as naytaIlmoitus } from './yhteiso.js?v=19a48e7';
 
 export const omaPaivitys = true;
 
@@ -188,6 +189,17 @@ export function kutsuPalkkioTreenista(tila, treeni, nyt) {
   };
 }
 
+/**
+ * tallennusTila(tila, treeni, nyt) → uusi tila (annettua tilaa ei muuteta)
+ * Treenin tallennus yhtenä tilamuutoksena: treeni historiaan, käynnissä oleva treeni pois,
+ * kutsuhaasteen palkkio (kutsuPalkkioTreenista, speksi 4k B) ja saman päivän kalenterivarauksen
+ * merkintä toteutuneeksi (markDone, speksi 4l B).
+ */
+export function tallennusTila(tila, treeni, nyt) {
+  const t = { ...tila, historia: [...(Array.isArray(tila.historia) ? tila.historia : []), treeni], kaynnissa: null };
+  return markDone(kutsuPalkkioTreenista(t, treeni, nyt).tila, treeni);
+}
+
 // Liike on kesken: tavoitesarjoja tekemättä tai juoksu kirjaamatta.
 function kesken(tl) {
   if (onKesto(tl)) return !juoksuKirjattu(tl);
@@ -205,7 +217,7 @@ function lammittelyMaara(tl) {
 
 function avaaLiike(liike) {
   if (!liike) return;
-  import('./media.js?v=31a36ec')
+  import('./media.js?v=19a48e7')
     .then((m) => { if (m && typeof m.openExerciseSheet === 'function') m.openExerciseSheet(liike); })
     .catch(() => {});
 }
@@ -1230,12 +1242,7 @@ export function render(root) {
       }),
     };
     lopetetaan = true;
-    update((s) => {
-      s.historia = [...(Array.isArray(s.historia) ? s.historia : []), treeni];
-      s.kaynnissa = null;
-      // Kutsuhaasteen palkkio (speksi 4k B): ensimmäinen voimatreeni kutsun hyväksymisen jälkeen.
-      return kutsuPalkkioTreenista(s, treeni, new Date().toISOString()).tila;
-    });
+    update((s) => tallennusTila(s, treeni, new Date().toISOString()));
     poistaLuonnokset(k.id);
     location.hash = `#/historia/${encodeURIComponent(id)}${uusi ? '?uusi=1' : ''}`;
   }

@@ -3,7 +3,7 @@
 // kuvan, PDF:n tai taulukon; demossa rivit tulevat esimerkkitiedostosta (data.js ESIMERKKITUONTI).
 // Puhdas moduuli: ei DOM-, window-, localStorage- eikä Date.now()-kutsuja.
 
-import { LIIKKEET } from '../data.js?v=31a36ec';
+import { LIIKKEET } from '../data.js?v=19a48e7';
 
 // Synonyymisanasto: yleisimmät suomen- ja englanninkieliset nimet jokaiselle kirjaston liikkeelle.
 // Liikkeen oma nimi ja id (väliviivat välilyönneiksi) tunnistetaan aina. Lyhenteet (DL, RDL, DB,

@@ -1,12 +1,12 @@
 // Viikon sarjatavoitteet (speksi 4d, 4h): kuusikulmiorengas, ryhmäkortit, jotka avautuvat
 // lihasriveiksi, ja "Muokattu viikko" -merkintä, kun hyväksytty viikkosuunnitelma on voimassa.
 // Tavoitetapahtuman jakso (speksi 4k C) kertoo tavoitteet: merkintä "Jakso: Kovennus · × 1,1".
-import { getState } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET, RYHMAT } from '../data.js?v=31a36ec';
-import { el, svgEl, hexRing, whyButton, segmented } from './ui.js?v=31a36ec';
-import { viikonTavoitteet, weeklyProgress } from '../engine/targets.js?v=31a36ec';
-import { weekStart, addDays } from '../engine/util.js?v=31a36ec';
+import { getState } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET, RYHMAT } from '../data.js?v=19a48e7';
+import { el, svgEl, hexRing, whyButton, segmented } from './ui.js?v=19a48e7';
+import { viikonTavoitteet, weeklyProgress } from '../engine/targets.js?v=19a48e7';
+import { weekStart, addDays } from '../engine/util.js?v=19a48e7';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {

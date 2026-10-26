@@ -1,12 +1,12 @@
 // Historia (speksi 4e): otsikkorivi, 2 × 2 -yhteenveto, viikkonauha ja kuukausiruudukko sekä
 // "Menneet treenit" -aikajana. Reitti #/historia/<id> näyttää yksittäisen treenin yhteenvedon
 // (views/yhteenveto.js: renderSummary, varana oma yksinkertainen yhteenveto).
-import { getState } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET, MERKKIPAALUT, RYHMAT, liike as haeLiike } from '../data.js?v=31a36ec';
-import { workoutSummary, weeklyGoalDays, streakWeeks, milestones, weekStart, addDays } from '../engine.js?v=31a36ec';
-import { el, svgEl, card, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=31a36ec';
-import { bodyMap } from './bodymap.js?v=31a36ec';
+import { getState } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET, MERKKIPAALUT, RYHMAT, liike as haeLiike } from '../data.js?v=19a48e7';
+import { workoutSummary, weeklyGoalDays, streakWeeks, milestones, weekStart, addDays } from '../engine.js?v=19a48e7';
+import { el, svgEl, card, sectionTitle, sheet, whyButton, formatWeight } from './ui.js?v=19a48e7';
+import { bodyMap } from './bodymap.js?v=19a48e7';
 
 const KG_LB = 2.20462;
 const ERA = 30;
@@ -204,6 +204,17 @@ function yhteenveto(state, tanaan) {
 // ---------------------------------------------------------------------------
 // Kalenteri
 
+/**
+ * koosteLinkki(kk, historia) → '#/kooste?kk=YYYY-MM' tai null
+ * Kuukauden Treenikuukautesi-kooste (speksi 4l C), kun kuukaudessa on voimatreenejä.
+ */
+export function koosteLinkki(kk, historia) {
+  if (!/^\d{4}-\d{2}$/.test(String(kk))) return null;
+  const on = (historia || []).some((t) => t && typeof t.pvm === 'string' && t.pvm.startsWith(`${kk}-`)
+    && (t.tyyppi == null || t.tyyppi === 'voima'));
+  return on ? `#/kooste?kk=${kk}` : null;
+}
+
 function kalenteri(state, tanaan, treeniPaivat, onPaiva) {
   const viikonAlku = state.profiili.viikonAlku || 'maanantai';
   const alku = weekStart(tanaan, viikonAlku);
@@ -234,6 +245,18 @@ function kalenteri(state, tanaan, treeniPaivat, onPaiva) {
     }));
 
   const ruudukko = el('div', { class: 'cal-month', hidden: !kuukausiAuki });
+  // Treenikuukautesi-linkki näytettävälle kuukaudelle (kiinni: kuluva kuukausi, auki: selattu kuukausi).
+  const koosteRivi = el('div', { class: 'hist-recap' });
+  function paivitaKoosteLinkki() {
+    const kk = kuukausiAuki ? kuukausiNaytto : tanaan.slice(0, 7);
+    const href = koosteLinkki(kk, state.historia);
+    const [ky, km] = kk.split('-').map(Number);
+    koosteRivi.hidden = !href;
+    koosteRivi.replaceChildren(...(href
+      ? [el('a', { class: 'hist-recap-link', href, 'aria-label': `Treenikuukautesi: ${KUUT[km - 1].toLowerCase()} ${ky}` },
+        `${KUUT[km - 1]}: Treenikuukautesi →`)]
+      : []));
+  }
 
   function piirraKuukausi() {
     const [y, m] = kuukausiNaytto.split('-').map(Number);
@@ -245,6 +268,7 @@ function kalenteri(state, tanaan, treeniPaivat, onPaiva) {
       const d = new Date(Date.UTC(y, m - 1 + n, 1));
       kuukausiNaytto = d.toISOString().slice(0, 7);
       piirraKuukausi();
+      paivitaKoosteLinkki();
     };
     const seuraavaKielletty = kuukausiNaytto >= tanaan.slice(0, 7);
     ruudukko.replaceChildren(
@@ -269,12 +293,15 @@ function kalenteri(state, tanaan, treeniPaivat, onPaiva) {
       ruudukko.hidden = !kuukausiAuki;
       nauha.hidden = kuukausiAuki;
       valitsin.setAttribute('aria-expanded', String(kuukausiAuki));
+      paivitaKoosteLinkki();
     },
   }, `${KUUT[m - 1]} ${y}`, ikoni('M6 9l6 6 6-6', { koko: 16, leveys: 2.4 }));
   nauha.hidden = kuukausiAuki;
+  paivitaKoosteLinkki();
 
   return el('div', { class: 'card cal-card' },
     el('div', { class: 'cal-head' }, valitsin, el('span', { class: 'muted small' }, 'Napauta päivää')),
+    koosteRivi,
     nauha,
     ruudukko);
 }
@@ -512,7 +539,7 @@ async function renderTreeni(root, params) {
 
   let solmu = null;
   try {
-    const mod = await import('./yhteenveto.js?v=31a36ec');
+    const mod = await import('./yhteenveto.js?v=19a48e7');
     if (mod && typeof mod.renderSummary === 'function') {
       solmu = await mod.renderSummary(t, { uusi: params.uusi === '1' });
       if (!(solmu instanceof Node)) solmu = null;

@@ -19,21 +19,24 @@
 // 6. Ilman lippua näkymä piirretään statechange-tapahtumasta uudelleen (siivous ensin),
 //    ja vierityskohta säilyy. Useat peräkkäiset update()-kutsut yhdistetään yhdeksi piirroksi.
 // 7. Reitin vaihtuessa root saa kohdistuksen (preventScroll) ja sivu vieritetään alkuun.
-import { getState } from './store.js?v=31a36ec';
-import { el, svgEl, card } from './views/ui.js?v=31a36ec';
-import * as koti from './views/koti.js?v=31a36ec';
-import * as valmentaja from './views/valmentaja.js?v=31a36ec';
-import * as yhteiso from './views/yhteiso.js?v=31a36ec';
-import * as edistyminen from './views/edistyminen.js?v=31a36ec';
-import * as historia from './views/historia.js?v=31a36ec';
-import * as liikkeet from './views/liikkeet.js?v=31a36ec';
-import * as tavoitteet from './views/tavoitteet.js?v=31a36ec';
-import * as ohjelmat from './views/ohjelmat.js?v=31a36ec';
-import * as profiili from './views/profiili.js?v=31a36ec';
-import * as aloitus from './views/aloitus.js?v=31a36ec';
-import * as treeni from './views/treeni.js?v=31a36ec';
-import * as kutsu from './views/kutsu.js?v=31a36ec';
-import * as raportti from './views/raportti.js?v=31a36ec';
+import { getState, refreshDemo } from './store.js?v=19a48e7';
+import { el, svgEl, card } from './views/ui.js?v=19a48e7';
+import * as koti from './views/koti.js?v=19a48e7';
+import * as valmentaja from './views/valmentaja.js?v=19a48e7';
+import * as yhteiso from './views/yhteiso.js?v=19a48e7';
+import * as edistyminen from './views/edistyminen.js?v=19a48e7';
+import * as historia from './views/historia.js?v=19a48e7';
+import * as liikkeet from './views/liikkeet.js?v=19a48e7';
+import * as tavoitteet from './views/tavoitteet.js?v=19a48e7';
+import * as ohjelmat from './views/ohjelmat.js?v=19a48e7';
+import * as profiili from './views/profiili.js?v=19a48e7';
+import * as aloitus from './views/aloitus.js?v=19a48e7';
+import * as treeni from './views/treeni.js?v=19a48e7';
+import * as kutsu from './views/kutsu.js?v=19a48e7';
+import * as raportti from './views/raportti.js?v=19a48e7';
+import * as kalenteri from './views/kalenteri.js?v=19a48e7';
+import * as kooste from './views/kooste.js?v=19a48e7';
+import * as yritys from './views/yritys.js?v=19a48e7';
 
 // tab: korostettava alanavigaation kohta; fab: näytetäänkö "Aloita treeni".
 // Kodissa ei ole kelluvaa Aloita-painiketta: treenikortissa on oma painike, ja kelluva
@@ -57,6 +60,10 @@ const ROUTES = [
   // Kutsulinkin vastaanotto (speksi 4k B) ja PT:n viikkoraportti (4k E).
   { name: 'kutsu', re: /^kutsu$/, view: kutsu, tab: null },
   { name: 'raportti', re: /^raportti$/, view: raportti, tab: 'koti' },
+  // Kalenterivalmentaja, kuukausikooste ja työnantajan näkymä (speksi 4l B–D).
+  { name: 'kalenteri', re: /^kalenteri$/, view: kalenteri, tab: 'koti' },
+  { name: 'kooste', re: /^kooste$/, view: kooste, tab: null, hideNav: true },
+  { name: 'yritys', re: /^yritys$/, view: yritys, tab: 'yhteiso' },
 ];
 
 // Reitit, jotka näytetään ennen aloitusohjausta: kutsulinkki avautuu uudelle käyttäjälle suoraan.
@@ -250,8 +257,20 @@ function renderCurrent() {
   }
 }
 
+// Demon ajonaikainen uusinta (speksi 4l: liigan viikko, kalenteri, kuukausihaasteet). Store rajaa
+// ajot kerran minuuttiin ja kutsuu updatea vain, jos tila muuttuu ('statechange' piirtää näkymän).
+function paivitaAjantasalle() {
+  try {
+    return refreshDemo();
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
 // Reitin vaihto (hashchange tai käynnistys).
 function navigate() {
+  paivitaAjantasalle();
   const state = getState();
   applyTheme(state);
 
@@ -305,6 +324,10 @@ function onStateChange() {
 }
 
 window.addEventListener('hashchange', navigate);
+// Sivu tulee näkyviin (esim. sovellus palaa taustalta seuraavana päivänä tai viikkona).
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') paivitaAjantasalle();
+});
 window.addEventListener('statechange', () => {
   if (renderScheduled) return;
   renderScheduled = true;

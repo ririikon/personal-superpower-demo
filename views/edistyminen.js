@@ -1,15 +1,15 @@
 // Edistyminen (speksi 6.4, 4b ja 4b-2): välilehdet Tulokset ja Palautuminen.
 // Tulokset: Treeniscore-mittari, ryhmäkortit, vertailuliikkeet, kehonkoostumus ja ennätykset.
 // Palautuminen: käännettävä kehokartta ja lihaskohtainen palautumistieto.
-import { getState, update } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET, VERTAILULIIKKEET, RYHMAT, LIHASRYHMAT, liike as haeLiike } from '../data.js?v=31a36ec';
+import { getState, update } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET, VERTAILULIIKKEET, RYHMAT, LIHASRYHMAT, liike as haeLiike } from '../data.js?v=19a48e7';
 import {
   muscleStrength, treeniscore, scoreTrend, estimatedStrength, exerciseRecords, recovery, addDays,
-} from '../engine.js?v=31a36ec';
-import { el, svgEl, card, sectionTitle, sheet, whyButton, segmented, formatWeight } from './ui.js?v=31a36ec';
-import { bodyMap, PUOLET } from './bodymap.js?v=31a36ec';
-import { openShareSheet, jakoIkoni } from './jako.js?v=31a36ec';
+} from '../engine.js?v=19a48e7';
+import { el, svgEl, card, sectionTitle, sheet, whyButton, segmented, formatWeight } from './ui.js?v=19a48e7';
+import { bodyMap, PUOLET } from './bodymap.js?v=19a48e7';
+import { openShareSheet, jakoIkoni } from './jako.js?v=19a48e7';
 
 const KG_LB = 2.20462;
 

@@ -1,24 +1,28 @@
 // Profiili ja oma suunnitelma (speksi 4c ja 6.6). Rakenne: korostettu Tavoite-rivi, jonka
 // takana on oma valintanäkymä, ja sen alla ryhmitellyt osiot TAVOITETAPAHTUMA ja VALMENTAJANI
 // (speksi 4k C ja E), SALIN LAITTEET (speksi 4j),
-// TREENIPROFIILI, TREENIN MUOTO, VALMENTAJAN MUISTI, TIETOA ja ASETUKSET. Jokainen muutos tallentuu heti update()-
-// kutsulla, ja reititin piirtää näkymän uudelleen statechange-tapahtumasta.
+// TREENIPROFIILI, TREENIN MUOTO, VALMENTAJAN MUISTI, TILAUS (speksi 4l D: maksutapa ja työpaikka,
+// mockup), TIETOA ja ASETUKSET (mm. "Osallistun liigaan", speksi 4l A). Jokainen muutos tallentuu
+// heti update()-kutsulla, ja reititin piirtää näkymän uudelleen statechange-tapahtumasta.
 //
 // Vie myös apurit, joita aloitusohjaus ja valmentaja käyttävät (tavoitteet, kokemustasot,
 // ohjelmasuositus, valintalaatikko ja Valmentajan muisti).
 
-import { getState, update, resetDemo } from '../store.js?v=31a36ec';
+import { getState, update, resetDemo } from '../store.js?v=19a48e7';
 import {
   OHJELMAT, OLETUSPROFIILI, LAITTEET, LAITERYHMAT, LAITEPOHJAT, TAPAHTUMATYYPIT, HYROX_DIVISIOONAT,
-} from '../data.js?v=31a36ec';
-import { goalParams } from '../engine/progression.js?v=31a36ec';
-import { eventPlan } from '../engine/event.js?v=31a36ec';
-import { addDays } from '../engine/util.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=31a36ec';
-import { PALAUTUS_KESTOT } from './treeni-input.js?v=31a36ec';
-import { ohjelmanLaiteVaihdot } from './vaihto.js?v=31a36ec';
-import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
+} from '../data.js?v=19a48e7';
+import { goalParams } from '../engine/progression.js?v=19a48e7';
+import { eventPlan } from '../engine/event.js?v=19a48e7';
+import { addDays } from '../engine/util.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=19a48e7';
+import { PALAUTUS_KESTOT } from './treeni-input.js?v=19a48e7';
+import { ohjelmanLaiteVaihdot } from './vaihto.js?v=19a48e7';
+import { kaikkiOhjelmat } from './paiva.js?v=19a48e7';
+import { asetaLiigaOsallistuminen } from './yhteiso.js?v=19a48e7';
+import { workplaceDemo } from '../engine/workplace.js?v=19a48e7';
+import { vaihdaViikonAlku } from '../engine/league.js?v=19a48e7';
 
 const KG_LB = 2.20462;
 
@@ -604,6 +608,63 @@ function valmentajaOsio(p) {
     listRow({ otsikko: 'Viikkoraportti', arvo: 'Valmentajalle', href: '#/raportti' }));
 }
 
+// ---------------------------------------------------------------------------
+// Tilaus ja työpaikka (speksi 4l D, mockup). Etuoperaattorit ovat maksutapoja, eivät kumppaneita:
+// nimet tekstinä, ei logoja.
+
+export const MAKSUTAVAT = [
+  { arvo: 'liikuntaetu', otsikko: 'Liikuntaetu (ePassi, Smartum, Edenred)', kuvaus: 'Työnantajan liikunta- ja hyvinvointietu' },
+  { arvo: 'kortti', otsikko: 'Kortti', kuvaus: 'Maksukortti' },
+];
+export const PREMIUM_TEKSTI = 'Personal SuperPower Premium – demo, ei oikeaa maksua';
+
+/** maksutapaHuomio('liikuntaetu') → demon huomautus valinnan jälkeen; tuntematon tai puuttuva → null. */
+export function maksutapaHuomio(maksutapa) {
+  if (maksutapa === 'liikuntaetu') return 'Demo: tuotteessa maksu ohjataan etupalvelun kautta';
+  if (maksutapa === 'kortti') return 'Demo: tuotteessa korttimaksu tehdään maksupalvelun kautta';
+  return null;
+}
+
+/** tyopaikkaTeksti(yhteiso.tyopaikka, tanaan) → 'Esimerkki Oy · Kehitys' tai null (ei työpaikkaa). */
+export function tyopaikkaTeksti(tyopaikka, tanaan) {
+  if (!tyopaikka || typeof tyopaikka !== 'object') return null;
+  const tiimi = workplaceDemo(tanaan).tiimit.find((t) => t.id === tyopaikka.tiimi);
+  return [tyopaikka.yritys || 'Esimerkki Oy', tiimi ? tiimi.nimi : null].filter(Boolean).join(' · ');
+}
+
+function tallennaMaksutapa(arvo) {
+  update((s) => {
+    const t = s.tilaus && typeof s.tilaus === 'object' && !Array.isArray(s.tilaus) ? s.tilaus : {};
+    s.tilaus = { ...t, maksutapa: arvo };
+  });
+}
+
+function tilausOsio(s) {
+  const maksutapa = s.tilaus && typeof s.tilaus === 'object' ? s.tilaus.maksutapa : undefined;
+  const huomio = maksutapaHuomio(maksutapa);
+  const tp = tyopaikkaTeksti(s.yhteiso && s.yhteiso.tyopaikka, tamaPaiva());
+  return [
+    lista(
+      el('div', { class: 'row prof-row' },
+        el('span', { class: 'row-title' }, 'Personal SuperPower Premium', el('span', { class: 'row-sub' }, 'Kuukausitilaus')),
+        el('span', { class: 'yh-pill is-gold' }, 'Demo'))),
+    el('p', { class: 'prof-pay-label', id: 'prof-maksutapa' }, 'Maksutapa'),
+    el('div', { class: 'list pick-list', role: 'radiogroup', 'aria-labelledby': 'prof-maksutapa' },
+      ...MAKSUTAVAT.map((m) => el('button', {
+        class: 'row pick-row', type: 'button', role: 'radio', 'aria-checked': String(m.arvo === maksutapa),
+        onClick: () => { if (m.arvo !== maksutapa) tallennaMaksutapa(m.arvo); },
+      },
+      el('span', { class: 'pick-text' },
+        el('span', { class: 'pick-title' }, m.otsikko),
+        el('span', { class: 'pick-desc' }, m.kuvaus)),
+      el('span', { class: 'pick-radio', 'aria-hidden': 'true' })))),
+    huomio ? el('p', { class: 'note prof-pay-note', role: 'status' }, huomio) : null,
+    el('p', { class: 'muted small memory-note' }, PREMIUM_TEKSTI),
+    tp ? el('div', { class: 'list prof-work' }, listRow({ otsikko: `Työpaikka: ${tp}`, href: '#/yhteiso?tab=haasteet' })) : null,
+    tp ? el('p', { class: 'muted small memory-note' }, 'Demo: kuvitteellinen yritys. Työpaikkahaaste näkyy Yhteisön Haasteet-välilehdellä.') : null,
+  ];
+}
+
 // Kodin kortti ja valmentajan siru avaavat tapahtumavalinnan osoitteella #/profiili?tapahtuma=1
 // (valinnainen &tyyppi=…). Laatikko avataan kerran reitille tultaessa, ei tilan muutoksen
 // uudelleenpiirrossa; reitin vaihto nollaa merkinnän.
@@ -799,14 +860,24 @@ function piirraProfiili(root) {
     muistiLista(),
     el('p', { class: 'muted small memory-note' }, MUISTI_SELITE),
 
+    sectionTitle('Tilaus'),
+    ...tilausOsio(s),
+
     sectionTitle('Tietoa'),
     lista(listRow({ otsikko: 'Tietoa demosta ja ominaisuuksista', href: './ominaisuudet.html' })),
 
     sectionTitle('Asetukset'),
     lista(
       segmenttiRivi('Yksikkö', [{ arvo: 'kg', teksti: 'kg' }, { arvo: 'lb', teksti: 'lb' }], p.yksikko, (arvo) => tallenna({ yksikko: arvo })),
-      segmenttiRivi('Viikon alku', [{ arvo: 'maanantai', teksti: 'Ma' }, { arvo: 'sunnuntai', teksti: 'Su' }], p.viikonAlku, (arvo) => tallenna({ viikonAlku: arvo })),
+      segmenttiRivi('Viikon alku', [{ arvo: 'maanantai', teksti: 'Ma' }, { arvo: 'sunnuntai', teksti: 'Su' }], p.viikonAlku, (arvo) => update((st) => {
+        // Liigan seuranta siirtyy kuluvaan viikkoon uudella viikonalulla (ei rolloveria vaihdosta).
+        const uusi = vaihdaViikonAlku(st, arvo, new Date().toISOString());
+        uusi.profiili = { ...OLETUSPROFIILI, ...uusi.profiili };
+        return uusi;
+      })),
       toggleRivi('Lämmittelysarjat', !!p.lammittelysarjat, (on) => tallenna({ lammittelysarjat: on }), { kuvaus: '2 kevyttä sarjaa ennen ensimmäistä painavaa liikettä' }),
+      toggleRivi('Osallistun liigaan', !(s.liiga && s.liiga.osallistuu === false), (on) => asetaLiigaOsallistuminen(on),
+        { kuvaus: 'Viikkoliiga Yhteisössä: tasapainotetut pisteet, kärkiviisikko nousee' }),
       toggleRivi('Palautusajastin', p.palautusajastin ?? false, (on) => update((st) => {
         st.profiili = { ...OLETUSPROFIILI, ...(st.profiili || {}), palautusajastin: on };
         // Pois kytkentä päättää käynnissä olevan tauon (kuten treenin yläpalkin kytkin).

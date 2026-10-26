@@ -1,7 +1,7 @@
 // Progressiomoottori: e1RM, tavoitteen parametrit, jumiutumisen tunnistus ja
 // seuraavan sarjan ehdotus. Puhdas moduuli: aika ja data tulevat parametreina.
 
-import { round25, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
+import { round25, onVoimatreeni, onTyosarja } from './util.js?v=19a48e7';
 
 // Voimanoston pääliikkeet: näille haarukka 1–5, muille liikkeille apuliikkeiden 6–10.
 export const VOIMANOSTO_PAALIIKKEET = ['takakyykky', 'penkkipunnerrus', 'maastaveto'];

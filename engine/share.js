@@ -5,11 +5,11 @@
 // volyymi korvataan sarjamäärällä, ennätykset näytetään muodossa "+N ennätystä" ja oivalluksista
 // näytetään vain prosentit.
 
-import { onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
-import { workoutSummary } from './history.js?v=31a36ec';
-import { workoutInsights } from './insights.js?v=31a36ec';
-import { challengeProgress } from './challenges.js?v=31a36ec';
-import { LIIKKEET, OHJELMAT } from '../data.js?v=31a36ec';
+import { onVoimatreeni, onTyosarja } from './util.js?v=19a48e7';
+import { workoutSummary } from './history.js?v=19a48e7';
+import { workoutInsights } from './insights.js?v=19a48e7';
+import { challengeProgress } from './challenges.js?v=19a48e7';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=19a48e7';
 
 export const SANAMERKKI = 'Personal SuperPower';
 const MAX_KOHOKOHDAT = 2;

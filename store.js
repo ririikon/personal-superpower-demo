@@ -5,9 +5,12 @@
 // Rajapinta: getState(), update(fn), resetDemo(). createStore(tallennus, nytFn) on testejä
 // varten; moduulin oletusinstanssi käyttää window.localStorage-oliota, jos se on saatavilla.
 
-import { seedState, tanaanPvm, kuukausiGen } from './seed.js?v=31a36ec';
-import { valineetLaitteiksi, LAITTEET, HYROX_LAITTEET } from './data.js?v=31a36ec';
-import { addDays } from './engine/util.js?v=31a36ec';
+import { seedState, tanaanPvm, kuukausiGen, seedLiiga, seedKalenteri, seedTyopaikka } from './seed.js?v=19a48e7';
+import { valineetLaitteiksi, LAITTEET, HYROX_LAITTEET } from './data.js?v=19a48e7';
+import { addDays } from './engine/util.js?v=19a48e7';
+import { uusiDemoKalenteri } from './engine/schedule.js?v=19a48e7';
+import { uusiTyopaikkahaaste } from './engine/workplace.js?v=19a48e7';
+import { rolloverLeague } from './engine/league.js?v=19a48e7';
 
 export const TALLENNUSAVAIN = 'psp-poc-v1';
 export const TILAN_VERSIO = 1;
@@ -93,6 +96,56 @@ function poistaSeedinMerkit(yhteiso) {
   const jaljelle = merkit.filter((m) => !(m && ['eka-kaverihaaste', 'voitettu-kaverihaaste'].includes(m.id) && m.pvm === kisa.loppu));
   return jaljelle.length === merkit.length ? yhteiso : { ...yhteiso, ansaitutMerkit: jaljelle };
 }
+
+// --- Speksi 4l: latausajan uusinta ------------------------------------------------
+
+function onOlio(x) {
+  return !!x && typeof x === 'object' && !Array.isArray(x);
+}
+
+/**
+ * uusiDemoTila(tila, nyt) → tila (sama olio, jos mitään ei uusittu)
+ * Puhdas. Latausajan uusinta (speksi 4l), uusiDemoHaasteet-funktion tapaan:
+ * - kalenteri: demokalenteri generoidaan edelliselle, kuluvalle ja seuraavalle viikolle (uusiDemoKalenteri),
+ * - yhteiso: työpaikkahaaste uusiutuu kuukausittain (uusiTyopaikkahaaste),
+ * - liiga: viikon vaihtuessa rollover kerran viikossa (rolloverLeague); tulos jää kenttään
+ *   liiga.odottavaTulos "viikko vaihtui" -näkymää varten.
+ * Puuttuviin osioihin ei kosketa (ne lisää migraatio).
+ */
+export function uusiDemoTila(tila, nyt) {
+  if (!onOlio(tila) || !nyt) return tila;
+  const tanaan = tanaanPvm(nyt);
+  const asetus = onOlio(tila.profiili) && tila.profiili.viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai';
+  let tulos = tila;
+  if (onOlio(tila.kalenteri)) {
+    const k = uusiDemoKalenteri(tila.kalenteri, tanaan, asetus);
+    if (k !== tila.kalenteri) tulos = { ...tulos, kalenteri: k };
+  }
+  if (onOlio(tila.yhteiso)) {
+    const y = uusiTyopaikkahaaste(tila.yhteiso, tanaan);
+    if (y !== tila.yhteiso) tulos = { ...tulos, yhteiso: y };
+  }
+  if (onOlio(tila.liiga)) tulos = rolloverLeague(tulos, nyt).tila;
+  return tulos;
+}
+
+/**
+ * paivitaDemoTila(tila, nyt) → tila (sama olio, jos kaikki on ajan tasalla)
+ * Puhdas. Ajonaikainen uusinta (sivu tulee näkyviin, reitti vaihtuu): päättyneet demohaasteet
+ * (uusiDemoHaasteet) sekä kalenteri, työpaikkahaaste ja liigan viikko (uusiDemoTila).
+ */
+export function paivitaDemoTila(tila, nyt) {
+  if (!onOlio(tila) || !nyt) return tila;
+  let tulos = tila;
+  if (onOlio(tila.yhteiso)) {
+    const y = uusiDemoHaasteet(tila.yhteiso, tanaanPvm(nyt));
+    if (y !== tila.yhteiso) tulos = { ...tulos, yhteiso: y };
+  }
+  return uusiDemoTila(tulos, nyt);
+}
+
+// Ajonaikainen uusinta korkeintaan kerran minuutissa (refresh).
+export const PAIVITYS_VALI_MS = 60 * 1000;
 
 function oletusNyt() {
   return new Date().toISOString();
@@ -193,6 +246,37 @@ export function createStore(tallennus, nytFn = oletusNyt) {
       tila.yhteiso = { ...tila.yhteiso, kutsut: [] };
       muuttui = true;
     }
+    // Speksi 4l: puuttuvat liiga (Hopea, osallistuu), kalenteri (demokalenteri ja asetukset),
+    // koosteetNahty ({}), yhteiso.tyopaikka (työpaikkahaaste haasteisiin) ja tilaus ({}) lisätään.
+    // Muita kenttiä ei kosketa.
+    const tanaan = tanaanPvm(nyt());
+    const asetus = tila.profiili && tila.profiili.viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai';
+    if (!onOlio(tila.liiga)) {
+      tila.liiga = seedLiiga(tanaan, asetus);
+      muuttui = true;
+    }
+    if (!onOlio(tila.kalenteri)) {
+      tila.kalenteri = seedKalenteri(tanaan, asetus);
+      muuttui = true;
+    }
+    if (!onOlio(tila.koosteetNahty)) {
+      tila.koosteetNahty = {};
+      muuttui = true;
+    }
+    if (!onOlio(tila.tilaus)) {
+      tila.tilaus = {};
+      muuttui = true;
+    }
+    if (onOlio(tila.yhteiso) && !onOlio(tila.yhteiso.tyopaikka)) {
+      const { tyopaikka, haaste } = seedTyopaikka(tanaan);
+      const haasteet = Array.isArray(tila.yhteiso.haasteet) ? tila.yhteiso.haasteet : [];
+      tila.yhteiso = {
+        ...tila.yhteiso,
+        haasteet: haasteet.some((h) => h && h.id === haaste.id) ? haasteet : [...haasteet, haaste],
+        tyopaikka,
+      };
+      muuttui = true;
+    }
     // Yhteisö: seedin tallentamat merkit pois ja päättyneet demohaasteet uudelle jaksolle.
     if (tila.yhteiso && typeof tila.yhteiso === 'object') {
       const ilmanMerkkeja = poistaSeedinMerkit(tila.yhteiso);
@@ -201,6 +285,12 @@ export function createStore(tallennus, nytFn = oletusNyt) {
         tila.yhteiso = uusittu;
         muuttui = true;
       }
+    }
+    // Speksi 4l: kalenteri, työpaikkahaaste ja liigan viikko ajan tasalle.
+    const uusi = uusiDemoTila(tila, nyt());
+    if (uusi !== tila) {
+      Object.assign(tila, uusi);
+      muuttui = true;
     }
     return muuttui;
   }
@@ -239,7 +329,22 @@ export function createStore(tallennus, nytFn = oletusNyt) {
     ilmoita();
   }
 
-  return { getState, update, resetDemo };
+  // Ajonaikainen uusinta (speksi 4l): sama kuin latauksessa, korkeintaan kerran minuutissa (vali).
+  // Vain jos tila muuttuu, kutsutaan update (tallennus ja 'statechange', jolloin näkymä piirtyy).
+  // Palauttaa true, kun tila muuttui. Lataus lasketaan ensimmäiseksi ajoksi.
+  let edellinenPaivitys = Date.parse(nyt());
+  function refresh({ vali = PAIVITYS_VALI_MS } = {}) {
+    const hetki = nyt();
+    const ms = Date.parse(hetki);
+    if (Number.isFinite(edellinenPaivitys) && Number.isFinite(ms) && ms - edellinenPaivitys < vali) return false;
+    edellinenPaivitys = ms;
+    const uusi = paivitaDemoTila(state, hetki);
+    if (uusi === state) return false;
+    update(() => uusi);
+    return true;
+  }
+
+  return { getState, update, resetDemo, refresh };
 }
 
 // --- Moduulin oletusinstanssi (selain) ---------------------------------------
@@ -270,4 +375,9 @@ export function update(fn) {
 
 export function resetDemo() {
   instanssi().resetDemo();
+}
+
+/** refreshDemo() → bool: ajonaikainen uusinta (ks. createStore refresh), korkeintaan kerran minuutissa. */
+export function refreshDemo() {
+  return instanssi().refresh();
 }

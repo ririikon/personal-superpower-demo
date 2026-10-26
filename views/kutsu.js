@@ -6,12 +6,12 @@
 //
 // Puhtaat apurit (kutsuKoodi, lisaaKutsuHaaste, odottava-tallennus annetulla storagella) ovat
 // testattavissa ilman DOMia.
-import { getState, update } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { getState, update } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
 import {
   decodeInvite, encodeInvite, inviteTitle, createInviteChallenge, KUTSU_PISTEET,
-} from '../engine/invite.js?v=31a36ec';
-import { el, svgEl, card } from './ui.js?v=31a36ec';
+} from '../engine/invite.js?v=19a48e7';
+import { el, svgEl, card } from './ui.js?v=19a48e7';
 
 export const ODOTTAVA_AVAIN = 'psp-odottava-kutsu';
 const MITTARI_NIMI = {

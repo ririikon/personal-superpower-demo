@@ -3,12 +3,14 @@
 // Puhdas moduuli: ei DOMia, ei windowia, ei localStoragea eikä Date.now()-kutsuja.
 // buildReply ei muuta tilaa, vaan palauttaa muutokset, jotka näkymä vie tilaan.
 
-import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=31a36ec';
-import { viikonTavoitteet, weeklyProgress } from './engine/targets.js?v=31a36ec';
-import { recovery } from './engine/recovery.js?v=31a36ec';
-import { addDays, daysBetween, weekStart } from './engine/util.js?v=31a36ec';
-import { challengeProgress, baseline } from './engine/challenges.js?v=31a36ec';
-import { eventPlan, tapahtumaTyyppi } from './engine/event.js?v=31a36ec';
+import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=19a48e7';
+import { viikonTavoitteet, weeklyProgress } from './engine/targets.js?v=19a48e7';
+import { recovery } from './engine/recovery.js?v=19a48e7';
+import { addDays, daysBetween, weekStart } from './engine/util.js?v=19a48e7';
+import { challengeProgress, baseline } from './engine/challenges.js?v=19a48e7';
+import { eventPlan, tapahtumaTyyppi } from './engine/event.js?v=19a48e7';
+import { planWeek, demoCalendar, KALENTERI_OLETUSASETUKSET, AIKAIKKUNAT } from './engine/schedule.js?v=19a48e7';
+import { shieldSuggestion } from './engine/league.js?v=19a48e7';
 
 export const ESIMERKKISIRUT = [
   'Ensi viikolla olen reissussa ja pelaan 3 kertaa padelia',
@@ -124,6 +126,13 @@ const KIIRE_RE = /kiire|kiirei|vähän aikaa|aikaa vähän|nopea treeni|lyhyt tr
 const MUISTI_RE = /mitä.*tänään|tänään.*mitä|muistat|tällä viikolla|tämän viikon/;
 // Haaste (speksi 4i): haaste, kilpailla, kaveri, kisa. "Haasteellinen" ja "haastava" eivät ole haastepyyntöjä.
 const HAASTE_RE = /haast(?!eelli|av)|kilpail|kaver|kisa|kisoi|kisoj/;
+// Kalenterivalmentaja (speksi 4l B): kalenteri, aikataulu, ehdin, palaveri tai kiire tällä/ensi viikolla.
+// Pelkkä "kiire" ilman viikkoa ja minuuttimäärä (≤ 45 min) ovat kiireskenaario.
+const KALENTERI_RE = new RegExp([
+  'kalenter', 'aikatau', 'palaver', '(?:^|[^a-zåäö])ehdi(?:n|nkö|mme|mmekö)(?![a-zåäö])',
+  'kiirei(?:nen|sen|ne) viikk', '(?:kiire|kiirei)[^.?!]*(?:tällä|tämän|ensi) viiko',
+  '(?:tällä|tämän|ensi) viiko[^.?!]*kiire',
+].join('|'));
 // Tavoitetapahtuma (speksi 4k): hyrox, maraton, turnaus ja tapahtuma tunnistetaan aina. Pelkkä "kisa"
 // on tapahtuma vain päivämäärän tai valmistautumisen kanssa ("kisa 14.12.", "valmistaudun kisaan");
 // muuten se on haastepyyntö ("Mikä kisa sopisi minulle?").
@@ -285,10 +294,12 @@ function onTapahtumaTeksti(t) {
 }
 
 /**
- * detectScenario(teksti) → { id: 'reissu-laji'|'reissu'|'kipu'|'vasymys'|'kiire'|'tapahtuma'|'haaste'|'muisti'|'muu',
- *   laji?, kerrat?, lihas?, tyyppi? }
+ * detectScenario(teksti) → { id: 'reissu-laji'|'reissu'|'kipu'|'vasymys'|'kalenteri'|'kiire'|'tapahtuma'|'haaste'|'muisti'|'muu',
+ *   laji?, kerrat?, lihas?, tyyppi?, viikko?: 'tama'|'ensi' }
  * Tunnistus pienaakkosiksi muutetusta tekstistä, ensimmäinen osuma voittaa. Järjestys: reissu, kipu,
- * väsymys, kiire, tapahtuma, haaste, muistikysymys, muu. Tapahtuma tarkistetaan ennen haastetta,
+ * väsymys, kiire minuuttimäärällä (≤ 45 min), kalenteri (speksi 4l B), muu kiire, tapahtuma, haaste,
+ * muistikysymys, muu. Kalenteri tarkistetaan ennen sanaa "kiire", jotta "kiire tällä viikolla" avaa
+ * suunnittelun, mutta "Ehdin vain 30 min" on edelleen kiire. Tapahtuma tarkistetaan ennen haastetta,
  * jotta "HYROX-kisa" tai "turnaus kaverin kanssa" ei muutu haasteeksi; kipu, väsymys ja kiire
  * voittavat, jotta esim. "olen väsynyt kisan jälkeen" saa väsymysvastauksen. tyyppi = tunnistettu
  * TAPAHTUMATYYPIT-id tai null.
@@ -310,7 +321,9 @@ export function detectScenario(teksti) {
   if (VASYMYS_RE.test(t)) return { id: 'vasymys' };
 
   const min = poimiMinuutit(t);
-  if ((min !== null && min > 0 && min <= 45) || KIIRE_RE.test(t)) return { id: 'kiire' };
+  const lyhyt = min !== null && min > 0 && min <= 45;
+  if (!lyhyt && KALENTERI_RE.test(t)) return { id: 'kalenteri', viikko: /ensi viiko/.test(t) ? 'ensi' : 'tama' };
+  if (lyhyt || KIIRE_RE.test(t)) return { id: 'kiire' };
 
   if (onTapahtumaTeksti(t)) return { id: 'tapahtuma', tyyppi: poimiTapahtumaTyyppi(t) };
 
@@ -393,6 +406,10 @@ function normalisoi(konteksti) {
     muistit: Array.isArray(k.muistit) ? k.muistit : [],
     viikkosuunnitelmat: Array.isArray(k.viikkosuunnitelmat) ? k.viikkosuunnitelmat : [],
     yhteiso: k.yhteiso && typeof k.yhteiso === 'object' ? k.yhteiso : null,
+    // Speksi 4l: liiga (putkisuojan ehdotus) ja kalenteri (kalenteriskenaario), valinnaisia.
+    liiga: k.liiga && typeof k.liiga === 'object' ? k.liiga : null,
+    kalenteri: k.kalenteri && typeof k.kalenteri === 'object' ? k.kalenteri : null,
+    omatOhjelmat: Array.isArray(k.omatOhjelmat) ? k.omatOhjelmat : [],
   };
 }
 
@@ -1095,6 +1112,100 @@ function vastausTapahtuma(teksti, k, skenaario) {
   };
 }
 
+// --- Kalenterivalmentaja ja liigan putkisuoja (speksi 4l) ---------------------------
+
+function kello(aika) {
+  const [h, m] = aika.slice(11, 16).split(':');
+  return `${Number(h)}.${m}`;
+}
+
+// Kalenterin tila planWeek-funktiolle. Ilman tallennettua kalenteria käytetään demokalenteria.
+function kalenteriTila(k) {
+  const kalenteri = k.kalenteri || {
+    tapahtumat: demoCalendar(weekStart(k.tanaan, k.profiili.viikonAlku)),
+    asetukset: { ...KALENTERI_OLETUSASETUKSET },
+    varaukset: [],
+  };
+  return {
+    profiili: k.profiili,
+    historia: k.historia,
+    viikkosuunnitelmat: k.viikkosuunnitelmat,
+    aktiivinenOhjelmaId: k.ohjelma.id,
+    omatOhjelmat: [...k.omatOhjelmat, k.ohjelma],
+    kalenteri,
+  };
+}
+
+function vastausKalenteri(teksti, k, skenaario) {
+  const nimi = etunimi(k.profiili);
+  const tila = kalenteriTila(k);
+  const tama = tamaViikko(k.tanaan, k.profiili.viikonAlku);
+  const ensi = nextWeekRange(k.tanaan, k.profiili.viikonAlku);
+  let vali = skenaario.viikko === 'ensi' ? ensi : tama;
+  let ehdotus = planWeek(tila, vali.alku, { nyt: k.nyt });
+  let siirtyi = false;
+  if (!ehdotus.length && vali === tama) {
+    vali = ensi;
+    ehdotus = planWeek(tila, vali.alku, { nyt: k.nyt });
+    siirtyi = true;
+  }
+  const sana = vali === tama ? 'tälle viikolle' : 'ensi viikolle';
+  const asetukset = (tila.kalenteri && tila.kalenteri.asetukset) || KALENTERI_OLETUSASETUKSET;
+  const suosikit = (asetukset.suosikkiajat || []).filter((x) => AIKAIKKUNAT[x]).map((x) => AIKAIKKUNAT[x].nimi.toLowerCase());
+  const matka = Number.isFinite(asetukset.matkaMin) ? asetukset.matkaMin : KALENTERI_OLETUSASETUKSET.matkaMin;
+
+  const kappaleet = [valitse([
+    `Selvä, ${nimi}! Katsotaan kalenteriasi, niin treenit löytävät paikkansa kiireen keskeltä.`,
+    `Hyvä ajatus, ${nimi}: kun treeni on kalenterissa, se myös tapahtuu.`,
+    `Autan mielelläni, ${nimi}. Etsin kalenteristasi vapaat raot treeneille.`,
+  ], teksti)];
+  if (ehdotus.length) {
+    if (siirtyi) kappaleet.push('Tälle viikolle ei enää mahdu treeniä, joten katsoin valmiiksi ensi viikon.');
+    const rivit = ehdotus.map((p) => `• ${paivaJaPvm(p.pvm)} klo ${kello(p.alku)}–${kello(p.loppu)}: ${p.ohjelmaPaiva}, ${p.kestoMin} min`);
+    kappaleet.push(`Ehdotukseni ${sana} (${valiTeksti(vali.alku, vali.loppu)}):\n${rivit.join('\n')}`);
+    kappaleet.push(`Miksi näin: sijoitin treenit vapaisiin rakoihin${suosikit.length ? ` ja suosikkiaikoihisi (${luettelo(suosikit)})` : ''}, `
+      + `ja jokaiseen mahtuu myös ${matka} min matka salille ja takaisin. Saman lihasryhmän treenien väliin jää vähintään yksi lepopäivä.`);
+    kappaleet.push('Jos väliin tulee uusi palaveri, ehdotan kalenterinäkymässä uuden ajan tai tiivistetyn version.');
+    kappaleet.push('Avaa kalenteri, niin voit hyväksyä ehdotuksen ja lisätä treenit kalenteriisi. Mitään ei lisätä ennen kuin hyväksyt.');
+  } else {
+    kappaleet.push(`En löytänyt kalenteristasi ${sana} rakoa, johon mahtuisi treeni ja matkat. Avaa kalenteri, niin voit muuttaa suosikkiaikoja tai matka-aikaa.`);
+  }
+  return {
+    teksti: kappaleet.join('\n\n'),
+    muistit: [],
+    poistettavat: [],
+    ehdotus: null,
+    sirut: ['Avaa kalenteri'],
+    toiminto: { tyyppi: 'avaaKalenteri', viikonAlku: vali.alku, ehdotus },
+  };
+}
+
+// Putkisuojan ehdotus (speksi 4l A) matka- ja kipuvastauksiin: kun liigan suoja on käytettävissä ja
+// voimassa on (myös juuri tallennettu) matka- tai kipumuisti tai matkapäiviä, vastaukseen tulee
+// kappale, siru 'Käytä putkisuoja' ja toiminto { tyyppi: 'kaytaPutkisuoja', viikonAlku }.
+function lisaaPutkisuoja(vastaus, k) {
+  if (!k.liiga) return vastaus;
+  const tila = {
+    profiili: k.profiili,
+    liiga: k.liiga,
+    muistit: [...k.muistit, ...(vastaus.muistit || [])],
+    viikkosuunnitelmat: k.viikkosuunnitelmat,
+  };
+  const ehdotus = shieldSuggestion(tila, k.nyt);
+  if (!ehdotus) return vastaus;
+  const tama = ehdotus.viikonAlku === tamaViikko(k.tanaan, k.profiili.viikonAlku).alku;
+  const syy = ehdotus.syy === 'kipu' ? 'vaiva' : 'reissu';
+  const kappale = `Liigavinkki: voit käyttää kuukauden putkisuojan ${tama ? 'tälle viikolle' : 'ensi viikolle'} `
+    + `(${valiTeksti(ehdotus.viikonAlku, addDays(ehdotus.viikonAlku, 6))}). Silloin ${syy} ei pudota sinua liigassa alemmalle tasolle, `
+    + 'vaikka pisteitä kertyisi tavallista vähemmän. Suojan voi käyttää kerran kuukaudessa.';
+  return {
+    ...vastaus,
+    teksti: `${vastaus.teksti}\n\n${kappale}`,
+    sirut: [...(vastaus.sirut || []), 'Käytä putkisuoja'],
+    toiminto: { tyyppi: 'kaytaPutkisuoja', viikonAlku: ehdotus.viikonAlku },
+  };
+}
+
 function vastausMuu(teksti, k) {
   const nimi = etunimi(k.profiili);
   const seuraava = k.ohjelma.paivat[seuraavaPaivaIndeksi(k)];
@@ -1114,8 +1225,11 @@ function vastausMuu(teksti, k) {
  * buildReply(teksti, konteksti) → { teksti, muistit: [uusiMuisti], poistettavat: [id], ehdotus: Viikkosuunnitelma|null, sirut: [],
  *   toiminto?: { tyyppi: 'liityHaasteeseen', haasteId }   (haaste-skenaario)
  *            | { tyyppi: 'asetaTapahtuma', ehdotus: { tyyppi, pvm?, divisioona? } }   (tapahtuma, kun sitä ei ole asetettu)
+ *            | { tyyppi: 'avaaKalenteri', viikonAlku, ehdotus: planWeek-tulos }   (kalenteri, speksi 4l B; siru 'Avaa kalenteri')
+ *            | { tyyppi: 'kaytaPutkisuoja', viikonAlku }   (reissu ja kipu, kun shieldSuggestion ehdottaa; siru 'Käytä putkisuoja')
  *            | null }
- * konteksti = { tanaan, nyt, profiili, ohjelma, historia, liikkeet, muistit, viikkosuunnitelmat, yhteiso? }
+ * konteksti = { tanaan, nyt, profiili, ohjelma, historia, liikkeet, muistit, viikkosuunnitelmat, yhteiso?,
+ *   liiga?, kalenteri?, omatOhjelmat? }   (liiga ja kalenteri: speksi 4l; ilman kalenteria käytetään demokalenteria)
  * Puhdas funktio: palauttaa muutokset, eikä muuta kontekstia.
  */
 export function buildReply(teksti, konteksti) {
@@ -1125,9 +1239,11 @@ export function buildReply(teksti, konteksti) {
   switch (skenaario.id) {
     case 'reissu-laji':
     case 'reissu':
-      return vastausReissu(syote, k, skenaario);
+      return lisaaPutkisuoja(vastausReissu(syote, k, skenaario), k);
     case 'kipu':
-      return vastausKipu(syote, k, skenaario);
+      return lisaaPutkisuoja(vastausKipu(syote, k, skenaario), k);
+    case 'kalenteri':
+      return vastausKalenteri(syote, k, skenaario);
     case 'vasymys':
       return vastausVasymys(syote, k);
     case 'kiire':

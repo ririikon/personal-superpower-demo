@@ -6,10 +6,10 @@
 // Kutsulinkki: `<demo-url>#/kutsu?d=<base64url(JSON)>`. JSON:ssa on vain kutsujan nimi,
 // kaksintaistelun parametrit ja kutsujan lähtötaso, ei muita henkilötietoja.
 
-import { addDays } from './util.js?v=31a36ec';
-import { baseline } from './challenges.js?v=31a36ec';
-import { LIIKKEET } from '../data.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { addDays } from './util.js?v=19a48e7';
+import { baseline } from './challenges.js?v=19a48e7';
+import { LIIKKEET } from '../data.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
 
 export const KUTSU_VERSIO = 1;
 export const KUTSU_MITTARIT = ['treenit', 'volyymi', 'sarjat', 'aktiivisetPaivat'];

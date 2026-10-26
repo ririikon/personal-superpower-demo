@@ -3,16 +3,16 @@
 //
 // Rajapinta: renderSummary(treeni, { uusi = false } = {}) → HTMLElement. Laskee kaiken
 // tarvitsemansa getState()-kutsulla (aiemmat treenit, profiili, ohjelma, muistit, viikkosuunnitelma).
-import { getState } from '../store.js?v=31a36ec';
-import { LIIKKEET, OHJELMAT } from '../data.js?v=31a36ec';
+import { getState } from '../store.js?v=19a48e7';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=19a48e7';
 import {
   workoutSummary, workoutInsights, viikonTavoitteet, weeklyProgress, weekStart, addDays, onVoimatreeni,
   challengeProgress, badges, pointsAndLevel, PISTE_ERITTELY_NIMET,
-} from '../engine.js?v=31a36ec';
-import { el, card, sectionTitle, whyButton, hexRing } from './ui.js?v=31a36ec';
-import { palkki, merkkiKuusikulmio } from './yhteiso.js?v=31a36ec';
-import { openShareSheet, jakoIkoni } from './jako.js?v=31a36ec';
-import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
+} from '../engine.js?v=19a48e7';
+import { el, card, sectionTitle, whyButton, hexRing } from './ui.js?v=19a48e7';
+import { palkki, merkkiKuusikulmio } from './yhteiso.js?v=19a48e7';
+import { openShareSheet, jakoIkoni } from './jako.js?v=19a48e7';
+import { kaikkiOhjelmat } from './paiva.js?v=19a48e7';
 
 const KUUKAUDET = ['tammikuuta', 'helmikuuta', 'maaliskuuta', 'huhtikuuta', 'toukokuuta', 'kesäkuuta',
   'heinäkuuta', 'elokuuta', 'syyskuuta', 'lokakuuta', 'marraskuuta', 'joulukuuta'];

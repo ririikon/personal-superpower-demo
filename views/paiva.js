@@ -1,14 +1,14 @@
 // Tämän päivän treenin rakentaminen (speksi 6.2, 4b-2, 4h). Yhteinen Kodille ja Treenille,
 // jotta Kodin treenikortti näyttää samat liikkeet, sarjat, toistot ja keston kuin Treenin aloitus.
 // Ei DOM-kutsuja; aika annetaan parametrina.
-import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
 import {
   LIIKKEET, OHJELMAT, LAITTEET, VALINE_LAITTEET, JUOKSU, liike as haeLiike,
-} from '../data.js?v=31a36ec';
+} from '../data.js?v=19a48e7';
 import {
   suggestNextSet, goalParams, recovery, round25, onVoimatreeni, VOIMANOSTO_PAALIIKKEET,
   autoSwap, valtettavatMuisteista, estimatedStrength, eventPlan, eventDayAdditions,
-} from '../engine.js?v=31a36ec';
+} from '../engine.js?v=19a48e7';
 
 const KAIKKI_LAITTEET = LAITTEET.map((l) => l.id);
 // Matkapäivän välinerajaus laitemallissa: kehonpaino = lattia (ei telineitä), käsipainot = käsipainot.

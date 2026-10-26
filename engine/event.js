@@ -2,9 +2,9 @@
 // lisätään jakson mukaan HYROX-asemat ja juoksuosuus. Puhdas moduuli: ei DOM-, window-, localStorage-
 // eikä Date.now()-kutsuja. Päivämäärät ovat 'YYYY-MM-DD'-merkkijonoja.
 
-import { addDays, daysBetween, weekStart } from './util.js?v=31a36ec';
-import { onSaatavilla } from './alternatives.js?v=31a36ec';
-import { LIIKKEET, TAPAHTUMATYYPIT, HYROX_ASEMAT, HYROX_DIVISIOONAT } from '../data.js?v=31a36ec';
+import { addDays, daysBetween, weekStart } from './util.js?v=19a48e7';
+import { onSaatavilla } from './alternatives.js?v=19a48e7';
+import { LIIKKEET, TAPAHTUMATYYPIT, HYROX_ASEMAT, HYROX_DIVISIOONAT } from '../data.js?v=19a48e7';
 
 // Jaksot ja sarjatavoitteen kertoimet (speksin taulukko). Joka 4. perus- tai kovennusviikko on
 // kevennysviikko (× 0,7).

@@ -9,13 +9,15 @@
 // syöttökentän kohdistus säilyy. Näkymä piirtää viestilistan itse ja purkaa kuuntelijan
 // ja ajastimet siivousfunktiossa.
 
-import { getState, update } from '../store.js?v=31a36ec';
-import { LIIKKEET, OHJELMAT } from '../data.js?v=31a36ec';
-import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { el, svgEl } from './ui.js?v=31a36ec';
-import { avaaMuistit, tallennaTapahtuma, tapahtumaTeksti } from './profiili.js?v=31a36ec';
-import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
+import { getState, update } from '../store.js?v=19a48e7';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=19a48e7';
+import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { el, svgEl } from './ui.js?v=19a48e7';
+import { avaaMuistit, tallennaTapahtuma, tapahtumaTeksti } from './profiili.js?v=19a48e7';
+import { kaikkiOhjelmat } from './paiva.js?v=19a48e7';
+import { useStreakShield } from '../engine/league.js?v=19a48e7';
+import { addDays } from '../engine/util.js?v=19a48e7';
 
 export const omaPaivitys = true;
 
@@ -68,7 +70,49 @@ function konteksti(s, nyt) {
     muistit: s.muistit || [],
     viikkosuunnitelmat: s.viikkosuunnitelmat || [],
     yhteiso: s.yhteiso,
+    // Speksi 4l: liiga (putkisuojan ehdotus), kalenteri (kalenteriskenaario) ja tuodut ohjelmat.
+    liiga: s.liiga,
+    kalenteri: s.kalenteri,
+    omatOhjelmat: Array.isArray(s.omatOhjelmat) ? s.omatOhjelmat : [],
   };
+}
+
+// Kalenterivalmentaja (speksi 4l B): coach.js palauttaa sirun 'Avaa kalenteri' ja toiminnon
+// { tyyppi: 'avaaKalenteri', viikonAlku, ehdotus }. Siru avaa kalenterin ehdotuksineen.
+const KALENTERI_SIRU = 'Avaa kalenteri';
+
+function kalenteriToiminto(v) {
+  return v && v.toiminto && v.toiminto.tyyppi === 'avaaKalenteri' ? v.toiminto : null;
+}
+
+/** kalenteriHref(toiminto) → '#/kalenteri?viikko=YYYY-MM-DD&ehdota=1' (ilman viikkoa '#/kalenteri'). */
+export function kalenteriHref(toiminto) {
+  const viikko = toiminto && typeof toiminto.viikonAlku === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(toiminto.viikonAlku)
+    ? toiminto.viikonAlku : null;
+  return viikko ? `#/kalenteri?viikko=${viikko}&ehdota=1` : '#/kalenteri';
+}
+
+// Liigan putkisuoja (speksi 4l A): siru 'Käytä putkisuoja' ja toiminto { tyyppi: 'kaytaPutkisuoja', viikonAlku }.
+// Siru näytetään tekstillä "Käytä putkisuojaa".
+const SUOJA_SIRU = 'Käytä putkisuoja';
+const SUOJA_SIRU_TEKSTI = 'Käytä putkisuojaa';
+
+function suojaToiminto(v) {
+  return v && v.toiminto && v.toiminto.tyyppi === 'kaytaPutkisuoja' ? v.toiminto : null;
+}
+
+/**
+ * putkisuojaVahvistusTeksti(tulos) → vahvistuksen teksti useStreakShield-tuloksesta
+ * ({ ok, syy?, viikonAlku }).
+ */
+export function putkisuojaVahvistusTeksti(tulos) {
+  if (!tulos) return '';
+  const vali = tulos.viikonAlku ? ` viikolle ${pvmLyhyt(tulos.viikonAlku)}–${pvmLyhyt(addDays(tulos.viikonAlku, 6))}` : '';
+  if (tulos.ok) return `Putkisuoja käytössä${vali} ✓`;
+  if (tulos.syy === 'kaytetty') return 'Tämän kuun putkisuoja on jo käytetty.';
+  if (tulos.syy === 'joSuojattu') return `Putkisuoja on jo käytössä${vali}.`;
+  if (tulos.syy === 'eiOsallistu') return 'Et osallistu liigaan, joten putkisuojaa ei tarvita.';
+  return 'Putkisuojaa ei voitu käyttää.';
 }
 
 const LIITY_SIRU = 'Liity haasteeseen';
@@ -310,7 +354,30 @@ export function render(root) {
         if (v && v.toiminto) v.toiminto = { ...v.toiminto, tehty: true };
       });
     },
+    // Siru "Avaa kalenteri" (speksi 4l B): kalenteri avautuu valmentajan ehdottamalla viikolla.
+    avaaKalenteri(viesti) {
+      location.hash = kalenteriHref(kalenteriToiminto(viesti));
+    },
+    // Siru "Käytä putkisuojaa" (speksi 4l A): suoja käytetään suoraan ja tulos jää viestiin vahvistukseksi.
+    kaytaPutkisuoja(viesti) {
+      const t = suojaToiminto(viesti);
+      if (!t) return;
+      update((s) => {
+        const r = useStreakShield(s, new Date().toISOString(), t.viikonAlku);
+        const v = (r.tila.chat || []).find((x) => x.id === viesti.id);
+        if (v && v.toiminto) v.toiminto = { ...v.toiminto, tehty: true, tulos: { ok: r.ok, syy: r.syy || null, viikonAlku: r.viikonAlku } };
+        return r.tila;
+      });
+    },
   };
+
+  function suojaVahvistus(v) {
+    const t = suojaToiminto(v);
+    if (!t || !t.tehty) return null;
+    return el('div', { class: 'chat-attach' },
+      el('div', { class: t.tulos && t.tulos.ok ? 'yh-chat-ok' : 'kal-chat-info', role: 'status' }, putkisuojaVahvistusTeksti(t.tulos)),
+      el('a', { class: 'yh-chat-link', href: '#/yhteiso?tab=liiga' }, 'Avaa liiga ›'));
+  }
 
   function tapahtumaVahvistus(v) {
     const t = tapahtumaToiminto(v);
@@ -348,9 +415,17 @@ export function render(root) {
       const muistit = Array.isArray(v.muistit) ? v.muistit : [];
       const toiminto = liittymisToiminto(v);
       const tapahtuma = tapahtumaToiminto(v);
+      const kalenteri = kalenteriToiminto(v);
+      const suoja = suojaToiminto(v);
       const sirut = (i === viimeinenValmentaja && !pending && Array.isArray(v.sirut) ? v.sirut : [])
         .filter((t) => !(t === LIITY_SIRU && toiminto && toiminto.tehty))
-        .filter((t) => !(t === TAPAHTUMA_SIRU && tapahtuma && tapahtuma.tehty));
+        .filter((t) => !(t === TAPAHTUMA_SIRU && tapahtuma && tapahtuma.tehty))
+        .filter((t) => !(t === SUOJA_SIRU && suoja && suoja.tehty));
+      const siruTeksti = (t) => {
+        if (t === TAPAHTUMA_SIRU && tapahtuma) return TAPAHTUMA_SIRU_TEKSTI;
+        if (t === SUOJA_SIRU && suoja) return SUOJA_SIRU_TEKSTI;
+        return t;
+      };
       return el('div', { class: 'chat-turn' },
         valmentajanKupla(muotoile(v.teksti)),
         muistit.length
@@ -361,15 +436,18 @@ export function render(root) {
         v.ehdotus ? el('div', { class: 'chat-attach' }, ehdotusKortti(v, toiminnot)) : null,
         liittymisVahvistus(v),
         tapahtumaVahvistus(v),
+        suojaVahvistus(v),
         sirut.length
           ? el('div', { class: 'chips chat-followups' }, ...sirut.map((t) => el('button', {
             class: 'chip', type: 'button',
             onClick: () => {
               if (t === LIITY_SIRU && toiminto) toiminnot.liity(v);
               else if (t === TAPAHTUMA_SIRU && tapahtuma) toiminnot.asetaTapahtuma(v);
+              else if (t === KALENTERI_SIRU && kalenteri) toiminnot.avaaKalenteri(v);
+              else if (t === SUOJA_SIRU && suoja) toiminnot.kaytaPutkisuoja(v);
               else laheta(t);
             },
-          }, t === TAPAHTUMA_SIRU && tapahtuma ? TAPAHTUMA_SIRU_TEKSTI : t)))
+          }, siruTeksti(t))))
           : null);
     }));
   }

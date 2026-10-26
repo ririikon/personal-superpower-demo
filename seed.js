@@ -14,8 +14,12 @@
 // - Vanhemmat merkinnät ovat kevyitä voimamerkintöjä (kokonaismäärä ja merkkipaalut).
 // - Viimeisille 3 viikolle 7 tuotua kävelyä tai pyöräilyä, joista kaksi samana päivänä.
 
-import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=31a36ec';
-import { onVoimatreeni } from './engine/util.js?v=31a36ec';
+import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=19a48e7';
+import { onVoimatreeni, weekStart } from './engine/util.js?v=19a48e7';
+// Kehäviittaukset (schedule.js ja workplace.js tuovat seed.js:stä mulberry32:n ja tanaanPvm:n) ovat
+// turvallisia: moduulit käyttävät toisiaan vain funktiokutsuissa, eivät moduulin latautuessa.
+import { demoCalendar, KALENTERI_OLETUSASETUKSET } from './engine/schedule.js?v=19a48e7';
+import { tyopaikkaHaaste, YRITYS } from './engine/workplace.js?v=19a48e7';
 
 export const SEED_OHJELMA_ID = 'koko-kroppa-3';
 
@@ -403,6 +407,44 @@ function seedYhteiso(tanaan, historia) {
   };
 }
 
+// --- Speksi 4l: liiga, kalenteri, työpaikka ja tilaus ------------------------------
+
+/**
+ * seedLiiga(tanaan, viikonAlku) → { taso: 'hopea', historia: [], suojat: {}, osallistuu: true,
+ *   viimeksiNaytettyViikko: tämän viikon ensimmäinen päivä, odottavaTulos: null }
+ * Esimerkkidatan käyttäjä on Hopeassa. Kilpailijat generoidaan engine/league.js:ssä viikosta ja tasosta.
+ */
+export function seedLiiga(tanaan, viikonAlku = 'maanantai') {
+  return {
+    taso: 'hopea',
+    historia: [],
+    suojat: {},
+    osallistuu: true,
+    viimeksiNaytettyViikko: weekStart(tanaan, viikonAlku),
+    odottavaTulos: null,
+  };
+}
+
+/**
+ * seedKalenteri(tanaan, viikonAlku) → { tapahtumat, asetukset, varaukset: [], generoituViikolle }
+ * Demokalenteri edelliselle, kuluvalle ja seuraavalle viikolle (engine/schedule.js demoCalendar) ja oletusasetukset.
+ */
+export function seedKalenteri(tanaan, viikonAlku = 'maanantai') {
+  const alku = weekStart(tanaan, viikonAlku);
+  return {
+    tapahtumat: demoCalendar(alku),
+    asetukset: structuredClone(KALENTERI_OLETUSASETUKSET),
+    varaukset: [],
+    generoituViikolle: alku,
+  };
+}
+
+/** seedTyopaikka(tanaan) → { tyopaikka: { yritys, tiimi: 'kehitys', haasteId }, haaste } (keksitty Esimerkki Oy). */
+export function seedTyopaikka(tanaan) {
+  const haaste = tyopaikkaHaaste(tanaan);
+  return { tyopaikka: { yritys: YRITYS.nimi, tiimi: 'kehitys', haasteId: haaste.id }, haaste };
+}
+
 // Demon kuukausihaasteiden nimissä käytetty kuukausi (genetiivi), esim. 'Marraskuun'.
 export function kuukausiGen(pvm) {
   return KUUKAUDET_GEN[Number(String(pvm).slice(5, 7)) - 1];
@@ -522,10 +564,22 @@ export function seedState(nyt) {
     kaynnissa: null,
     paivanVaihdot: {}, // { [pvm]: { [alkuperainenId]: korvaavaId | null } } (speksi 4j)
     asetukset: { teema: 'vaalea' }, // vaalea | tumma | auto (auto = laitteen asetus)
-    yhteiso: seedYhteiso(tanaanPvm(nyt), historia),
+    yhteiso: yhteisoTyopaikalla(seedYhteiso(tanaanPvm(nyt), historia), tanaanPvm(nyt)),
     // Speksi 4k: tuodut ohjelmat (OHJELMAT-muoto) ja käyttäjän kommentit viikkoraporttiin
     // ({ [viikonAlku]: teksti }). profiili.tapahtuma ja profiili.valmentaja puuttuvat oletuksena.
     omatOhjelmat: [],
     raporttiKommentit: {},
+    // Speksi 4l: treeniliiga (Hopea, osallistuu), kalenterivalmentaja, nähdyt kuukausikoosteet
+    // ({ 'YYYY-MM': true }) ja tilaus ({ maksutapa? }, mockup).
+    liiga: seedLiiga(tanaanPvm(nyt), OLETUSPROFIILI.viikonAlku),
+    kalenteri: seedKalenteri(tanaanPvm(nyt), OLETUSPROFIILI.viikonAlku),
+    koosteetNahty: {},
+    tilaus: {},
   };
+}
+
+// Työpaikkahaaste (speksi 4l D) lisätään haasteisiin ja yhteiso.tyopaikka viittaa siihen.
+function yhteisoTyopaikalla(yhteiso, tanaan) {
+  const { tyopaikka, haaste } = seedTyopaikka(tanaan);
+  return { ...yhteiso, haasteet: [...yhteiso.haasteet, haaste], tyopaikka };
 }

@@ -2,12 +2,12 @@
 // ja "Ota käyttöön", joka asettaa aktiivinenOhjelmaId:n. Sisältö: #/ohjelmat?id=<ohjelmaId>.
 // "Tuo ohjelma" (mockup): tiedosto tai esimerkkitiedosto → "Tunnistetaan…" → esikatselu, jossa
 // luottamusmerkit ja korjattavat rivit → "Tallenna ohjelmaksi" (omatOhjelmat, merkintä "Tuotu").
-import { getState, update } from '../store.js?v=31a36ec';
-import { LIIKKEET, ESIMERKKITUONTI, liike as haeLiike } from '../data.js?v=31a36ec';
-import { matchImportedExercises, importedToProgram } from '../engine/import.js?v=31a36ec';
-import { el, svgEl, sectionTitle, sheet } from './ui.js?v=31a36ec';
-import { openExerciseSheet } from './media.js?v=31a36ec';
-import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
+import { getState, update } from '../store.js?v=19a48e7';
+import { LIIKKEET, ESIMERKKITUONTI, liike as haeLiike } from '../data.js?v=19a48e7';
+import { matchImportedExercises, importedToProgram } from '../engine/import.js?v=19a48e7';
+import { el, svgEl, sectionTitle, sheet } from './ui.js?v=19a48e7';
+import { openExerciseSheet } from './media.js?v=19a48e7';
+import { kaikkiOhjelmat } from './paiva.js?v=19a48e7';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {

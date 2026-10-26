@@ -6,9 +6,9 @@
 //
 // omaPaivitys: kommentin tallennus ei piirrä näkymää uudelleen (kohdistus ja kirjoitus säilyvät).
 // Muut tilan muutokset piirtävät näkymän uudelleen tässä moduulissa.
-import { getState, update } from '../store.js?v=31a36ec';
-import { weeklyReport } from '../engine/report.js?v=31a36ec';
-import { el, card, sectionTitle } from './ui.js?v=31a36ec';
+import { getState, update } from '../store.js?v=19a48e7';
+import { weeklyReport } from '../engine/report.js?v=19a48e7';
+import { el, card, sectionTitle } from './ui.js?v=19a48e7';
 
 export const omaPaivitys = true;
 

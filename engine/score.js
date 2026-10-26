@@ -1,8 +1,8 @@
 // Treeniscore ja ennätykset: arvioitu voima, lihasvoima (mVoima), ryhmät,
 // kokonaisluku, trendi ja liikekohtaiset ennätykset. Puhdas moduuli.
 
-import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
-import { e1rm } from './progression.js?v=31a36ec';
+import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=19a48e7';
+import { e1rm } from './progression.js?v=19a48e7';
 
 const LIHASRYHMAT = ['rinta', 'selkä', 'olkapäät', 'hauis', 'ojentajat', 'etureidet', 'takareidet', 'pakarat', 'pohkeet', 'vatsa'];
 const RYHMAT = {

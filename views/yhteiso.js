@@ -1,29 +1,38 @@
-// Yhteisö (speksi 4i): haasteet, merkit ja kaverit. Kolme välilehteä segmenttivalitsimella
-// (#/yhteiso?tab=haasteet|merkit|kaverit) ja haasteen tiedot (#/yhteiso/haaste/<id>).
+// Yhteisö (speksi 4i): haasteet, liiga, merkit ja kaverit. Neljä välilehteä segmenttivalitsimella
+// (#/yhteiso?tab=haasteet|liiga|merkit|kaverit) ja haasteen tiedot (#/yhteiso/haaste/<id>).
 // Laskenta on engine/challenges.js:ssä; tämä moduuli vain piirtää ja tallentaa käyttäjän valinnat
 // (liittyminen, poistuminen, oma kaverihaaste, tsempit ja lunastetut edut) yhteiso-osioon.
+//
+// Speksi 4l: Liiga-välilehti (engine/league.js: sijoitukset, pisteet, putkisuoja ja "viikko
+// vaihtui" -näkymä liiga.odottavaTulos-kentästä) ja Haasteet-välilehden työpaikkahaaste
+// (engine/workplace.js: tiimien tasapainotettu järjestys ja oma panos).
 //
 // Kaikki sosiaalinen data on keksittyä. Oma edistyminen lasketaan oikeista kirjauksista.
 //
 // Muut näkymät käyttävät tämän moduulin apureita: palkki, mittariArvo, edistysTeksti, kisaNimi,
-// merkkiKuusikulmio (Koti, treenin yhteenveto).
-import { getState, update } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { challengeProgress, leaderboard, pointsAndLevel, badges, feed, PISTE_ERITTELY_NIMET } from '../engine/challenges.js?v=31a36ec';
-import { addDays } from '../engine/util.js?v=31a36ec';
+// merkkiKuusikulmio (Koti, treenin yhteenveto) ja asetaLiigaOsallistuminen (Profiili).
+import { getState, update } from '../store.js?v=19a48e7';
+import { tanaanPvm, seedLiiga } from '../seed.js?v=19a48e7';
+import { challengeProgress, leaderboard, pointsAndLevel, badges, feed, PISTE_ERITTELY_NIMET } from '../engine/challenges.js?v=19a48e7';
+import { leagueWeek, useStreakShield, shieldSuggestion, simulateRollover } from '../engine/league.js?v=19a48e7';
+import { teamStandings } from '../engine/workplace.js?v=19a48e7';
+import { addDays, weekStart } from '../engine/util.js?v=19a48e7';
 import {
   createInvite, encodeInvite, simulateInviteStep, KUTSU_MITTARIT, KUTSU_PISTEET, KUTSU_TILAT,
-} from '../engine/invite.js?v=31a36ec';
-import { el, svgEl, sectionTitle, sheet, whyButton, segmented, toggle, hexRing } from './ui.js?v=31a36ec';
-import { kopioiLeikepoydalle } from './jako.js?v=31a36ec';
+} from '../engine/invite.js?v=19a48e7';
+import { el, svgEl, sectionTitle, sheet, whyButton, segmented, toggle, hexRing } from './ui.js?v=19a48e7';
+import { kopioiLeikepoydalle } from './jako.js?v=19a48e7';
 
 const VKP = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
 const VALILEHDET = [
   { arvo: 'haasteet', teksti: 'Haasteet' },
+  { arvo: 'liiga', teksti: 'Liiga' },
   { arvo: 'merkit', teksti: 'Merkit' },
   { arvo: 'kaverit', teksti: 'Kaverit' },
 ];
-const TYYPPI_NIMI = { oma: 'Oma haaste', kaveri: 'Kaverihaaste', sali: 'Salihaaste', kumppani: 'Kumppanihaaste' };
+const TYYPPI_NIMI = {
+  oma: 'Oma haaste', kaveri: 'Kaverihaaste', sali: 'Salihaaste', kumppani: 'Kumppanihaaste', tyopaikka: 'Työpaikkahaaste',
+};
 const LUOTAVAT_MITTARIT = [
   { arvo: 'treenit', teksti: 'Treenit' },
   { arvo: 'sarjat', teksti: 'Sarjat' },
@@ -86,9 +95,11 @@ const KUVAKKEET = {
   lock: ['M6.5 11h11v9h-11z', 'M8.5 11V8a3.5 3.5 0 0 1 7 0v3'],
   copy: ['M9 9h10v11H9z', 'M5 15V4h10'],
   invite: ['M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z', 'M3.5 20a6.5 6.5 0 0 1 13 0', 'M19 8v6', 'M16 11h6'],
+  briefcase: ['M4 8h16v11H4z', 'M9 8V5.5h6V8', 'M4 13h16'],
+  shield: ['M12 3.5l7 3v5.5c0 4.2-3 7.4-7 8.5-4-1.1-7-4.3-7-8.5V6.5z', 'M9 12l2 2 4-4'],
 };
 const MITTARI_KUVAKE = { treenit: 'dumbbell', volyymi: 'weight', sarjat: 'list', aktiivisetPaivat: 'calendar', putki: 'flame' };
-const TYYPPI_KUVAKE = { sali: 'gym', kumppani: 'gift' };
+const TYYPPI_KUVAKE = { sali: 'gym', kumppani: 'gift', tyopaikka: 'briefcase' };
 
 // Välilehti säilyy, kun Yhteisöön palataan alanavigaatiosta (kuten Edistymisessä).
 let muistiTab = 'haasteet';
@@ -336,6 +347,8 @@ function lueTab(params) {
   const q = location.hash.split('?')[1] || '';
   const tab = new URLSearchParams(q).get('tab') || (params && params.tab);
   if (VALILEHDET.some((v) => v.arvo === tab)) return tab;
+  // Liigan viikko vaihtui: ilman valittua välilehteä avataan Liiga, jossa tulos näytetään.
+  if (odottavaTulos(getState())) return 'liiga';
   return muistiTab;
 }
 
@@ -420,12 +433,449 @@ function haasteetTab(state, nyt) {
     tasoPalkki(pointsAndLevel(state, nyt)),
     haasteOsio('Omat haasteet', tyyppia('oma'), state, nyt),
     haasteOsio('Kaverihaasteet', tyyppia('kaveri'), state, nyt),
+    tyopaikkaOsio(state, nyt),
     haasteOsio(`Salihaaste · ${sali}`, tyyppia('sali'), state, nyt),
     haasteOsio('Kumppanihaaste', tyyppia('kumppani'), state, nyt),
     el('button', { class: 'btn yh-create-btn', type: 'button', onClick: () => avaaLuonti() },
       ikoni('users', 20), 'Luo kaverihaaste'),
     el('button', { class: 'btn yh-create-btn yk-invite-btn', type: 'button', dataset: { kohdistus: 'kutsu-haasteet' }, onClick: () => avaaKutsu() },
       ikoni('invite', 20), 'Kutsu kaveri'));
+}
+
+// ---------------------------------------------------------------------------
+// Työpaikkahaaste (speksi 4l D)
+
+export const TIIMI_PIILOTETTU_TEKSTI = 'alle 5 jäsentä – tulosta ei näytetä';
+export const TYOPAIKKA_SELITYS ='Tiimin tulos on jäsenten tasapainotettujen tulosten keskiarvo – kooltaan ja kunnoltaan erilaiset tiimit kilpailevat tasavertaisesti';
+
+function desimaali(n) {
+  return String(Math.round((Number(n) || 0) * 10) / 10).replace('.', ',');
+}
+
+/** etumerkki(2.6) → '+2,6', etumerkki(-1) → '−1', etumerkki(0) → '0'. */
+export function etumerkki(n) {
+  const x = Math.round((Number(n) || 0) * 10) / 10;
+  if (x > 0) return `+${desimaali(x)}`;
+  if (x < 0) return `−${desimaali(-x)}`;
+  return '0';
+}
+
+function tyopaikkaHaasteTilasta(state) {
+  const y = (state && state.yhteiso) || {};
+  const tp = y.tyopaikka && typeof y.tyopaikka === 'object' ? y.tyopaikka : null;
+  if (!tp) return null;
+  const h = (Array.isArray(y.haasteet) ? y.haasteet : []).find((x) => x && x.id === tp.haasteId);
+  return h ? { tp, h } : null;
+}
+
+function tyopaikkaOsio(state, nyt) {
+  const t = tyopaikkaHaasteTilasta(state);
+  if (!t) return null;
+  const { tp, h } = t;
+  const p = challengeProgress(h, state, nyt);
+  const rivit = teamStandings(h, state, nyt);
+  const oma = rivit.find((r) => r.kayttajanTiimi);
+  const panos = oma && oma.omaPanos;
+  const yritys = tp.yritys || h.yritys || 'Esimerkki Oy';
+
+  // Vähimmäisryhmäkoko (engine/workplace.js): alle 5 osallistujan tiimi on lopussa ilman sijaa ja tulosta.
+  const lista = el('ol', { class: 'yh-board tp-board', 'aria-label': 'Tiimien tasapainotettu järjestys' },
+    ...rivit.map((r) => el('li', { class: `yh-board-row${r.kayttajanTiimi ? ' is-user' : ''}${r.piilotettu ? ' is-hidden' : ''}` },
+      el('span', { class: `yh-board-rank${r.sija === 1 ? ' is-first' : ''}` }, r.piilotettu ? '–' : String(r.sija)),
+      el('span', { class: `yh-ball tp-ball${r.kayttajanTiimi ? ' is-user' : ''}`, style: 'width:36px;height:36px', 'aria-hidden': 'true' }, r.nimi.charAt(0)),
+      el('span', { class: 'yh-board-name' }, r.nimi,
+        el('span', { class: 'yh-board-sub' }, r.piilotettu
+          ? `${TIIMI_PIILOTETTU_TEKSTI}${r.kayttajanTiimi ? ' · oma tiimisi' : ''}`
+          : `${r.osallistujia}/${r.jasenia} mukana${r.kayttajanTiimi ? ' · oma tiimisi' : ''}`)),
+      el('span', { class: 'yh-board-value' }, r.piilotettu ? '–' : `${r.tulos} %`))));
+
+  const panosOsa = panos
+    ? el('div', { class: 'tp-own' },
+      el('span', { class: 'yh-stat-label' }, 'Oma panoksesi'),
+      el('span', { class: 'tp-own-value' }, `${panos.pros} %`, el('span', { class: 'tp-own-unit' }, ' omasta lähtötasostasi')),
+      el('span', { class: 'tp-own-sub' }, panos.vaikutus === null || panos.vaikutus === undefined
+        ? `${mittariArvo(h.mittari, panos.arvo)} / lähtötaso ${desimaali(panos.lahtotaso)} · tiimisi keskiarvoa ei näytetä (alle 5 jäsentä)`
+        : `${mittariArvo(h.mittari, panos.arvo)} / lähtötaso ${desimaali(panos.lahtotaso)} · vaikutus ${oma.nimi}-tiimin tulokseen ${etumerkki(panos.vaikutus)} %-yks.`))
+    : el('p', { class: 'yh-locked' }, 'Et ole mukana työpaikkahaasteessa, joten tiimisi tulos lasketaan ilman sinua.');
+
+  return [
+    sectionTitle(`Työpaikka · ${yritys}`),
+    el('section', { class: 'card tp-card' },
+      el('div', { class: 'yh-card-top' },
+        haasteIkoni(h),
+        el('div', { class: 'yh-card-main' },
+          el('div', { class: 'yh-card-title' }, h.nimi),
+          el('div', { class: 'yh-card-meta' }, ['Aktiiviset päivät, tasapainotettu', ...aikaTeksti(h, p)].join(' · ')))),
+      lista,
+      panosOsa,
+      el('p', { class: 'tp-explain' }, TYOPAIKKA_SELITYS),
+      el('a', { class: 'btn tp-link', href: '#/yritys' }, ikoni('briefcase', 18), 'Työnantajan näkymä (demo)'),
+      el('p', { class: 'yh-demo-note' }, 'Demo: kuvitteellinen yritys')),
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Liiga (speksi 4l A)
+
+const LIIGA_VARIT = { pronssi: '#a8693a', hopea: '#9aa6b8', kulta: '#c8a42a', platina: '#3f8797', superpower: '#26548f' };
+const LIIGA_MUSTE = { hopea: '#1e293b', kulta: '#1e293b' };
+const LIIGA_NIMET = {
+  pronssi: 'Pronssiliiga', hopea: 'Hopealiiga', kulta: 'Kultaliiga', platina: 'Platinaliiga', superpower: 'SuperPower-liiga',
+};
+const LIIGA_SELITYS = 'Liigapisteet ovat tasapainotettuja: ne tulevat omista viikkotavoitteistasi, eivät nostetuista kiloista. '
+  + 'Sarjatavoitteiden toteuma tuo enintään 60 pistettä, treenipäivät suhteessa omaan viikkotavoitteeseesi enintään 25, '
+  + 'ennätykset 3 pistettä kappaleelta (enintään 9) ja täysi viikkotavoite 6.\n\n'
+  + 'Katto on 100 pistettä viikossa. Tavoitteen ylittävät sarjat eivät tuo lisäpisteitä, joten liiga ei palkitse '
+  + 'ylikuormituksesta – aloittelija ja kokenut kilpailevat tasavertaisesti.\n\n'
+  + 'Sijat 1–5 nousevat ylemmälle tasolle ja sijat 16–20 putoavat. Putkisuoja (1 kuukaudessa) estää pudotuksen '
+  + 'reissu- tai vaivaviikolla.\n\n'
+  + 'Demossa liigan 19 muuta osallistujaa ovat keksittyjä.';
+
+/** liigaNimi('hopea') → 'Hopealiiga'; muoto 'ill' → 'Hopealiigaan', 'ine' → 'Hopealiigassa'. */
+export function liigaNimi(taso, muoto = 'nom') {
+  const nimi = LIIGA_NIMET[taso] || LIIGA_NIMET.pronssi;
+  if (muoto === 'ill') return `${nimi}an`;
+  if (muoto === 'ine') return `${nimi}ssa`;
+  return nimi;
+}
+
+/** liigaLoppuuTeksti('2026-11-01') → 'Viikko päättyy su 1.11. klo 23.59'. */
+export function liigaLoppuuTeksti(loppuu) {
+  return `Viikko päättyy ${vkPvm(loppuu)} klo 23.59`;
+}
+
+/** viikkoVali('2026-10-19') → '19.–25.10.' (kuun vaihtuessa '26.10.–1.11.'). */
+export function viikkoVali(alku) {
+  const loppu = addDays(alku, 6);
+  const [, ma, da] = alku.split('-').map(Number);
+  const [, mb, db] = loppu.split('-').map(Number);
+  return ma === mb ? `${da}.–${db}.${mb}.` : `${da}.${ma}.–${db}.${mb}.`;
+}
+
+/**
+ * liigaVyohyke(sija, viikko) → 'nousu' | 'putoaminen' | null
+ * viikko = { nousuRaja, putoamisRaja, ylinTaso, alinTaso } (leagueWeek). Ylimmältä tasolta ei nousta
+ * eikä alimmalta pudota, joten niillä vastaavaa vyöhykettä ei ole.
+ */
+export function liigaVyohyke(sija, viikko) {
+  if (!Number.isFinite(sija) || !viikko) return null;
+  if (sija <= viikko.nousuRaja && !viikko.ylinTaso) return 'nousu';
+  if (sija >= viikko.putoamisRaja && !viikko.alinTaso) return 'putoaminen';
+  return null;
+}
+
+/** suojiaJaljella(liiga, tanaan) → 0 | 1: putkisuoja on 1 kalenterikuukaudessa. */
+export function suojiaJaljella(liiga, tanaan) {
+  const suojat = liiga && liiga.suojat && typeof liiga.suojat === 'object' ? liiga.suojat : {};
+  return suojat[String(tanaan).slice(0, 7)] ? 0 : 1;
+}
+
+/**
+ * liigaTulosTeksti(rivi) → { tyyppi: 'nousu'|'pysyi'|'putosi', kicker, otsikko, teksti }
+ * "Viikko vaihtui" -näkymän tekstit liiga.odottavaTulos-rivistä
+ * ({ viikonAlku, taso, sija, pisteet, tulos, uusiTaso, suojattu }). Pudotus kerrotaan kannustavasti.
+ */
+export function liigaTulosTeksti(rivi) {
+  const r = rivi || {};
+  const kicker = `Viikko vaihtui${r.viikonAlku ? ` · ${viikkoVali(r.viikonAlku)}` : ''}`;
+  const sijoitus = `Sijoituit ${r.sija}. ja keräsit ${luku(r.pisteet)} pistettä.`;
+  if (r.tulos === 'nousu') {
+    return {
+      tyyppi: 'nousu', kicker,
+      otsikko: `Nousit ${liigaNimi(r.uusiTaso, 'ill')}!`,
+      teksti: `${sijoitus} Ensi viikolla vastassa on kovempi joukko – ja sinä kuulut sinne.`,
+    };
+  }
+  if (r.tulos === 'putosi') {
+    return {
+      tyyppi: 'putosi', kicker,
+      otsikko: 'Uusi viikko, uusi mahdollisuus',
+      teksti: `${sijoitus} Jatkat ${liigaNimi(r.uusiTaso, 'ill')}, josta kärkiviisikko nousee takaisin jo ensi viikolla. Yksikin lisätreeni voi ratkaista.`,
+    };
+  }
+  if (r.suojattu) {
+    return {
+      tyyppi: 'pysyi', kicker,
+      otsikko: `Putkisuoja piti sinut ${liigaNimi(r.uusiTaso || r.taso, 'ine')}`,
+      teksti: `${sijoitus} Suoja esti pudotuksen, ja uusi viikko alkaa puhtaalta pöydältä.`,
+    };
+  }
+  return {
+    tyyppi: 'pysyi', kicker,
+    otsikko: `Pysyit ${liigaNimi(r.uusiTaso || r.taso, 'ine')}`,
+    teksti: `${sijoitus} ${r.sija <= 8 ? 'Nousu oli lähellä' : 'Tasainen viikko'} – kärkiviisikko nousee ensi viikolla.`,
+  };
+}
+
+/**
+ * liigaOsallistuminen(tila, osallistuu, nyt) → uusi tila (puhdas)
+ * Profiilin "Osallistun liigaan" ja Liiga-välilehden "Ota käyttöön". Käyttöön otettaessa viikon
+ * seuranta alkaa tästä viikosta, jottei poissaoloviikosta lasketa tulosta. Puuttuva liiga luodaan.
+ */
+export function liigaOsallistuminen(tila, osallistuu, nyt) {
+  const t = tila || {};
+  const asetus = t.profiili && t.profiili.viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai';
+  const tanaan = tanaanPvm(nyt);
+  const l = t.liiga && typeof t.liiga === 'object' && !Array.isArray(t.liiga) ? t.liiga : seedLiiga(tanaan, asetus);
+  const uusi = { ...l, osallistuu: !!osallistuu };
+  if (osallistuu) uusi.viimeksiNaytettyViikko = weekStart(tanaan, asetus);
+  return { ...t, liiga: uusi };
+}
+
+export function asetaLiigaOsallistuminen(osallistuu) {
+  update((s) => liigaOsallistuminen(s, osallistuu, nykyhetki()));
+}
+
+function odottavaTulos(state) {
+  const l = state && state.liiga;
+  return l && typeof l === 'object' && l.odottavaTulos && typeof l.odottavaTulos === 'object' ? l.odottavaTulos : null;
+}
+
+// Tason merkki: värillinen kuusikulmio ja tähti (väri tason mukaan).
+export function tasoMerkki(taso, koko = 56) {
+  const R = 11;
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = ((-90 + 60 * i) * Math.PI) / 180;
+    pts.push(`${(12 + R * Math.cos(a)).toFixed(2)},${(12 + R * Math.sin(a)).toFixed(2)}`);
+  }
+  const vari = LIIGA_VARIT[taso] || LIIGA_VARIT.pronssi;
+  const poly = svgEl('polygon', { points: pts.join(' '), 'stroke-linejoin': 'round', 'stroke-width': 1.5 });
+  poly.style.fill = vari;
+  poly.style.stroke = taso === 'superpower' ? '#c8a42a' : vari;
+  const tahti = svgEl('path', {
+    d: KUVAKKEET.star[0], transform: 'translate(4.8 4.6) scale(0.6)', 'stroke-width': 1.6, 'stroke-linejoin': 'round',
+  });
+  const muste = taso === 'superpower' ? '#c8a42a' : LIIGA_MUSTE[taso] || '#ffffff';
+  tahti.style.fill = muste;
+  tahti.style.stroke = muste;
+  return svgEl('svg', { class: `lg-badge is-${taso}`, viewBox: '-1 -1 26 26', width: koko, height: koko, 'aria-hidden': 'true' }, poly, tahti);
+}
+
+function liigaPois() {
+  return el('div', { class: 'yh-tab' },
+    el('section', { class: 'card lg-off' },
+      el('span', { class: 'lg-off-badge' }, tasoMerkki('hopea', 64)),
+      el('h2', { class: 'lg-off-title' }, 'Liiga on pois päältä'),
+      el('p', null, 'Viikkoliigassa kisaat 19 samantasoisen treenaajan kanssa tasapainotetuilla pisteillä: '
+        + 'kärkiviisikko nousee ylemmälle tasolle ja viisi viimeistä putoaa. Pisteet tulevat omista '
+        + 'tavoitteistasi, joten ylikuormitus ei kannata.'),
+      el('button', { class: 'btn btn-primary', type: 'button', onClick: () => asetaLiigaOsallistuminen(true) }, 'Ota käyttöön'),
+      el('p', { class: 'muted small lg-off-note' }, 'Voit muuttaa valintaa myös Profiilin asetuksista.')));
+}
+
+function kayta(suositus) {
+  const state = getState() || {};
+  const r = useStreakShield(state, nykyhetki(), suositus ? suositus.viikonAlku : undefined);
+  if (!r.ok) {
+    ilmoitus(r.syy === 'kaytetty' ? 'Tämän kuun putkisuoja on jo käytetty' : 'Putkisuojaa ei voitu käyttää');
+    return;
+  }
+  update(() => r.tila);
+  ilmoitus(r.viikonAlku === weekStart(tanaanPvm(nykyhetki()), viikonAlkuAsetus(state))
+    ? 'Putkisuoja käytössä tällä viikolla ✓' : `Putkisuoja käytössä viikolla ${viikkoVali(r.viikonAlku)} ✓`);
+}
+
+// Demo "Simuloi viikon vaihto": kuluva viikko päätetään nyt (simulateRollover). Tilan muutos piirtää
+// näkymän uudelleen, ja Liiga-välilehti näyttää "viikko vaihtui" -näkymän odottavaTulos-kentästä.
+function simuloiViikonVaihto() {
+  const r = simulateRollover(getState() || {}, nykyhetki());
+  if (r.tulos) update(() => r.tila);
+}
+
+function simulointiOsio() {
+  return el('section', { class: 'card lg-sim' },
+    el('div', { class: 'lg-sim-top' },
+      el('span', { class: 'demo-badge' }, 'Demo'),
+      el('span', { class: 'lg-sim-title' }, 'Viikon vaihtuminen')),
+    el('p', { class: 'muted small lg-sim-text' },
+      'Näe heti, miltä viikon vaihtuminen näyttää: kuluva viikko päätetään nyt nykyisillä pisteillä ja sijalla. '
+      + 'Seuraava oikea viikonvaihto ei laske samaa viikkoa uudelleen.'),
+    el('button', { class: 'btn btn-ghost lg-sim-btn', type: 'button', onClick: simuloiViikonVaihto }, 'Simuloi viikon vaihto'));
+}
+
+function viikonAlkuAsetus(state) {
+  return state && state.profiili && state.profiili.viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai';
+}
+
+function suojaOsio(state, w, nyt) {
+  const l = state.liiga || {};
+  const tanaan = tanaanPvm(nyt);
+  const jaljella = suojiaJaljella(l, tanaan);
+  const suojat = l.suojat && typeof l.suojat === 'object' ? Object.values(l.suojat) : [];
+  const ensiViikko = addDays(w.viikonAlku, 7);
+  const ensiSuojattu = suojat.some((p) => typeof p === 'string' && weekStart(p.slice(0, 10), viikonAlkuAsetus(state)) === ensiViikko);
+  const suositus = shieldSuggestion(state, nyt);
+
+  if (w.suojaKaytossa || ensiSuojattu) {
+    return el('section', { class: 'card lg-shield is-on' },
+      el('span', { class: 'lg-shield-ico' }, ikoni('shield', 22)),
+      el('div', { class: 'lg-shield-body' },
+        el('div', { class: 'lg-shield-title' }, w.suojaKaytossa ? 'Putkisuoja käytössä tällä viikolla' : 'Putkisuoja käytössä ensi viikolla'),
+        el('p', { class: 'lg-shield-text' }, 'Et putoa, vaikka sijoituksesi jäisi putoamisalueelle.')));
+  }
+  if (suositus) {
+    const tama = suositus.viikonAlku === w.viikonAlku;
+    const syy = suositus.syy === 'kipu'
+      ? `Valmentaja tietää vaivasta ${tama ? 'tällä' : 'ensi'} viikolla.`
+      : `Reissu tiedossa ${tama ? 'tällä' : 'ensi'} viikolla.`;
+    return el('section', { class: 'card lg-shield' },
+      el('span', { class: 'lg-shield-ico' }, ikoni('shield', 22)),
+      el('div', { class: 'lg-shield-body' },
+        el('div', { class: 'lg-shield-title' }, 'Valmentaja ehdottaa putkisuojaa'),
+        el('p', { class: 'lg-shield-text' }, `${syy} Suoja estää pudotuksen, vaikka treenit jäisivät väliin.`),
+        el('p', { class: 'lg-shield-count' }, `Suojia jäljellä tässä kuussa: ${jaljella}/1`),
+        el('button', { class: 'btn btn-primary lg-shield-btn', type: 'button', onClick: () => kayta(suositus) },
+          ikoni('shield', 20), 'Käytä putkisuojaa')));
+  }
+  return el('p', { class: 'muted small lg-shield-hint' }, jaljella
+    ? 'Putkisuoja: 1 jäljellä tässä kuussa. Valmentaja ehdottaa sitä, kun tiedossa on reissu tai vaiva.'
+    : 'Tämän kuun putkisuoja on käytetty.');
+}
+
+function liigaPallo(r, profiili) {
+  if (r.kayttaja) return pallo(null, profiili, 32);
+  return el('span', { class: 'yh-ball lg-ball', style: 'width:32px;height:32px', 'aria-hidden': 'true' }, r.nimi.charAt(0));
+}
+
+function sijoitusLista(w, state) {
+  const rivit = [];
+  for (const r of w.sijoitukset) {
+    if (r.sija === w.putoamisRaja && !w.alinTaso) {
+      rivit.push(el('li', { class: 'lg-line is-down', 'aria-hidden': 'true' }, el('span', null, `Putoamisalue · sijat ${w.putoamisRaja}–${w.sijoitukset.length}`)));
+    }
+    const vyo = liigaVyohyke(r.sija, w);
+    rivit.push(el('li', { class: `yh-board-row lg-row${r.kayttaja ? ' is-user' : ''}${vyo ? ` is-${vyo}` : ''}` },
+      el('span', { class: 'yh-board-rank lg-rank' }, String(r.sija)),
+      liigaPallo(r, state.profiili),
+      el('span', { class: 'yh-board-name' }, r.kayttaja ? 'Sinä' : r.nimi,
+        vyo ? el('span', { class: 'lg-sr' }, vyo === 'nousu' ? ', nousualue' : ', putoamisalue') : null),
+      el('span', { class: 'yh-board-value' }, `${r.pisteet} p`)));
+    if (r.sija === w.nousuRaja && !w.ylinTaso) {
+      rivit.push(el('li', { class: 'lg-line is-up', 'aria-hidden': 'true' }, el('span', null, `Nousualue · sijat 1–${w.nousuRaja}`)));
+    }
+  }
+  return el('div', { class: 'lg-scroll', tabindex: '0', 'aria-label': 'Liigan sijoitukset' },
+    el('ol', { class: 'yh-board lg-board' }, ...rivit));
+}
+
+const ERITTELY_TEKSTI = {
+  sarjat: (e) => `${Math.round(Number(e.arvo) || 0)} % sarjatavoitteista`,
+  paivat: (e) => `${e.arvo.tehty}/${e.arvo.tavoite} treenipäivää`,
+  ennatykset: (e) => (e.arvo === 1 ? '1 ennätys' : `${e.arvo} ennätystä`),
+  putki: (e) => (e.arvo ? 'Viikkotavoite täyttyi' : 'Ei vielä täynnä'),
+};
+
+function pisteOsio(w) {
+  const p = w.omatPisteet;
+  if (!p) return null;
+  return [
+    sectionTitle('Pisteesi tällä viikolla'),
+    el('section', { class: 'card lg-points' },
+      el('div', { class: 'lg-points-top' },
+        el('span', { class: 'yh-big' }, String(p.yhteensa), el('span', { class: 'yh-big-unit' }, ` / ${p.katto} p`)),
+        el('span', { class: 'yh-pill' }, `Katto ${p.katto} p`)),
+      palkki((p.yhteensa / p.katto) * 100, { label: `Liigapisteet ${p.yhteensa}/${p.katto}` }),
+      el('ul', { class: 'lg-split' }, ...p.erittely.map((e) => el('li', { class: 'lg-split-row' },
+        el('span', { class: 'lg-split-name' }, e.nimi,
+          el('span', { class: 'lg-split-sub' }, (ERITTELY_TEKSTI[e.id] || (() => ''))(e))),
+        el('span', { class: 'lg-split-val' }, `${e.pisteet}`, el('span', { class: 'lg-split-max' }, ` / ${e.enintaan}`))))),
+      el('div', { class: 'lg-why' },
+        whyButton(LIIGA_SELITYS),
+        el('span', { class: 'yh-ai-note' }, 'Ylimääräiset sarjat eivät tuo pisteitä.'))),
+  ];
+}
+
+function liigaTab(state, nyt) {
+  const l = state.liiga && typeof state.liiga === 'object' ? state.liiga : null;
+  if (!l || l.osallistuu === false) return liigaPois();
+  const w = leagueWeek(state, nyt);
+  const vyo = liigaVyohyke(w.omaSija, w);
+  const viides = w.sijoitukset.find((r) => r.sija === w.nousuRaja);
+  const omat = w.omatPisteet ? w.omatPisteet.yhteensa : 0;
+  let tilanne;
+  if (vyo === 'nousu') tilanne = 'Olet nousualueella';
+  else if (w.ylinTaso) tilanne = 'Ylin taso – pidä paikkasi';
+  else tilanne = `Nousualueelle: ${Math.max(1, (viides ? viides.pisteet : 0) - omat + 1)} p`;
+
+  return el('div', { class: 'yh-tab' },
+    el('section', { class: `card lg-head is-${w.taso}` },
+      el('div', { class: 'lg-head-top' },
+        tasoMerkki(w.taso, 64),
+        el('div', { class: 'lg-head-body' },
+          el('div', { class: 't8-eyebrow' }, 'Viikkoliiga'),
+          el('h2', { class: 'lg-head-title' }, liigaNimi(w.taso)),
+          el('div', { class: 'lg-head-sub' }, liigaLoppuuTeksti(w.loppuu))),
+        w.suojaKaytossa ? el('span', { class: 'yh-pill is-gold lg-shielded' }, ikoni('shield', 14), 'Suojattu') : null),
+      el('div', { class: 'yh-stats lg-stats' },
+        el('div', { class: 'yh-stat' },
+          el('span', { class: 'yh-stat-label' }, 'Sijasi'),
+          el('span', { class: 'yh-stat-value' }, `${w.omaSija}./${w.sijoitukset.length}`)),
+        el('div', { class: 'yh-stat' },
+          el('span', { class: 'yh-stat-label' }, 'Pisteesi'),
+          el('span', { class: 'yh-stat-value' }, `${omat} p`))),
+      el('p', { class: `lg-status${vyo ? ` is-${vyo}` : ''}` },
+        vyo === 'putoaminen' ? `Putoamisalueella – ${tilanne.toLowerCase()}` : tilanne)),
+    suojaOsio(state, w, nyt),
+    sectionTitle(`Sijoitukset · ${liigaNimi(w.taso)}`),
+    el('section', { class: 'card lg-board-card' }, sijoitusLista(w, state)),
+    ...(pisteOsio(w) || []),
+    simulointiOsio(),
+    el('p', { class: 'muted small yh-foot-note' }, 'Demo: liigan muut osallistujat ovat keksittyjä. Liigasta voi jättäytyä pois Profiilissa.'));
+}
+
+// Vierittää sijoituslistan (oma vierityslaatikko) niin, että oma rivi on keskellä.
+function vieritaOmaRivi(juuri) {
+  const laatikko = juuri.querySelector('.lg-scroll');
+  const rivi = laatikko && laatikko.querySelector('.lg-row.is-user');
+  if (!rivi) return;
+  laatikko.scrollTop = Math.max(0, rivi.offsetTop - (laatikko.clientHeight - rivi.offsetHeight) / 2);
+}
+
+// "Viikko vaihtui" -näkymä koko ruudulla. Sulkeminen tyhjentää liiga.odottavaTulos-kentän.
+function naytaViikkoVaihtui(rivi) {
+  const t = liigaTulosTeksti(rivi);
+  const app = document.querySelector('.app');
+  const palauta = document.activeElement;
+  let auki = true;
+  const poista = () => {
+    if (!auki) return;
+    auki = false;
+    document.removeEventListener('keydown', nappain);
+    kerros.remove();
+    if (app) app.inert = false;
+  };
+  const sulje = () => {
+    poista();
+    update((s) => { if (s.liiga && typeof s.liiga === 'object') s.liiga.odottavaTulos = null; });
+    if (palauta && palauta.isConnected && typeof palauta.focus === 'function') palauta.focus({ preventScroll: true });
+  };
+  const nappain = (e) => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    sulje();
+  };
+  const jatka = el('button', { class: 'btn btn-primary lg-over-btn', type: 'button', onClick: sulje }, 'Jatka');
+  const otsikkoId = 'lg-over-title';
+  const kerros = el('div', { class: `lg-over is-${t.tyyppi}`, role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': otsikkoId },
+    t.tyyppi === 'nousu'
+      ? el('div', { class: 'lg-confetti', 'aria-hidden': 'true' }, ...Array.from({ length: 18 }, (_, i) => el('span', { style: `--i:${i}` })))
+      : null,
+    el('div', { class: 'lg-over-inner' },
+      el('p', { class: 'lg-over-kicker' }, t.kicker),
+      el('div', { class: 'lg-over-badge' }, tasoMerkki(rivi.uusiTaso || rivi.taso, 112)),
+      el('h2', { class: 'lg-over-title', id: otsikkoId }, t.otsikko),
+      el('p', { class: 'lg-over-text' }, t.teksti),
+      el('div', { class: 'lg-over-stats' },
+        el('span', null, el('b', null, `${rivi.sija}.`), ' sija'),
+        el('span', null, el('b', null, luku(rivi.pisteet)), ' pistettä'),
+        el('span', null, el('b', null, liigaNimi(rivi.uusiTaso || rivi.taso)), ' ensi viikolla')),
+      jatka));
+  document.body.append(kerros);
+  if (app) app.inert = true;
+  document.addEventListener('keydown', nappain);
+  jatka.focus({ preventScroll: true });
+  return poista;
 }
 
 // ---------------------------------------------------------------------------
@@ -1049,13 +1499,20 @@ export function render(root, params = {}) {
   let tab = lueTab(params);
   muistiTab = tab;
   const sisalto = el('div', { class: 'yh-content' });
+  let poistaIlmoitus = null;
 
   const piirra = () => {
     const state = getState() || {};
     const nyt = nykyhetki();
     if (tab === 'merkit') sisalto.replaceChildren(merkitTab(state, nyt));
     else if (tab === 'kaverit') sisalto.replaceChildren(kaveritTab(state, nyt));
+    else if (tab === 'liiga') sisalto.replaceChildren(liigaTab(state, nyt));
     else sisalto.replaceChildren(haasteetTab(state, nyt));
+    if (tab === 'liiga') {
+      if (sisalto.isConnected) vieritaOmaRivi(sisalto);
+      const tulos = odottavaTulos(state);
+      if (tulos && !poistaIlmoitus) poistaIlmoitus = naytaViikkoVaihtui(tulos);
+    }
   };
 
   const valitsin = segmented({
@@ -1083,4 +1540,8 @@ export function render(root, params = {}) {
     sisalto,
   );
   piirra();
+  return () => {
+    if (poistaIlmoitus) poistaIlmoitus();
+    poistaIlmoitus = null;
+  };
 }

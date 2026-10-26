@@ -1,14 +1,14 @@
 // Viikkoraportti valmentajalle (speksi 4k E). Puhdas moduuli: ei DOM-, window-, localStorage- eikä
 // Date.now()-kutsuja. Aika annetaan parametrina (`nyt`: ISO-merkkijono).
 
-import { addDays, weekStart, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
-import { viikonTavoitteet, weeklyProgress } from './targets.js?v=31a36ec';
-import { workoutSummary } from './history.js?v=31a36ec';
-import { estimatedStrength } from './score.js?v=31a36ec';
-import { recovery } from './recovery.js?v=31a36ec';
-import { eventPlan } from './event.js?v=31a36ec';
-import { LIIKKEET, VERTAILULIIKKEET, liike as haeLiike } from '../data.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { addDays, weekStart, onVoimatreeni, onTyosarja } from './util.js?v=19a48e7';
+import { viikonTavoitteet, weeklyProgress } from './targets.js?v=19a48e7';
+import { workoutSummary } from './history.js?v=19a48e7';
+import { estimatedStrength } from './score.js?v=19a48e7';
+import { recovery } from './recovery.js?v=19a48e7';
+import { eventPlan } from './event.js?v=19a48e7';
+import { LIIKKEET, VERTAILULIIKKEET, liike as haeLiike } from '../data.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
 
 export const RAPORTTI_TEKSTI_MAX = 1500;
 

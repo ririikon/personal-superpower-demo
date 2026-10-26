@@ -1,12 +1,12 @@
 // Liikkeet (speksi 6.5, 4f): haku, lihasryhmäsirut ja lista. Liikkeen sivu #/liike/<id>:
 // media ylimpänä, lihasryhmät, paras arvioitu voima, ennätykset, oma historia ja ohje.
-import { getState } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET, LIHASRYHMAT, RYHMAT, LAITTEET, liike as haeLiike } from '../data.js?v=31a36ec';
-import { el, svgEl, card, sectionTitle, whyButton, formatWeight } from './ui.js?v=31a36ec';
-import { estimatedStrength, exerciseRecords, onKestavyysliike } from '../engine/score.js?v=31a36ec';
-import { e1rm } from '../engine/progression.js?v=31a36ec';
-import { openExerciseSheet, exerciseMedia, youtubeLinkki } from './media.js?v=31a36ec';
+import { getState } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET, LIHASRYHMAT, RYHMAT, LAITTEET, liike as haeLiike } from '../data.js?v=19a48e7';
+import { el, svgEl, card, sectionTitle, whyButton, formatWeight } from './ui.js?v=19a48e7';
+import { estimatedStrength, exerciseRecords, onKestavyysliike } from '../engine/score.js?v=19a48e7';
+import { e1rm } from '../engine/progression.js?v=19a48e7';
+import { openExerciseSheet, exerciseMedia, youtubeLinkki } from './media.js?v=19a48e7';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {

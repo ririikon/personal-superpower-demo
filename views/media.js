@@ -8,8 +8,8 @@
 // Näin animaatio on puhdasta SVG:tä ja CSS:ää, toimii ilman verkkoa ja myös iOS Safarissa.
 // prefers-reduced-motion: animaatio ei pyöri, vaan hahmo näytetään tunnistettavassa asennossa.
 
-import { el, svgEl, sheet } from './ui.js?v=31a36ec';
-import { liike as haeLiike } from '../data.js?v=31a36ec';
+import { el, svgEl, sheet } from './ui.js?v=19a48e7';
+import { liike as haeLiike } from '../data.js?v=19a48e7';
 
 const YT_HAKU = 'https://www.youtube.com/results?search_query=';
 const YT_UPOTUS = 'https://www.youtube-nocookie.com/embed/';

@@ -5,12 +5,12 @@
 // Kaikki sosiaalinen data on mockup: kavereiden edistyminen ja syöte generoidaan deterministisesti
 // (mulberry32) haasteesta, kaverista ja päivämäärästä. Oma edistyminen lasketaan historiasta.
 
-import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
-import { workoutSummary, streakWeeks, milestones } from './history.js?v=31a36ec';
-import { LIIKKEET, MERKKIPAALUT, HAASTEMERKIT } from '../data.js?v=31a36ec';
-import { mulberry32, tanaanPvm } from '../seed.js?v=31a36ec';
+import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=19a48e7';
+import { workoutSummary, streakWeeks, milestones } from './history.js?v=19a48e7';
+import { LIIKKEET, MERKKIPAALUT, HAASTEMERKIT } from '../data.js?v=19a48e7';
+import { mulberry32, tanaanPvm } from '../seed.js?v=19a48e7';
 // Kehäviittaus invite.js ↔ challenges.js on turvallinen: molemmat käyttävät toisiaan vain funktiokutsuissa.
-import { inviteBonusPoints } from './invite.js?v=31a36ec';
+import { inviteBonusPoints } from './invite.js?v=19a48e7';
 
 const LAHTOTASO_PV = 28;            // lähtötaso: 4 edellistä viikkoa
 const PISTEET = { voimatreeni: 10, aktiviteetti: 3, haaste: 50, merkki: 20 };
@@ -196,7 +196,9 @@ export function baseline(mittari, historia, alku, loppu, opts = {}) {
 /**
  * challengeProgress(haaste, tila, nyt) →
  *   { arvo, tavoite, pros, suoritettu, paivaaJaljella, alkanut, paattynyt,
- *     lahtotaso? (kaverihaaste), sali? { kertyma, tavoite, pros, omaOsuus, sija, jasenia } (salihaaste) }
+ *     lahtotaso? (kaveri- ja työpaikkahaaste), sali? { kertyma, tavoite, pros, omaOsuus, sija, jasenia } (salihaaste) }
+ * Työpaikkahaaste (tyyppi 'tyopaikka', speksi 4l D): tavoite on haasteen tavoite tai oma lähtötaso,
+ * ja haaste on suoritettu, kun arvo ≥ tavoite. Tiimien taulukko: engine/workplace.js teamStandings.
  * arvo lasketaan historiasta väliltä [alku, min(loppu, tänään)]. pros on 0–100.
  * Kaverihaaste: tavoite on haasteen tavoite tai käyttäjän oma lähtötaso, ja haaste on suoritettu,
  * kun se on päättynyt. Muut: suoritettu, kun arvo ≥ tavoite.
@@ -213,7 +215,8 @@ export function challengeProgress(haaste, tila, nyt) {
 
   const tulos = {};
   let tavoite = Number.isFinite(haaste.tavoite) ? haaste.tavoite : 0;
-  if (haaste.tyyppi === 'kaveri') {
+  // Kaveri- ja työpaikkahaaste (speksi 4l D): oma lähtötaso on tavoite, ellei tavoitetta ole annettu.
+  if (haaste.tyyppi === 'kaveri' || haaste.tyyppi === 'tyopaikka') {
     const lahtotaso = baseline(haaste.mittari, o.historia, haaste.alku, haaste.loppu, opts);
     tulos.lahtotaso = lahtotaso;
     if (!Number.isFinite(haaste.tavoite)) tavoite = Math.max(1, Math.round(lahtotaso));
@@ -420,7 +423,8 @@ export function feed(tila, nyt) {
   const tanaan = tanaanPvm(nyt);
   const nytMs = Date.parse(nyt);
   const merkit = [...MERKKIPAALUT, ...HAASTEMERKIT];
-  const yhteiset = o.haasteet.filter((h) => h && h.tyyppi !== 'oma');
+  // Työpaikkahaasteessa (speksi 4l D) ovat työkaverit, eivät yhteisön kaverit.
+  const yhteiset = o.haasteet.filter((h) => h && h.tyyppi !== 'oma' && h.tyyppi !== 'tyopaikka');
   const tapahtumat = [];
   for (let n = 0; n < SYOTE_PAIVIA; n++) {
     const pvm = addDays(tanaan, -n);

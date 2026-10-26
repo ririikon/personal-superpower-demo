@@ -1,19 +1,20 @@
 // Treenin ja Treeniscoren jakokortti (speksi 4k A). Kortti piirretään canvasiin 1080 × 1350 px:n
 // PNG:ksi brändin väreillä, ja esikatselu näytetään alalaatikossa ennen jakoa.
 //
-// Rajapinta: openShareSheet({ tyyppi: 'treeni'|'treeniscore', treeni?, tila }) avaa alalaatikon.
-// Kortin data tulee engine/share.js:n shareCardData-funktiosta (treeni) tai treeniscoreKortti-
-// funktiosta (Treeniscore). Puhtaat apurit (treeniKortti, treeniscoreKortti, rivita,
-// jasennaMuunnos, tiedostoNimi) ovat testattavissa ilman DOMia.
+// Rajapinta: openShareSheet({ tyyppi: 'treeni'|'treeniscore'|'kooste', treeni?, kooste?, tila }) avaa
+// alalaatikon. Kortin data tulee engine/share.js:n shareCardData-funktiosta (treeni),
+// treeniscoreKortti-funktiosta (Treeniscore) tai koosteKortti-funktiosta (Treenikuukautesi, speksi
+// 4l C: treenityyppi ja kolme kohokohtaa). Puhtaat apurit (treeniKortti, treeniscoreKortti,
+// koosteKortti, rivita, jasennaMuunnos, tiedostoNimi) ovat testattavissa ilman DOMia.
 //
 // Yksityisyys: "Näytä painot" pois → kortin malli tulee shareCardData-funktiosta ilman kilomääriä,
 // eikä piirto lisää kortille yhtään lukua mallin ulkopuolelta.
-import { getState } from '../store.js?v=31a36ec';
-import { tanaanPvm } from '../seed.js?v=31a36ec';
-import { LIIKKEET } from '../data.js?v=31a36ec';
-import { shareCardData, SANAMERKKI, muscleStrength, treeniscore, scoreTrend } from '../engine.js?v=31a36ec';
-import { el, svgEl, sheet, toggle } from './ui.js?v=31a36ec';
-import { bodyMap } from './bodymap.js?v=31a36ec';
+import { getState } from '../store.js?v=19a48e7';
+import { tanaanPvm } from '../seed.js?v=19a48e7';
+import { LIIKKEET } from '../data.js?v=19a48e7';
+import { shareCardData, SANAMERKKI, muscleStrength, treeniscore, scoreTrend } from '../engine.js?v=19a48e7';
+import { el, svgEl, sheet, toggle } from './ui.js?v=19a48e7';
+import { bodyMap } from './bodymap.js?v=19a48e7';
 
 export const KORTTI_LEVEYS = 1080;
 export const KORTTI_KORKEUS = 1350;
@@ -118,8 +119,37 @@ export function treeniscoreKortti(tila, tanaan) {
   };
 }
 
-/** tiedostoNimi(malli) → esim. 'superpower-treeni-2026-10-26.png'. */
+/**
+ * koosteKortti(kooste, { naytaPainot = true }) → kortin malli tai null. kooste = monthRecap(...).
+ * { tyyppi: 'kooste', pvm: 'YYYY-MM', otsikko, persoona, kuvaus, kohokohdat: [teksti] (3), alateksti, jakoteksti }
+ * Painot piilossa kohokohdat tulevat tekstiIlmanPainoja-kentistä, joten mallissa ei ole kilomääriä.
+ */
+export function koosteKortti(kooste, { naytaPainot = true } = {}) {
+  if (!kooste || !kooste.jako) return null;
+  const j = kooste.jako;
+  const kohokohdat = (j.kohokohdat || []).slice(0, 3)
+    .map((k) => String((naytaPainot ? k.teksti : k.tekstiIlmanPainoja) ?? k.tekstiIlmanPainoja ?? ''));
+  return {
+    tyyppi: 'kooste',
+    pvm: kooste.kuukausi,
+    otsikko: j.otsikko,
+    persoona: j.tyyppi,
+    kuvaus: (kooste.tyyppi && kooste.tyyppi.kuvaus) || '',
+    kohokohdat,
+    alateksti: ALATEKSTI,
+    jakoteksti: [
+      `${j.sanamerkki || SANAMERKKI} · ${j.otsikko}`,
+      `Treenityyppini: ${j.tyyppi}`,
+      kohokohdat.join(' · '),
+    ].join('\n'),
+  };
+}
+
+/** tiedostoNimi(malli) → esim. 'superpower-treeni-2026-10-26.png' tai 'superpower-kooste-2026-09.png'. */
 export function tiedostoNimi(malli) {
+  if (malli && malli.tyyppi === 'kooste') {
+    return `superpower-kooste-${/^\d{4}-\d{2}$/.test(String(malli.pvm)) ? malli.pvm : 'kortti'}.png`;
+  }
   const tyyppi = malli && malli.tyyppi === 'treeniscore' ? 'treeniscore' : 'treeni';
   const pvm = malli && /^\d{4}-\d{2}-\d{2}$/.test(String(malli.pvm)) ? malli.pvm : 'kortti';
   return `superpower-${tyyppi}-${pvm}.png`;
@@ -534,6 +564,68 @@ function piirraScore(ctx, m) {
   piirraAlaosa(ctx, m.alateksti);
 }
 
+// Treenikuukautesi-kortti: kuukausi, treenityyppi ja kuvaus ylhäällä, kolme kohokohtaa alhaalla.
+function piirraKooste(ctx, m) {
+  const W = KORTTI_LEVEYS;
+  const H = KORTTI_KORKEUS;
+  ctx.clearRect(0, 0, W, H);
+  piirraYlapalkki(ctx);
+  piirraTausta(ctx);
+  const mittaa = (t) => ctx.measureText(t).width;
+  const leveys = W - 2 * M;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  const [ylaOtsikko, kuukausi] = String(m.otsikko || '').split(/:\s*/);
+  osioOtsikko(ctx, ylaOtsikko || 'Treenikuukausi', M, 270);
+  ctx.font = fontti(700, 40);
+  ctx.fillStyle = HIMMEA;
+  ctx.fillText(kuukausi ? kuukausi.charAt(0).toUpperCase() + kuukausi.slice(1) : '', M, 326);
+
+  osioOtsikko(ctx, 'Treenityyppini', M, 418);
+  ctx.font = fontti(800, 92, true);
+  const nimiRivit = rivita(m.persoona, leveys, mittaa, 2);
+  let y = 506;
+  ctx.fillStyle = KULTA;
+  for (const r of nimiRivit) {
+    ctx.fillText(r, M, y);
+    y += 100;
+  }
+  y = y - 100 + 64;
+  ctx.font = fontti(700, 34);
+  ctx.fillStyle = HIMMEA;
+  for (const r of rivita(m.kuvaus, leveys, mittaa, 3)) {
+    ctx.fillText(r, M, y);
+    y += 44;
+  }
+
+  // Kohokohdat alareunaan
+  const riviK = 104;
+  const rako = 18;
+  const alku = H - 160 - (3 * riviK + 2 * rako);
+  osioOtsikko(ctx, 'Kohokohdat', M, alku - 26);
+  m.kohokohdat.slice(0, 3).forEach((teksti, i) => {
+    const ry = alku + i * (riviK + rako);
+    pyorea(ctx, M, ry, leveys, riviK, 26);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(M + 56, ry + riviK / 2, 28, 0, Math.PI * 2);
+    ctx.fillStyle = KULTA;
+    ctx.fill();
+    ctx.fillStyle = SLATE;
+    ctx.font = fontti(800, 30);
+    ctx.textAlign = 'center';
+    ctx.fillText(String(i + 1), M + 56, ry + riviK / 2 + 11);
+    ctx.textAlign = 'left';
+    sovita(ctx, teksti, leveys - 140, 800, 40, 26);
+    ctx.fillStyle = VALKOINEN;
+    ctx.fillText(rivita(teksti, leveys - 140, mittaa, 1)[0] || '', M + 110, ry + riviK / 2 + 14);
+  });
+
+  piirraAlaosa(ctx, m.alateksti);
+}
+
 // ---------------------------------------------------------------------------
 // Fontit, leikepöytä ja ilmoitus
 
@@ -619,23 +711,27 @@ function tiedostoJakoTuettu() {
 // Alalaatikko
 
 /**
- * openShareSheet({ tyyppi: 'treeni'|'treeniscore', treeni?, tila }) → { close } | null
+ * openShareSheet({ tyyppi: 'treeni'|'treeniscore'|'kooste', treeni?, kooste?, tila }) → { close } | null
  * Treeni: kytkimet "Näytä painot" ja "Näytä haaste" (jälkimmäinen vain, jos haaste on).
  * Treeniscore: ei kytkimiä (kortissa ei ole kiloja eikä haastetta).
+ * Kooste (kooste = monthRecap-tulos): kytkin "Näytä painot".
  * Painikkeet: Jaa (vain kun laite tukee tiedostojakoa), Tallenna kuva ja Kopioi teksti.
  */
-export function openShareSheet({ tyyppi = 'treeni', treeni = null, tila } = {}) {
+export function openShareSheet({ tyyppi = 'treeni', treeni = null, kooste = null, tila } = {}) {
   const t = tila || getState() || {};
   const score = tyyppi === 'treeniscore';
+  const kk = tyyppi === 'kooste';
   let naytaPainot = true;
   let naytaHaaste = true;
 
-  const malli = () => (score
-    ? treeniscoreKortti(t, tanaanPvm(new Date().toISOString()))
-    : treeniKortti(shareCardData(treeni, t, { naytaPainot, naytaHaaste })));
+  const malli = () => {
+    if (score) return treeniscoreKortti(t, tanaanPvm(new Date().toISOString()));
+    if (kk) return koosteKortti(kooste, { naytaPainot });
+    return treeniKortti(shareCardData(treeni, t, { naytaPainot, naytaHaaste }));
+  };
   let nyky = malli();
   if (!nyky) return null;
-  const haasteOn = !score && !!nyky.haaste;
+  const haasteOn = !score && !kk && !!nyky.haaste;
 
   const canvas = el('canvas', { class: 'jk-canvas', width: KORTTI_LEVEYS, height: KORTTI_KORKEUS, role: 'img', 'aria-label': 'Jakokortin esikatselu' });
   const kehys = el('div', { class: 'jk-preview is-loading' }, canvas);
@@ -652,6 +748,7 @@ export function openShareSheet({ tyyppi = 'treeni', treeni = null, tila } = {}) 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     if (score) piirraScore(ctx, nyky);
+    else if (kk) piirraKooste(ctx, nyky);
     else piirraTreeni(ctx, nyky);
     canvas.setAttribute('aria-label', `Jakokortti: ${String(nyky.jakoteksti || '').replace(/\n/g, '. ')}`);
     kehys.classList.remove('is-loading');
@@ -669,7 +766,7 @@ export function openShareSheet({ tyyppi = 'treeni', treeni = null, tila } = {}) 
   }
 
   const kytkimet = score ? null : el('div', { class: 'jk-toggles' },
-    kytkin('Näytä painot', 'Pois: vain prosentit ja ennätysten määrä', naytaPainot, (v) => { naytaPainot = v; piirra(); }),
+    kytkin('Näytä painot', kk ? 'Pois: kohokohdissa ei kilomääriä' : 'Pois: vain prosentit ja ennätysten määrä', naytaPainot, (v) => { naytaPainot = v; piirra(); }),
     haasteOn ? kytkin('Näytä haaste', 'Liitetyn haasteen eteneminen kortissa', naytaHaaste, (v) => { naytaHaaste = v; piirra(); }) : null);
 
   function tallennaKuva() {
@@ -732,7 +829,7 @@ export function openShareSheet({ tyyppi = 'treeni', treeni = null, tila } = {}) 
       el('button', { class: 'btn jk-copy', type: 'button', onClick: kopioiTeksti }, 'Kopioi teksti')));
 
   const sisalto = el('div', { class: 'jk-sheet' },
-    el('h2', { class: 'sheet-title' }, score ? 'Jaa Treeniscore' : 'Jaa treeni'),
+    el('h2', { class: 'sheet-title' }, score ? 'Jaa Treeniscore' : kk ? 'Jaa koosteesi' : 'Jaa treeni'),
     kehys,
     kytkimet,
     toiminnot,
