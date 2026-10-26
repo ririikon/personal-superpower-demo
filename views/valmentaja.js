@@ -9,12 +9,13 @@
 // syöttökentän kohdistus säilyy. Näkymä piirtää viestilistan itse ja purkaa kuuntelijan
 // ja ajastimet siivousfunktiossa.
 
-import { getState, update } from '../store.js?v=6612722';
-import { LIIKKEET, OHJELMAT } from '../data.js?v=6612722';
-import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { el, svgEl } from './ui.js?v=6612722';
-import { avaaMuistit } from './profiili.js?v=6612722';
+import { getState, update } from '../store.js?v=31a36ec';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=31a36ec';
+import { buildReply, ESIMERKKISIRUT } from '../coach.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { el, svgEl } from './ui.js?v=31a36ec';
+import { avaaMuistit, tallennaTapahtuma, tapahtumaTeksti } from './profiili.js?v=31a36ec';
+import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
 
 export const omaPaivitys = true;
 
@@ -61,7 +62,7 @@ function konteksti(s, nyt) {
     tanaan: tanaanPvm(nyt),
     nyt,
     profiili: s.profiili,
-    ohjelma: OHJELMAT.find((o) => o.id === s.aktiivinenOhjelmaId) || OHJELMAT[0],
+    ohjelma: kaikkiOhjelmat(s).find((o) => o.id === s.aktiivinenOhjelmaId) || OHJELMAT[0],
     historia: s.historia || [],
     liikkeet: LIIKKEET,
     muistit: s.muistit || [],
@@ -74,6 +75,16 @@ const LIITY_SIRU = 'Liity haasteeseen';
 
 function liittymisToiminto(v) {
   return v && v.toiminto && v.toiminto.tyyppi === 'liityHaasteeseen' && v.toiminto.haasteId ? v.toiminto : null;
+}
+
+// Tavoitetapahtuma (speksi 4k C): coach.js palauttaa sirun 'Aseta tapahtuma' ja toiminnon
+// { tyyppi: 'asetaTapahtuma', ehdotus: { tyyppi, pvm?, divisioona? } }. Siru näytetään tekstillä
+// "Aseta tavoitetapahtuma".
+const TAPAHTUMA_SIRU = 'Aseta tapahtuma';
+const TAPAHTUMA_SIRU_TEKSTI = 'Aseta tavoitetapahtuma';
+
+function tapahtumaToiminto(v) {
+  return v && v.toiminto && v.toiminto.tyyppi === 'asetaTapahtuma' && v.toiminto.ehdotus ? v.toiminto : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -284,7 +295,32 @@ export function render(root) {
         if (v && v.toiminto) v.toiminto = { ...v.toiminto, tehty: true };
       });
     },
+    // Siru "Aseta tavoitetapahtuma": ehdotus päivämäärineen asetetaan suoraan; ilman päivää (tai jos
+    // päivä on mennyt) avataan Profiilin tapahtumavalinta ehdotetulla tyypillä.
+    asetaTapahtuma(viesti) {
+      const t = tapahtumaToiminto(viesti);
+      if (!t) return;
+      const e = t.ehdotus;
+      if (!e.pvm || !tallennaTapahtuma(e)) {
+        location.hash = `#/profiili?tapahtuma=1${e.tyyppi ? `&tyyppi=${encodeURIComponent(e.tyyppi)}` : ''}`;
+        return;
+      }
+      update((s) => {
+        const v = (s.chat || []).find((x) => x.id === viesti.id);
+        if (v && v.toiminto) v.toiminto = { ...v.toiminto, tehty: true };
+      });
+    },
   };
+
+  function tapahtumaVahvistus(v) {
+    const t = tapahtumaToiminto(v);
+    if (!t || !t.tehty) return null;
+    const p = getState().profiili || {};
+    const tieto = tapahtumaTeksti(p.tapahtuma, tanaanPvm(new Date().toISOString()), p.viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai');
+    return el('div', { class: 'chat-attach' },
+      el('div', { class: 'yh-chat-ok', role: 'status' }, tieto ? `Tavoitetapahtuma asetettu: ${tieto.teksti} ✓` : 'Tavoitetapahtuma asetettu ✓'),
+      el('a', { class: 'yh-chat-link', href: '#/koti' }, 'Katso aikajana Kodissa ›'));
+  }
 
   function liittymisVahvistus(v) {
     const t = liittymisToiminto(v);
@@ -311,8 +347,10 @@ export function render(root) {
       }
       const muistit = Array.isArray(v.muistit) ? v.muistit : [];
       const toiminto = liittymisToiminto(v);
+      const tapahtuma = tapahtumaToiminto(v);
       const sirut = (i === viimeinenValmentaja && !pending && Array.isArray(v.sirut) ? v.sirut : [])
-        .filter((t) => !(t === LIITY_SIRU && toiminto && toiminto.tehty));
+        .filter((t) => !(t === LIITY_SIRU && toiminto && toiminto.tehty))
+        .filter((t) => !(t === TAPAHTUMA_SIRU && tapahtuma && tapahtuma.tehty));
       return el('div', { class: 'chat-turn' },
         valmentajanKupla(muotoile(v.teksti)),
         muistit.length
@@ -322,11 +360,16 @@ export function render(root) {
           : null,
         v.ehdotus ? el('div', { class: 'chat-attach' }, ehdotusKortti(v, toiminnot)) : null,
         liittymisVahvistus(v),
+        tapahtumaVahvistus(v),
         sirut.length
           ? el('div', { class: 'chips chat-followups' }, ...sirut.map((t) => el('button', {
             class: 'chip', type: 'button',
-            onClick: () => (t === LIITY_SIRU && toiminto ? toiminnot.liity(v) : laheta(t)),
-          }, t)))
+            onClick: () => {
+              if (t === LIITY_SIRU && toiminto) toiminnot.liity(v);
+              else if (t === TAPAHTUMA_SIRU && tapahtuma) toiminnot.asetaTapahtuma(v);
+              else laheta(t);
+            },
+          }, t === TAPAHTUMA_SIRU && tapahtuma ? TAPAHTUMA_SIRU_TEKSTI : t)))
           : null);
     }));
   }

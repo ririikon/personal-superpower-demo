@@ -224,6 +224,9 @@ html.js .laskuri-esim { display: none; }
 .palkki { height: 12px; background: rgba(30,41,59,0.1); border-radius: 999px; overflow: hidden; }
 .palkki i { display: block; height: 100%; background: var(--sininen); border-radius: 999px; }
 .palkki-rivi.sina .palkki i { background: var(--viini); }
+.tiivis th, .tiivis td { padding: 6px 8px; }
+.jakso-nauha { display: flex; gap: 3px; margin: 10px 0 4px; }
+.jakso-nauha span { flex: 1; height: 14px; border-radius: 4px; }
 .vertailu { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .vertailu h5 { margin: 0 0 4px; font-size: 0.9rem; }
 .henkilo { border: 1px solid var(--viiva); border-radius: 12px; padding: 10px 12px; }
@@ -347,6 +350,11 @@ footer.alapalkki a.demolinkki { justify-self: start; }
               <li><a href="#m-liikekirjasto">Liikekirjasto ja videot</a></li>
               <li><a href="#m-valmentaja">Tekoälyvalmentaja ja muisti</a></li>
               <li><a href="#m-yhteiso">Yhteisö</a></li>
+              <li><a href="#m-jako">Treenin jakaminen</a></li>
+              <li><a href="#m-kutsu">Kaverikutsu ja kutsuhaaste</a></li>
+              <li><a href="#m-tapahtuma">Tavoitetapahtuma ja jaksotus</a></li>
+              <li><a href="#m-tuonti">Ohjelman tuonti</a></li>
+              <li><a href="#m-raportti">Viikkoraportti valmentajalle</a></li>
               <li><a href="#m-ulkoasu">Ulkoasu ja teemat</a></li>
             </ol>
           </li>
@@ -361,6 +369,8 @@ footer.alapalkki a.demolinkki { justify-self: start; }
               <li><a href="#s-oivallukset">Oivallukset</a></li>
               <li><a href="#s-haasteet">Haasteet ja tasot</a></li>
               <li><a href="#s-vaihto">Vaihtoehtojen pisteytys</a></li>
+              <li><a href="#s-jaksotus">Tapahtuman jaksotus</a></li>
+              <li><a href="#s-kutsupisteet">Kutsupisteet</a></li>
             </ol>
           </li>
           <li class="vain-speksi"><a href="#tietomalli">6. Tietomalli</a></li>
@@ -428,6 +438,25 @@ footer.alapalkki a.demolinkki { justify-self: start; }
     <li><strong>Oma sali huomioidaan.</strong> Laitelista ja liikkeen vaihto yhdellä pyyhkäisyllä. Sovellus ehdottaa sopivan korvaavan liikkeen ja perustelee valinnan.</li>
     <li><strong>Kokonaiskuva.</strong> Progressio, palautuminen, viikon sarjatavoitteet, Treeniscore ja yhteisö perustuvat samaan kirjausdataan, joten ne tukevat toisiaan.</li>
   </ul>
+  <h3>Kasvu ja erottautuminen</h3>
+  <div class="ruudukko">
+    <div class="kortti">
+      <h3>Suosittelu haasteena</h3>
+      <p>Kaverikutsu on tasapainotettu kaksintaistelu, ei pelkkä alennuskoodi. Kutsuttu saa heti syyn treenata, ja aloittelija voi voittaa kokeneen kaverin. Molemmat palkitaan, kun kutsuttu tekee ensimmäisen treeninsä.</p>
+    </div>
+    <div class="kortti">
+      <h3>Jakokortti, jossa on oivallus</h3>
+      <p>Jaettava kortti kertoo, mitä treenissä tapahtui: ennätykset, tekoälyn oivallus ja haasteen eteneminen. Painot saa piiloon, joten jakaminen ei vaadi suurten lukujen esittelyä.</p>
+    </div>
+    <div class="kortti">
+      <h3>PT- ja salikanava</h3>
+      <p>Valmentajan ohjelma tuodaan kuvasta, PDF:stä tai taulukosta, ja viikkoraportti kulkee takaisin valmentajalle. PT:t ja salit voivat suositella sovellusta asiakkailleen, ja tuotteessa niille tulee oma B2B-näkymä.</p>
+    </div>
+    <div class="kortti">
+      <h3>Tapahtumavalmennus monelle lajille</h3>
+      <p>Jaksotus kohti tavoitepäivää toimii HYROXissa, juoksukisoissa, joukkue- ja mailapelien turnauksissa sekä omissa tavoitteissa. Saliharjoittelu tukee tavoitetta eikä kilpaile sen kanssa.</p>
+    </div>
+  </div>
 </section>
 
 <!-- ============================ 3 ============================ -->
@@ -494,8 +523,42 @@ footer.alapalkki a.demolinkki { justify-self: start; }
       <li>Valitse syy: <em>Laite puuttuu</em>, <em>Laite varattu</em>, <em>Kipu tai loukkaantuminen</em> (ja kipualue) tai <em>Muu</em>.</li>
       <li>Valitse vaihtoehto. Jokaisella on perustelu, <em>▶ Näytä liike</em> ja <em>Valitse</em>. <em>Laite puuttuu</em> kysyy vielä, poistetaanko laite salisi laitteista. <em>Kipu</em> tallentaa valmentajan muistiin 14 päivän muistin, joka näkyy Profiilin kohdassa <em>Valmentajan muisti</em>.</li>
       <li>Vaihdetulla rivillä näkyy merkki, esimerkiksi <em>Vaihdettu · ei kyykkytelinettä</em>, ja <em>Palauta</em> palauttaa alkuperäisen liikkeen.</li>
-      <li>Avaa <a href="./#/profiili">Profiili</a> → <em>Salini laitteet · 19/19</em> ja valitse pikavalinta <em>Hotellisali</em> tai <em>Kotisali</em>. Kodissa liikkeet, joiden laitteita ei ole, on vaihdettu automaattisesti (<em>Vaihdettu automaattisesti · …</em>). Jos sopivaa vaihtoehtoa ei ole, liike ohitetaan tältä päivältä.</li>
+      <li>Avaa <a href="./#/profiili">Profiili</a> → <em>Salini laitteet · 23/23</em> ja valitse pikavalinta <em>Hotellisali</em> tai <em>Kotisali</em>. Kodissa liikkeet, joiden laitteita ei ole, on vaihdettu automaattisesti (<em>Vaihdettu automaattisesti · …</em>). Jos sopivaa vaihtoehtoa ei ole, liike ohitetaan tältä päivältä.</li>
       <li>Aloita treeni. Korvaavan liikkeen ensimmäinen painoehdotus on johdettu alkuperäisen liikkeen voimasta, ja <em>Miksi?</em> kertoo laskun. Palauta lopuksi pikavalinta <em>Täysi kuntosali</em>.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>7. Jaa treeni ja haasta kaveri</h3>
+    <ol class="askeleet">
+      <li>Lopeta treeni tai avaa menneen treenin tiedot <a href="./#/historia">Historiasta</a>. Paina yhteenvedossa <em>Jaa</em>.</li>
+      <li>Alalaatikossa näkyy jakokortin esikatselu: päivä, kolme avainlukua, enintään kaksi kohokohtaa, haasteen eteneminen ja treenatut lihakset. Kytke <em>Näytä painot</em> pois, jolloin kortista katoavat kilot. Kytke tarvittaessa myös <em>Näytä haaste</em> pois.</li>
+      <li>Paina <em>Jaa</em> (puhelimessa avautuu jakovalikko), <em>Tallenna kuva</em> tai <em>Kopioi teksti</em>. Myös <a href="./#/edistyminen">Edistymisen</a> Treeniscore-kortissa on <em>Jaa</em>.</li>
+      <li>Avaa <a href="./#/yhteiso">Yhteisö</a> ja paina <em>Kutsu kaveri</em>. Valitse mittari ja kesto (1 tai 2 viikkoa) ja jaa tai kopioi kutsulinkki.</li>
+      <li>Kutsu näkyy listassa tilassa <em>Lähetetty</em>. Paina <em>Simuloi seuraava vaihe</em> kahdesti: kaveri hyväksyy ja treenaa, ja saat +100 pistettä ja Treenikaveri-merkin.</li>
+      <li>Kokeile kutsun vastaanottoa <a href="./#/kutsu?d=eyJ2IjoxLCJuaW1pIjoiRGVtb2thdmVyaSIsIm1pdHRhcmkiOiJ0cmVlbml0Iiwia2VzdG8iOjE0LCJsYWh0b3Rhc28iOjQsImlkIjoiZGVtbzEiLCJsdW90dSI6IjIwMjYtMTAtMjYifQ">esimerkkikutsulla</a>: <em>Demokaveri haastaa sinut</em>. <em>Hyväksy haaste</em> lisää tasapainotetun kaksintaistelun haasteisiisi.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>8. Valmistaudu HYROXiin</h3>
+    <ol class="askeleet">
+      <li>Kirjoita <a href="./#/valmentaja">Valmentajalle</a> esimerkiksi <em>Haluan valmistautua HYROXiin</em>. Valmentaja kertoo jaksotuksesta (perusjakso, kovennus, kevennys ja kisaviikko), ja siru <em>Aseta tavoitetapahtuma</em> avaa tapahtuman asetuksen esitäytettynä.</li>
+      <li>Tai avaa suoraan <a href="./#/profiili?tapahtuma=1">Profiili → Tavoitetapahtuma</a>. Valitse HYROX, päivämäärä noin 8 viikon päähän ja divisioona (Open, Pro tai Doubles). Tallenna.</li>
+      <li>Kodin ylimpänä on aikajanakortti, esim. <em>HYROX 21.12. – 7 viikkoa</em>. Jaksot näkyvät värinauhana, nykyinen jakso on korostettu, ja alla on tämän viikon painopiste.</li>
+      <li>Tämän päivän treenissä on mukana HYROX-asemia (esim. SkiErg tai kelkkatyöntö) ja juoksuosuus. Juoksu kirjataan kestona ja matkana, ei sarjoina.</li>
+      <li>Avaa <a href="./#/tavoitteet">Tavoitteet</a>: merkintä <em>Jakso: …</em> kertoo, että jakson kerroin muuttaa kaikkia sarjatavoitteita.</li>
+    </ol>
+  </div>
+
+  <div class="kortti polku">
+    <h3>9. PT-ohjelma ja raportti</h3>
+    <ol class="askeleet">
+      <li>Avaa <a href="./#/ohjelmat">Ohjelmat</a> ja paina <em>Tuo ohjelma</em>. Valitse <em>Kokeile esimerkkitiedostolla</em>.</li>
+      <li><em>Tunnistetaan…</em> kestää hetken. Esikatselussa on kaksi päivää, ja jokaisella rivillä on luottamusmerkki: <em>Varma</em>, <em>Todennäköinen</em> tai keltainen <em>Tarkista</em>. Rivi, jota ei tunnistettu, pyytää valitsemaan vastaavan liikkeen.</li>
+      <li>Korjaa tarvittaessa rivi ja paina <em>Tallenna ohjelmaksi</em>. Ohjelma näkyy merkinnällä <em>Tuotu</em>. Paina <em>Ota käyttöön</em>: treenit käyttävät PT:n sarjoja ja toistoja.</li>
+      <li>Lisää <a href="./#/profiili">Profiilin</a> kohtaan <em>Valmentajani</em> valmentajan nimi ja sähköposti. Avaa <em>Viikkoraportti</em>.</li>
+      <li><a href="./#/raportti">Raportissa</a> ovat viikon treenit, sarjatavoitteet, ennätykset ja voiman muutos, palautuminen, vaihdetut liikkeet ja kommenttikenttä. Paina <em>Jaa valmentajalle</em> tai <em>Tulosta / PDF</em>, ja selaa viikkoja nuolilla.</li>
     </ol>
   </div>
 
@@ -533,7 +596,7 @@ footer.alapalkki a.demolinkki { justify-self: start; }
       <button type="button" class="siru" data-kat="profiili" aria-pressed="false">Profiili</button>
     </div>
     <div class="suodatin-tila">
-      <span id="haku-tulos" aria-live="polite">14 moduulia</span>
+      <span id="haku-tulos" aria-live="polite">19 moduulia</span>
       <span class="napit">
         <button type="button" class="nappi" id="avaa-kaikki">Avaa kaikki</button>
         <button type="button" class="nappi" id="sulje-kaikki">Sulje kaikki</button>
@@ -558,7 +621,8 @@ footer.alapalkki a.demolinkki { justify-self: start; }
             <li>Ensimmäisellä käynnistyksellä aloitusohjaus kysyy neljä asiaa omilla näytöillään: tavoite, kokemus, treenit viikossa ja kehonpaino. Lopuksi näytetään suositeltu ohjelma perusteluineen (2–3 treeniä: koko kroppa, 4: ylä/ala, 5–6: työntö/veto/jalat).</li>
             <li>Ohjauksen voi ohittaa esimerkkiprofiililla (lihasmassa, keskitaso, 3 treeniä viikossa, 80 kg).</li>
             <li>Profiilissa ylimpänä on korostettu Tavoite-rivi ja oma valintanäkymä. Sen alla ovat salin laitteet, treeniprofiili (kokemus, treenit viikossa, kesto 30–90 min, jako), treenin muoto, valmentajan muisti, Tietoa (linkki tälle sivulle) ja asetukset (kg/lb, lämmittelysarjat, palautusajastin, teema, Nollaa demo). Muutos tallentuu heti.</li>
-            <li>Salin laitteet: rivi <em>Salini laitteet · N/19</em> avaa alalaatikon, jossa on pikavalinnat (täysi kuntosali, kotisali, hotellisali, vain kehonpaino) ja 19 laitetta ryhmittäin rastiruutuina. Alareunassa lukee, että ohjelma vaihtaa automaattisesti liikkeet, joiden laitteita salilta ei löydy.</li>
+            <li>Salin laitteet: rivi <em>Salini laitteet · N/23</em> avaa alalaatikon, jossa on pikavalinnat (täysi kuntosali, kotisali, hotellisali, vain kehonpaino) ja 23 laitetta ryhmittäin rastiruutuina. Alareunassa lukee, että ohjelma vaihtaa automaattisesti liikkeet, joiden laitteita salilta ei löydy.</li>
+            <li>Tavoitetapahtuma ja Valmentajani (ks. <a href="#m-tapahtuma">jaksotus</a> ja <a href="#m-raportti">viikkoraportti</a>).</li>
             <li>Vammat ja rajoitteet, useampi sali, venyttely ja kardio näkyvät <em>tulossa</em>-riveinä.</li>
           </ul>
         </section>
@@ -568,7 +632,7 @@ footer.alapalkki a.demolinkki { justify-self: start; }
             <li>Aloitusohjaus kysyy tavoitteen, kokemuksen, treenit viikossa, treenin keston, salin laitteet (pikavalinta ja muokkaus) sekä kehonpainon. Nimi on valinnainen. Ohjaus kestää alle kaksi minuuttia, ja sen voi keskeyttää ja jatkaa.</li>
             <li>Tavoite määrää toistohaarukan, sarjamäärän, palautusajan ja RIR-tavoitteen (ks. <a href="#s-tavoitteet">tavoitteiden haarukat</a>). Kokemus määrää aloituspainon ja painonnoston askeleen.</li>
             <li>Kesto rajoittaa sarjamäärää niin, että arvioitu treenin kesto mahtuu valittuun aikaan.</li>
-            <li>Laitelista: 19 laitetta neljässä ryhmässä (vapaat painot, laitteet, taljat, kehonpainovälineet). Lattia ja kehonpaino ovat aina käytettävissä. Käyttäjällä voi olla useampi sali, ja salin laitelistan voi saada salilta (B2B).</li>
+            <li>Laitelista: 23 laitetta neljässä ryhmässä (mukana HYROX-välineet SkiErg, kelkka, wall ball -pallo ja hiekkasäkki) (vapaat painot, laitteet, taljat, kehonpainovälineet). Lattia ja kehonpaino ovat aina käytettävissä. Käyttäjällä voi olla useampi sali, ja salin laitelistan voi saada salilta (B2B).</li>
             <li>Yksikkö (kg/lb) vaikuttaa vain näyttöön. Data tallennetaan aina kiloina.</li>
             <li>Profiilin muutokset vaikuttavat heti seuraavaan treeniin ja synkronoituvat käyttäjän laitteiden välillä.</li>
             <li>Vammat ja rajoitteet tallennetaan profiiliin ja valmentajan muistiin, ja ne ohjaavat liikevalintaa (ks. <a href="#m-vaihto">liikkeen vaihto</a>).</li>
@@ -833,6 +897,7 @@ footer.alapalkki a.demolinkki { justify-self: start; }
             <li>Treeniscore avautuu vasta, kun kaikkia lihasryhmiä on treenattu (vähintään 6 sarjaa 6 viikossa). Siihen asti näkyy, mitkä lihakset puuttuvat.</li>
             <li>Vertailuliikkeet (penkkipunnerrus, takakyykky, maastaveto, leuanveto, pystypunnerrus) pyyhkäistävinä kortteina, joissa on arvioitu maksimi ja kaavio. Lisäksi ennätyslista.</li>
             <li>Tauko heikentää arviota: yli 14 päivän tauon jälkeen 1 % jokaista alkavaa viikkoa kohden, enintään 10 %.</li>
+            <li>HYROX-kestävyysasemat ja juoksu eivät vaikuta arvioituun voimaan eivätkä Treeniscoreen. Treeniscore-kortissa on <em>Jaa</em> (ks. <a href="#m-jako">jakaminen</a>).</li>
           </ul>
         </section>
         <section class="osa osa-tuote vain-speksi">
@@ -994,14 +1059,14 @@ footer.alapalkki a.demolinkki { justify-self: start; }
       <summary>
         <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
         <h3>Liikekirjasto ja esimerkkivideot</h3>
-        <span class="moduuli-tiivis">46 liikettä, ohjeet ja liikkeen näyttö yhdellä napautuksella.</span>
+        <span class="moduuli-tiivis">54 liikettä, ohjeet ja liikkeen näyttö yhdellä napautuksella.</span>
       </summary>
       <div class="moduuli-runko">
         <div class="moduuli-toiminnot"><a class="kokeile" href="./#/liikkeet">Kokeile demossa →</a></div>
         <section class="osa osa-demo">
           <h4><span class="lappu lappu-demo">Demossa</span></h4>
           <ul>
-            <li>Liikekirjasto avataan Kodin <em>Liikekirjasto</em>-kortista ja treenin liikelinkeistä (reitti <code>#/liikkeet</code>, ei alanavigaatiossa). 46 liikettä: haku, lihasryhmäsirut ja lista. Liikkeen sivulla ovat ohje, lihasryhmät, oma historia ja paras arvioitu maksimi.</li>
+            <li>Liikekirjasto avataan Kodin <em>Liikekirjasto</em>-kortista ja treenin liikelinkeistä (reitti <code>#/liikkeet</code>, ei alanavigaatiossa). 54 liikettä, joista 8 on HYROX-asemia: haku, lihasryhmäsirut ja lista. Liikkeen sivulla ovat ohje, lihasryhmät, oma historia ja paras arvioitu maksimi.</li>
             <li><em>▶ Näytä liike</em> treenissä, ohjelman päivänäkymässä ja liikkeen sivulla avaa alalaatikon: media, ohje ja lihasryhmät. Sulkeminen ei keskeytä treeniä eikä palautusajastinta.</li>
             <li>Median järjestys: oma animaatio (viidellä vertailuliikkeellä), tarkistettu upotettu video (demossa ei yhtään) ja lopuksi linkki videohakuun. Videotunnisteita ei arvata.</li>
             <li>Alalaatikossa lukee: <em>Tuotteessa Personal SuperPowerin omat tai lisensoidut liikevideot.</em></li>
@@ -1126,6 +1191,230 @@ footer.alapalkki a.demolinkki { justify-self: start; }
       </div>
     </details>
     <button type="button" class="kopioi vain-js" data-kohta="m-yhteiso" aria-label="Kopioi linkki: Yhteisö"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M15 -->
+  <article class="moduuli" id="m-jako" data-kat="yhteiso" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Yhteisö <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Treenin jakaminen</h3>
+        <span class="moduuli-tiivis">Jakokortti treenistä tai Treeniscoresta, painot piiloon halutessa.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/historia">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li><em>Jaa</em>-painike on treenin yhteenvedossa (myös menneen treenin tiedoissa) ja Edistymisen Treeniscore-kortissa.</li>
+            <li>Kortti on 1080 × 1350 px:n PNG, joka piirretään brändin väreillä. Kortissa ovat sanamerkki, päivä ja treenin nimi, kolme avainlukua (kesto, volyymi ja sarjat), enintään kaksi kohokohtaa (ennätykset ja Edistyit-oivallus), liitetyn haasteen eteneminen ja pieni kehokartta treenatuista lihaksista. Treeniscore-kortissa näkyvät luku, trendi ja ryhmät.</li>
+            <li>Alalaatikossa on esikatselu ja kytkimet <em>Näytä painot</em> (pois: vain prosentit ja ennätysten määrä, ei yhtään kilomäärää) ja <em>Näytä haaste</em>.</li>
+            <li><em>Jaa</em> käyttää laitteen jakovalikkoa (Web Share, tiedostona), kun laite tukee sitä. Lisäksi ovat aina <em>Tallenna kuva</em> ja <em>Kopioi teksti</em>.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Kortti luodaan laitteella, eikä mitään lähetetä palvelimelle ennen kuin käyttäjä jakaa sen itse.</li>
+            <li>Yksityisyys on käyttäjän päätettävissä: painot ja haaste voi piilottaa, ja valinnat muistetaan. Kehonpainoa, palautumista tai muisteja ei koskaan näytetä kortissa.</li>
+            <li>Natiivi jakovalikko (iOS ja Android) ja suorat jaot yleisimpiin somepalveluihin. Kortin koko sopii pystysuuntaisiin julkaisuihin.</li>
+            <li>Kohokohdan oivallus tulee samasta tekoälyn oivallusten tuotannosta kuin yhteenvedossa, ja sen luvut tarkistetaan moottorilta.</li>
+            <li>Kortissa voi olla kutsulinkki tai QR-koodi, joka vie kutsuhaasteeseen (ks. <a href="#m-kutsu">kaverikutsu</a>).</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Kun <em>Näytä painot</em> on pois, kortissa ja jakotekstissä ei ole yhtään kilomäärää, ja volyymin tilalla on sarjojen tai liikkeiden määrä.</li>
+            <li>Kortissa on aina kolme avainlukua ja enintään kaksi kohokohtaa.</li>
+            <li>Kun <em>Näytä haaste</em> on pois, kortissa ei ole haastetta.</li>
+            <li>Laitteella, joka ei tue tiedostojakoa, <em>Jaa</em> ei näy tai kertoo vaihtoehdot, ja <em>Tallenna kuva</em> sekä <em>Kopioi teksti</em> toimivat.</li>
+            <li>Esikatselu päivittyy heti, kun kytkintä muutetaan.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-jako" aria-label="Kopioi linkki: Treenin jakaminen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M16 -->
+  <article class="moduuli" id="m-kutsu" data-kat="yhteiso" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Yhteisö <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Kaverikutsu ja kutsuhaaste</h3>
+        <span class="moduuli-tiivis">Suosittelu on tasapainotettu kaksintaistelu, ja palkkio tulee molemmille.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/yhteiso">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-kutsupisteet">Kutsupisteet</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Yhteisön Haasteet-välilehdellä on <em>Kutsu kaveri</em>: mittari (treenit, volyymi, sarjat, aktiiviset päivät) ja kesto 1 tai 2 viikkoa. Kutsu on aina tasapainotettu.</li>
+            <li>Kutsulinkki on muotoa <code>#/kutsu?d=…</code>. Linkissä ovat vain kutsujan nimi, haasteen parametrit ja kutsujan lähtötaso. Linkin voi jakaa tai kopioida.</li>
+            <li>Vastaanottaja näkee esittelyn (<em>[nimi] haastaa sinut …</em>, <em>Voit voittaa vaikka olisit aloittelija</em>) ja palkkion. <em>Hyväksy haaste</em> lisää kaksintaistelun haasteisiin. Jos aloitusohjaus on tekemättä, se tehdään ensin, ja kutsu odottaa. Virheellinen linkki näyttää ilmoituksen <em>Kutsulinkki ei toimi</em>.</li>
+            <li>Palkkio: kun kutsuttu tekee ensimmäisen treeninsä, molemmat saavat +100 pistettä ja Treenikaveri-merkin. Kutsuttu saa palkkion omasta ensimmäisestä treenistään.</li>
+            <li>Kutsujan tila simuloidaan: kutsukortti näyttää vaiheet Lähetetty → Hyväksytty → Treenannut, ja <em>Simuloi seuraava vaihe</em> vie eteenpäin ja näyttää palkkion.</li>
+            <li>Näkymässä kerrotaan tuotteen ehtona: <em>kuukausi Premiumia jokaisesta kaverista, joka tekee ensimmäisen treeninsä</em>. Demossa Premiumia ei ole.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Kutsulinkki on palvelimen luoma, allekirjoitettu ja vanhenee. Linkissä ei ole henkilötietoja nimen lisäksi. Vastaanotto toimii ilman tiliä: haasteen voi katsoa, ja tili luodaan vasta hyväksyttäessä.</li>
+            <li>Kutsujan näkymä päivittyy oikeasti: hyväksyntä ja ensimmäinen treeni näkyvät ilman simulointia.</li>
+            <li>Palkkio: molemmille +100 pistettä ja Treenikaveri-merkki, ja kutsujalle kuukausi Premiumia jokaisesta kutsutusta, joka tekee ensimmäisen treeninsä. Palkkio annetaan kerran kutsua kohden.</li>
+            <li>Väärinkäytön esto: palkkio vaatii uuden tilin ja uskottavan treenin, kutsujen määrällä on yläraja, ja epäilyttävät tapaukset tarkistetaan.</li>
+            <li>Kaksintaistelu on tavallinen tasapainotettu kaverihaaste (ks. <a href="#s-haasteet">tasapainotus</a>), ja kaveruus syntyy hyväksynnästä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Kutsulinkki säilyttää nimen, mittarin, keston ja lähtötason edestakaisessa muunnoksessa, eikä siinä ole muita henkilötietoja.</li>
+            <li>Virheellinen tai katkennut linkki näyttää virheilmoituksen eikä muuta tilaa.</li>
+            <li>Hyväksytty kutsu näkyy vastaanottajan kaverihaasteissa tasapainotettuna kaksintaisteluna, jonka kesto on 7 tai 14 päivää.</li>
+            <li>Kun kutsuttu tekee ensimmäisen treeninsä, molemmat saavat +100 pistettä ja Treenikaveri-merkin täsmälleen kerran.</li>
+            <li>Käyttäjä, jolla ei ole tiliä, näkee kutsun ja voi hyväksyä sen, ja hyväksyminen ohjaa ensin aloitusohjaukseen.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-kutsu" aria-label="Kopioi linkki: Kaverikutsu ja kutsuhaaste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M17 -->
+  <article class="moduuli" id="m-tapahtuma" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Tavoitetapahtuma ja jaksotus</h3>
+        <span class="moduuli-tiivis">HYROX, juoksukisa, turnaus tai oma tavoite: treeni jaksotetaan kohti päivää.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/profiili?tapahtuma=1">Kokeile demossa →</a><a class="kokeile vain-speksi" href="#s-jaksotus">Laskuri ja säännöt</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Profiilin <em>Tavoitetapahtuma</em>: tyyppi (HYROX, juoksukisa 5 km, 10 km tai puolimaraton, padel-turnaus, salibandyturnaus, oma tavoite), päivämäärä (aikaisintaan huomenna) ja HYROXissa divisioona Open, Pro tai Doubles. Divisioona näkyy asemariveillä paino-ohjeena.</li>
+            <li>Jaksotus: perusjakso, kovennus, kevennys ja kisaviikko. Joka 4. rakennusviikko on kevennysviikko. Jakson kerroin vaikuttaa kaikkiin viikon sarjatavoitteisiin, ja Tavoitteet-näkymässä on merkintä <em>Jakso: …</em> (ks. <a href="#s-jaksotus">säännöt</a>).</li>
+            <li>HYROX: 8 asemaa liikekirjastossa (SkiErg, kelkkatyöntö, kelkkaveto, burpee-pituushyppy, soutu, farmarikävely, hiekkasäkkiaskelkyykky ja wall ball) ja uudet laitteet. Ohjelmapäivään lisätään jakson mukaan 1–3 asemaa ja juoksuosuus. Kovennusjaksossa viikon viimeinen treeni on simulaatio, jossa asemat ja juoksut vuorottelevat lyhennettyinä. Jos laitetta ei ole, asema tehdään vaihtoehtoisella välineellä tai jätetään pois.</li>
+            <li>Juoksukisat lisäävät juoksurivin. Turnaukset ja oma tavoite vaikuttavat vain kertoimiin. Juoksu kirjataan omana rivinään kestona ja matkana, ei sarjoina.</li>
+            <li>Kodin aikajanakortti, esim. <em>HYROX 14.12. – 7 viikkoa</em>: jaksot värinauhana, nykyinen viikko korostettuna, tämän viikon painopiste ja sarjatavoitteen kerroin.</li>
+            <li>Valmentaja tunnistaa sanat hyrox, maraton, puolikas, turnaus, tapahtuma ja juoksukisa, kertoo ehdotetun jaksotuksen ja tarjoaa sirun <em>Aseta tavoitetapahtuma</em>.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Jaksotuksen pohja on läpinäkyvä sääntö (ks. <a href="#s-jaksotus">säännöt</a>), ja tekoäly personoi sen: lähtötaso, treenimäärä, muut lajit ja palautuminen. Asiantuntija validoi jaksot ja asemaharjoitukset.</li>
+            <li>Valmentaja tietää tapahtumasta ja jaksosta. Muistit ja viikkosuunnitelmat toimivat jaksotuksen päällä, esimerkiksi reissuviikko siirtää kevennysviikkoa.</li>
+            <li>Asemien kuormat määräytyvät divisioonan ja käyttäjän tason mukaan. Juoksut voi tuoda terveysalustalta tai puettavasta laitteesta.</li>
+            <li>Tapahtumakirjasto laajenee: muut juoksumatkat, toiminnalliset kisat, pyöräily ja mailapelien turnaukset. Lajin nimeä käytetään vain sallitulla tavalla (ks. <a href="#avoimet">avoimet kysymykset</a>).</li>
+            <li>Kestävyysasemat ja juoksu eivät vaikuta arvioituun voimaan eivätkä Treeniscoreen, mutta niiden tulokset näkyvät ennätyksissä ja historiassa.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Kun tapahtumaan on 8 viikkoa, suunnitelmassa on perusjakso, kovennus, yksi kevennysviikko ennen kisaviikkoa ja kisaviikko, ja jaksojen pituudet noudattavat suhdetta 40 : 35.</li>
+            <li>Kun tapahtumaan on alle 4 viikkoa, suunnitelmassa on vain kovennus, kevennys ja kisaviikko.</li>
+            <li>Joka 4. perus- tai kovennusviikko on kevennysviikko (× 0,7), paitsi viimeinen rakennusviikko ennen kevennystä.</li>
+            <li>Jakson kerroin kertoo kaikki viikon sarjatavoitteet, ja Tavoitteet-näkymä näyttää jakson.</li>
+            <li>HYROX-ohjelmapäivässä on perusjaksossa 1 asema, kovennuksessa 2 asemaa ja juoksurivi, jonka kirjaus on kesto ja valinnainen matka.</li>
+            <li>Mennyt tapahtumapäivä poistaa jaksotuksen käytöstä, eikä kerroin enää vaikuta.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-tapahtuma" aria-label="Kopioi linkki: Tavoitetapahtuma ja jaksotus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M18 -->
+  <article class="moduuli" id="m-tuonti" data-kat="treeni" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Treeni <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Ohjelman tuonti</h3>
+        <span class="moduuli-tiivis">PT:n ohjelma kuvasta, PDF:stä tai taulukosta sovelluksen ohjelmaksi.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/ohjelmat">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Ohjelmat → <em>Tuo ohjelma</em>: <em>Valitse tiedosto</em> (kuva, PDF, xlsx, xls tai csv) tai <em>Kokeile esimerkkitiedostolla</em>.</li>
+            <li><em>Tunnistetaan…</em> kestää noin 2 sekuntia. Demossa näytetään aina esimerkki-PT-ohjelma (2 päivää, 11 liikettä) ja ilmoitus <em>Demossa tunnistus näyttää esimerkin – tuotteessa tekoäly lukee tiedostosi.</em></li>
+            <li>Jokaisella rivillä on luottamusmerkki: <em>Varma</em>, <em>Todennäköinen</em> tai keltainen <em>Tarkista</em>. Liikkeet sovitetaan liikekirjastoon synonyymien ja lyhenteiden avulla (esim. <em>Bench press</em> → penkkipunnerrus, <em>Kyykky</em> → takakyykky). Tuntematon liike näkyy rivinä <em>Valitse vastaava liike</em>.</li>
+            <li><em>Tallenna ohjelmaksi</em> tallentaa ohjelman omiin ohjelmiin merkinnällä <em>Tuotu</em>, ja sen voi ottaa käyttöön. Tuotu ohjelma käyttää PT:n sarjoja ja toistoja tavoitteen haarukoiden sijaan. Ehdotukset, palautuminen, vaihto ja haasteet toimivat normaalisti.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Tekoäly lukee kuvan, PDF:n tai taulukon (kuvantunnistus ja taulukon jäsennys) ja tuottaa rakenteen: päivät, liikkeet, sarjat ja toistot, ja tarvittaessa kuormat, tempot ja palautukset.</li>
+            <li>Käyttäjä vahvistaa tuloksen ennen tallennusta. Epävarmat rivit merkitään, ja tuntemattomalle liikkeelle valitaan vastine kirjastosta tai luodaan oma liike.</li>
+            <li>PT:n sarjoja ja toistoja kunnioitetaan: progressio ehdottaa kuormaa PT:n haarukassa eikä muuta ohjelmaa ilman käyttäjän lupaa.</li>
+            <li>Alkuperäinen tiedosto käsitellään vain tunnistusta varten, eikä sitä säilytetä ilman käyttäjän lupaa.</li>
+            <li>B2B: PT voi lähettää ohjelman suoraan asiakkaalle omasta näkymästään (ks. <a href="#m-raportti">viikkoraportti</a>).</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Rivit kuten <em>Bench press 4x8</em>, <em>Kyykky 3 x 10</em> ja <em>Penkki 4 sarjaa 8</em> jäsentyvät oikeiksi liikkeiksi, sarjoiksi ja toistoiksi.</li>
+            <li>Jokaisella tunnistetulla rivillä on luottamustaso, ja epävarmat rivit on merkitty tarkistettaviksi.</li>
+            <li>Ohjelmaa ei tallenneta ennen kuin käyttäjä vahvistaa sen, ja rivit, joille ei ole valittu liikettä, jätetään pois.</li>
+            <li>Tuodun ohjelman treenissä sarjat ja toistot ovat PT:n antamat, eivätkä tavoitteen haarukat ohita niitä.</li>
+            <li>Tuotu ohjelma näkyy Ohjelmissa merkinnällä <em>Tuotu</em>, ja sen voi ottaa käyttöön.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-tuonti" aria-label="Kopioi linkki: Ohjelman tuonti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
+  </article>
+
+  <!-- M19 -->
+  <article class="moduuli" id="m-raportti" data-kat="edistyminen" data-toc>
+    <details open>
+      <summary>
+        <span class="moduuli-meta">Edistyminen <span class="hk-tila vain-speksi vain-js"></span></span>
+        <h3>Viikkoraportti valmentajalle</h3>
+        <span class="moduuli-tiivis">Viikon treenit, tavoitteet ja huomiot PT:lle jaettavaksi tai tulostettavaksi.</span>
+      </summary>
+      <div class="moduuli-runko">
+        <div class="moduuli-toiminnot"><a class="kokeile" href="./#/raportti">Kokeile demossa →</a></div>
+        <section class="osa osa-demo">
+          <h4><span class="lappu lappu-demo">Demossa</span></h4>
+          <ul>
+            <li>Profiili → <em>Valmentajani</em> (nimi ja sähköposti, valinnainen) → <em>Viikkoraportti</em> (reitti <code>#/raportti?viikko=YYYY-MM-DD</code>).</li>
+            <li>Sisältö: viikon treenit ja kesto, sarjatavoitteiden toteuma ryhmittäin, ennätykset ja arvioidun voiman muutos vertailuliikkeissä, palautumishuomiot, ohitetut ja vaihdetut liikkeet syineen sekä kipumuistit, tapahtuman jakso (jos asetettu) ja oma kommentti valmentajalle.</li>
+            <li><em>Jaa valmentajalle</em>: Web Share (teksti ja linkki) tai sähköpostiluonnos <code>mailto:</code>-linkillä. Käyttäjä lähettää viestin itse, sovellus ei lähetä mitään.</li>
+            <li><em>Tulosta / PDF</em> käyttää tulostusasettelua. Edellinen ja seuraava viikko selataan nuolilla, eikä tulevaan viikkoon voi siirtyä.</li>
+          </ul>
+        </section>
+        <section class="osa osa-tuote vain-speksi">
+          <h4><span class="lappu lappu-tuote">Tuotteessa</span></h4>
+          <ul>
+            <li>Valmentajalla on oma näkymä (B2B), jossa ovat useat asiakkaat, viikkoraportit ja palautteen lähetys takaisin asiakkaalle. Tämä on myyntikanava PT:ille ja saleille.</li>
+            <li>Asiakas päättää, mitä valmentaja näkee, ja voi perua jaon. Terveystietoihin rinnastuvat tiedot (kipumuistit, palautuminen, kehonpaino) jaetaan vain erillisellä luvalla.</li>
+            <li>Raportin voi lähettää automaattisesti viikoittain, ja se toimii myös ilman valmentajan tiliä (linkki tai PDF).</li>
+            <li>Tekoäly voi kirjoittaa raportin alkuun tiivistelmän viikosta, ja sen luvut tarkistetaan moottorilta.</li>
+          </ul>
+        </section>
+        <section class="osa osa-hk vain-speksi">
+          <h4><span class="lappu lappu-hk">Hyväksymiskriteerit</span></h4>
+          <ol class="hk-lista">
+            <li>Raportin treenien määrä, sarjat ja sarjatavoitteiden prosentit vastaavat saman viikon historiaa ja Tavoitteet-näkymää.</li>
+            <li>Vaihdetut ja ohitetut liikkeet näkyvät syineen, ja voimassa olevat kipumuistit näkyvät raportissa.</li>
+            <li>Käyttäjän kommentti säilyy viikoittain, ja se on mukana jaettavassa tekstissä, joka on enintään 1 500 merkkiä.</li>
+            <li>Sähköpostiluonnos avautuu valmentajan osoitteella, ja käyttäjä lähettää sen itse.</li>
+            <li>Tulostusasettelussa ei ole navigaatiota eikä painikkeita.</li>
+          </ol>
+        </section>
+      </div>
+    </details>
+    <button type="button" class="kopioi vain-js" data-kohta="m-raportti" aria-label="Kopioi linkki: Viikkoraportti valmentajalle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg></button>
   </article>
 
   <!-- M14 -->
@@ -1290,6 +1579,7 @@ Treeniscore = kolmen ryhmän keskiarvo, jos kaikilla kolmella on arvo</div>
           <tr><td>Viitekertoimia</td><td>Penkkipunnerrus 1,0 · takakyykky 1,25 · maastaveto 1,5 · pystypunnerrus 0,6 · jalkaprässi 2,0 · käsipainoliikkeet per käsi 0,1–0,4 · leuanveto 10 toistoa</td></tr>
           <tr><td>Asteikko</td><td>50 = viitetaso, 100 = kaksinkertainen viitetaso. Kerroin on demossa sama sukupuolesta riippumatta.</td></tr>
           <tr><td>Trendi</td><td>Luku nyt verrattuna 28 päivää aiempaan: ero &gt; +2 nousu, &lt; −2 lasku, muuten tasainen.</td></tr>
+          <tr><td>Kestävyysliikkeet</td><td>HYROX-kestävyysasemat ja juoksu eivät vaikuta arvioituun voimaan, lihasvoimaan eivätkä Treeniscoreen. Niiden tulokset näkyvät ennätyksissä ja historiassa.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1500,7 +1790,7 @@ Taso alkaa nollasta. Taso n saavutetaan, kun pisteitä on ≥ 100 × n × (n + 1
     <p><strong>Kelpaa ehdokkaaksi:</strong> liike, jolla on sama päälihasryhmä, tai liike, jolla on sama liikemalli ja jossa alkuperäisen liikkeen päälihasryhmä työskentelee avustajana (toissijaisena).</p>
     <p><strong>Karsitaan:</strong> liikkeet, joiden tarvikkeita salilla ei ole, vältettävät liikkeet (kipumuistit), kipuvaihdossa ja voimassa olevien kipumuistien alueita kuormittavat liikkeet sekä liikkeet, jotka ovat jo päivän ohjelmassa. Syillä <em>Laite puuttuu</em> ja <em>Laite varattu</em> alkuperäisen liikkeen laitteet jätetään pois käytettävistä laitteista. Tuloksena on enintään 5 vaihtoehtoa paras ensin. Tasapisteillä järjestys on liikekirjaston järjestys. Tyhjä tulos → <em>Ohita liike tänään</em>.</p>
     <p><strong>Automaattinen vaihto</strong> tehdään päivän ohjelmalle, kun liikkeen laitteita ei ole (syy <code>laite</code>) tai liike on kipumuistissa vältettävä (syy <code>kipu</code>). Korvaajaksi valitaan paras vaihtoehto, joka ei ole jo päivän ohjelmassa eikä toisen vaihdon korvaajana. Jos sellaista ei ole, liike ohitetaan tältä päivältä.</p>
-    <p><strong>Laitepohjat:</strong> täysi kuntosali (kaikki 19), kotisali (levytanko, kyykkyteline, penkki, käsipainot, leuanvetotanko, vastuskuminauhat), hotellisali (käsipainot, penkki, ylätalja, alatalja) ja vain kehonpaino (ei laitteita).</p>
+    <p><strong>Laitepohjat:</strong> täysi kuntosali (kaikki 23), kotisali (levytanko, kyykkyteline, penkki, käsipainot, leuanvetotanko, vastuskuminauhat), hotellisali (käsipainot, penkki, ylätalja, alatalja) ja vain kehonpaino (ei laitteita).</p>
     <h4>Esimerkki: penkkipunnerrus hotellisalilla</h4>
     <p>Penkkipunnerrus (rinta, vaakatyöntö, toissijaiset ojentajat ja olkapäät) vaatii levytangon, jota hotellisalilla ei ole.</p>
     <div class="taulukko leveä" role="region" aria-label="Esimerkki vaihtoehtojen pisteytyksestä" tabindex="0">
@@ -1513,7 +1803,7 @@ Taso alkaa nollasta. Taso n saavutetaan, kun pisteitä on ≥ 100 × n × (n + 1
         </tbody>
       </table>
     </div>
-    <p>Takakyykyn vaihtoehdot ilman kyykkytelinettä ovat jalkaprässi, askelkyykky käsipainoilla, bulgarialainen askelkyykky ja kyykky kehonpainolla (kukin 85 = 50 + 30 + 5) sekä reiden ojennus (50). Polvikivussa takakyykylle ei löydy vaihtoehtoa, koska kaikki etureisiliikkeet kuormittavat polvea, joten liike ohitetaan.</p>
+    <p>Takakyykyn vaihtoehdot ilman kyykkytelinettä ovat jalkaprässi, askelkyykky käsipainoilla, bulgarialainen askelkyykky ja kyykky kehonpainolla (kukin 85 = 50 + 30 + 5) sekä hiekkasäkkiaskelkyykky (60 = 50 + 2 × 5). Polvikivussa takakyykylle ei löydy vaihtoehtoa, koska kaikki etureisiliikkeet kuormittavat polvea, joten liike ohitetaan.</p>
 
     <h4>Johdettu aloituspaino</h4>
     <div class="kaava">Johdettu paino = pyöristys2,5( korvaavan viitekerroin / alkuperäisen viitekerroin
@@ -1559,6 +1849,62 @@ Toistot = haarukan alapää</div>
       <p class="laskuri-esim"><strong>Esimerkki:</strong> penkkipunnerruksen e1RM 100 kg, korvaavana käsipainopenkkipunnerrus, lihasmassa: 0,4 / 1,0 × 100 × 0,75 = 30 → <strong>30 kg × 8</strong> (per käsi).</p>
     </div>
   </div>
+
+  <!-- 5.10 -->
+  <div class="saanto" id="s-jaksotus" data-toc>
+    <h3>5.10 Tapahtuman jaksotus</h3>
+    <p>Viikot ovat kalenteriviikkoja (profiilin viikon alku) suunnitelman alusta tapahtuman viikkoon asti. Suunnitelma alkaa viikosta, jolloin tapahtuma asetettiin, joten jaksojen rajat eivät siirry viikko viikolta.</p>
+    <div class="taulukko leveä" role="region" aria-label="Jaksot" tabindex="0">
+      <table>
+        <thead><tr><th>Jakso</th><th>Osuus viikoista</th><th class="num">Sarjatavoite</th><th>HYROX-ohjelmapäivä</th></tr></thead>
+        <tbody>
+          <tr><td>Perusjakso</td><td>rakennusviikoista 40 / 75 (pyöristettynä)</td><td class="num">× 1,0</td><td>1 asema ja rauhallinen juoksu 25 min</td></tr>
+          <tr><td>Kovennus</td><td>loput rakennusviikot (35 / 75)</td><td class="num">× 1,1</td><td>2 asemaa ja intervallit 4 × 1 km, viikon viimeinen treeni simulaatio (3 asemaa ja juoksut vuorotellen)</td></tr>
+          <tr><td>Kevennysviikko</td><td>joka 4. perus- tai kovennusviikko, ei viimeinen rakennusviikko</td><td class="num">× 0,7</td><td>1 asema (2 sarjaa) ja kevyt juoksu 20 min</td></tr>
+          <tr><td>Kevennys</td><td>1 viikko ennen kisaviikkoa</td><td class="num">× 0,6</td><td>1 asema (2 sarjaa) ja kevyt juoksu 20 min</td></tr>
+          <tr><td>Kisaviikko</td><td>tapahtuman viikko</td><td class="num">× 0,4</td><td>ei asemia, aktivointijuoksu 15 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="kaava">Viikkoja n = kalenteriviikot suunnitelman alusta tapahtuman viikkoon (mukaan lukien)
+Rakennusviikot = n − 2  (viimeiset kaksi: kevennys ja kisaviikko)
+Perusjakso = pyöristys(rakennusviikot × 40 / 75), kovennus = loput
+Jos n − 1 &lt; 4: ei perusjaksoa eikä kevennysviikkoja (vain kovennus, kevennys ja kisaviikko)
+n = 2: kevennys ja kisaviikko · n = 1: vain kisaviikko · mennyt päivä: ei suunnitelmaa</div>
+    <p>Juoksukisat lisäävät jakson mukaisen juoksurivin (esim. 10 km: perusjaksossa 40 min rauhallisesti, kovennuksessa 3 × 2 km kisavauhtia). Turnaukset ja oma tavoite vaikuttavat vain sarjatavoitteiden kertoimiin. Kerroin kertoo viikon kaikki sarjatavoitteet samalla tavalla kuin viikkosuunnitelman ryhmäkertoimet (kohta 5.6).</p>
+
+    <div class="laskuri" id="l-jaksotus">
+      <div class="laskuri-otsikko"><h4>Laskuri: jaksotus tapahtumaan</h4><span class="oletusmerkki">Demon oletusarvot – tuotteessa tekoäly personoi</span></div>
+      <form class="laskuri-ui" id="f-jaksotus" onsubmit="return false">
+        <div class="kentat">
+          <label class="kentta">Suunnitelman alku (tänään)<input name="alku" type="date" value="2026-10-26"></label>
+          <label class="kentta">Tapahtuman päivä<input name="pvm" type="date" value="2026-12-14"></label>
+          <label class="kentta">Viikko alkaa
+            <select name="viikonAlku"><option value="maanantai">Maanantaina</option><option value="sunnuntai">Sunnuntaina</option></select>
+          </label>
+        </div>
+        <output class="tulos" name="tulos" aria-live="polite"></output>
+      </form>
+      <p class="laskuri-esim"><strong>Esimerkki:</strong> alku ma 26.10.2026, tapahtuma 14.12.2026 → 8 viikkoa: perusjakso 3 viikkoa (× 1,0), kovennus 3 viikkoa, joista ensimmäinen kevennysviikko (× 0,7, muut × 1,1), kevennys 1 viikko (× 0,6) ja kisaviikko (× 0,4).</p>
+    </div>
+  </div>
+
+  <!-- 5.11 -->
+  <div class="saanto" id="s-kutsupisteet" data-toc>
+    <h3>5.11 Kutsupisteet</h3>
+    <div class="taulukko leveä" role="region" aria-label="Kutsupisteet" tabindex="0">
+      <table>
+        <thead><tr><th>Tapahtuma</th><th>Kutsuja</th><th>Kutsuttu</th></tr></thead>
+        <tbody>
+          <tr><td>Kutsun luonti ja hyväksyntä</td><td>ei pisteitä</td><td>kaksintaistelu lisätään haasteisiin</td></tr>
+          <tr><td>Kutsutun ensimmäinen voimatreeni haasteen alun jälkeen</td><td>+100 pistettä ja Treenikaveri-merkki (demossa simuloitu)</td><td>+100 pistettä ja Treenikaveri-merkki</td></tr>
+          <tr><td>Kaksintaistelun päättyminen</td><td>tuotteessa kuten kutsutulla (demossa kutsujan haastetta ei ole)</td><td>kuten kaverihaaste: haasteen pisteet (100)</td></tr>
+          <tr><td>Tuotteessa lisäksi</td><td>kuukausi Premiumia jokaisesta kutsutusta, joka treenaa</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Palkkio annetaan kerran kutakin kutsua kohden, ja palkittu kutsu saa päivämäärän. Treenikaveri-merkki lisätään vain kerran, ja se kerryttää merkkipisteet kuten muutkin merkit. Kutsupisteet lasketaan tason pisteisiin (kohta 5.8).</p>
+  </div>
 </section>
 
 <!-- ============================ 6 ============================ -->
@@ -1569,9 +1915,9 @@ Toistot = haarukan alapää</div>
     <table>
       <thead><tr><th>Entiteetti</th><th>Keskeiset kentät</th><th>Huomio tuotteeseen</th></tr></thead>
       <tbody>
-        <tr><td><strong>Käyttäjä ja profiili</strong></td><td><code>nimi</code>, <code>tavoite</code>, <code>kokemus</code>, <code>treenitViikossa</code> (2–6), <code>kesto</code> (min), <code>jako</code>, <code>laitteet</code> [laiteId], <code>lammittelysarjat</code>, <code>palautusajastin</code>, <code>palautusKesto</code>, <code>kehonpaino</code>, <code>yksikko</code> (kg/lb), <code>viikonAlku</code>, <code>sali</code>, <code>teema</code></td><td>Tili ja tunnistautuminen, suostumukset, näkyvyysasetukset. Kehonpaino voi olla terveystietoa.</td></tr>
+        <tr><td><strong>Käyttäjä ja profiili</strong></td><td><code>nimi</code>, <code>tavoite</code>, <code>kokemus</code>, <code>treenitViikossa</code> (2–6), <code>kesto</code> (min), <code>jako</code>, <code>laitteet</code> [laiteId], <code>lammittelysarjat</code>, <code>palautusajastin</code>, <code>palautusKesto</code>, <code>kehonpaino</code>, <code>yksikko</code> (kg/lb), <code>viikonAlku</code>, <code>sali</code>, <code>teema</code>, <code>tapahtuma</code>? { tyyppi, pvm, divisioona?, asetettu }, <code>valmentaja</code>? { nimi, email }</td><td>Tili ja tunnistautuminen, suostumukset, näkyvyysasetukset. Kehonpaino voi olla terveystietoa. Valmentajan sähköposti on kolmannen osapuolen henkilötieto.</td></tr>
         <tr><td><strong>Liike</strong></td><td><code>id</code>, <code>nimi</code>, <code>lihasryhma</code>, <code>toissijaiset</code> [], <code>valine</code>, <code>alue</code> (ylä/ala), <code>tarvikkeet</code> [laiteId], <code>kaava</code> (liikemalli), <code>kuormittaa</code> [alue], <code>viitekerroin</code> tai <code>viitetoistot</code>, <code>aloituspaino</code>, <code>ohje</code>, <code>media</code> {animaatio, videoId, hakusana}</td><td>Sisältö hallitaan sisällönhallinnassa ja lokalisoidaan.</td></tr>
-        <tr><td><strong>Laite</strong></td><td><code>id</code>, <code>nimi</code>, <code>ryhma</code> (vapaat, laitteet, taljat, kehonpaino). Demossa 19 laitetta. Laitepohja: <code>id</code>, <code>nimi</code>, <code>laitteet</code> []</td><td>Salin laitelista voi tulla salilta (B2B).</td></tr>
+        <tr><td><strong>Laite</strong></td><td><code>id</code>, <code>nimi</code>, <code>ryhma</code> (vapaat, laitteet, taljat, kehonpaino). Demossa 23 laitetta. Laitepohja: <code>id</code>, <code>nimi</code>, <code>laitteet</code> []</td><td>Salin laitelista voi tulla salilta (B2B).</td></tr>
         <tr><td><strong>Ohjelma</strong></td><td><code>id</code>, <code>nimi</code>, <code>kuvaus</code>, <code>tasot</code>, <code>paivat</code> [{ <code>nimi</code>, <code>liikkeet</code> [{ liikeId, sarjat, toistoMin, toistoMax, palautusS }] }]</td><td>Kirjasto-ohjelmat ja käyttäjän tai tekoälyn muokkaamat ohjelmat erotetaan.</td></tr>
         <tr><td><strong>Treeni</strong></td><td><code>id</code>, <code>pvm</code>, <code>aloitus</code>, <code>kestoS</code>, <code>ohjelmaId</code>, <code>paivaNimi</code>, <code>lahde</code> (psp/terveys), <code>tyyppi</code> (voima/kävely/pyöräily), <code>kcal</code>, <code>nimi</code>, <code>matkaKm</code>, <code>liikkeet</code> [{ liikeId, sarjat [], vaihdettu? { alkuperainen, syy } }], <code>ehdotukset</code> []</td><td>Tuoduille aktiviteeteille lähteen tunniste kaksoiskappaleiden estoon. Päivän vaihdot: <code>paivanVaihdot</code> { pvm: { alkuperainen: korvaava | null (ohitettu) } } ja syyt <code>paivanVaihtoSyyt</code> { pvm: { alkuperainen: { syy, kipualue? } } }.</td></tr>
         <tr><td><strong>Sarja</strong></td><td><code>paino</code> (kg), <code>toistot</code>, <code>rir</code> (0–4+), <code>lammittely</code> (bool)</td><td>Tuotteessa myös kuittausaika ja tarvittaessa aikasarjat.</td></tr>
@@ -1583,6 +1929,12 @@ Toistot = haarukan alapää</div>
         <tr><td><strong>Merkki</strong></td><td><code>id</code>, <code>nimi</code>, <code>kuvake</code>, <code>ehto</code>. Ansaittu: { <code>id</code>, <code>pvm</code> }</td><td>Ansaitseminen lasketaan palvelimella.</td></tr>
         <tr><td><strong>Kehonpainomittaus</strong></td><td><code>pvm</code>, <code>kg</code></td><td>Voi tulla terveyssovelluksesta.</td></tr>
         <tr><td><strong>Yhteisön tila</strong></td><td><code>tsempit</code> [tapahtumaId], <code>ansaitutMerkit</code> [{ id, pvm }], <code>lunastetutEdut</code> [haasteId]</td><td>Tapahtumasyöte palvelimelta.</td></tr>
+        <tr><td><strong>Tavoitetapahtuma</strong></td><td><code>tyyppi</code> (hyrox, juoksu-5km, juoksu-10km, puolimaraton, padel-turnaus, salibandyturnaus, oma), <code>pvm</code>, <code>divisioona</code>? (open, pro, doubles), <code>asetettu</code> (jaksotuksen alkupäivä). Johdettu suunnitelma: <code>viikot</code> [{ alku, jakso, kerroin, kevennysviikko, painopiste }]</td><td>Tuotteessa useita tapahtumia ja tapahtumakirjasto.</td></tr>
+        <tr><td><strong>Valmentaja (PT)</strong></td><td><code>profiili.valmentaja</code> { nimi, email }</td><td>Tuotteessa valmentajan tili, asiakkuus ja jakoluvat (B2B).</td></tr>
+        <tr><td><strong>Omat ohjelmat</strong></td><td><code>omatOhjelmat</code> [Ohjelma + <code>tasot: 'oma'</code>, <code>tuotu: true</code>, <code>kunnioitaSarjoja: true</code>]</td><td>Tuonnin lähde ja vahvistus tallennetaan, alkuperäistä tiedostoa ei.</td></tr>
+        <tr><td><strong>Kutsu</strong></td><td><code>yhteiso.kutsut</code> [{ id, luotu, mittari, kesto (7/14), tila (lähetetty/hyväksytty/treenannut), kaveriNimi?, koodi, palkittu? }]. Linkin data: { v, id, nimi, mittari, kesto, lahtotaso, luotu }. Vastaanottajan haaste: <code>haaste.kutsu</code> { id, nimi, lahtotaso, palkittu? }</td><td>Tuotteessa palvelimen allekirjoittama, vanheneva kutsu.</td></tr>
+        <tr><td><strong>Raporttikommentit</strong></td><td><code>raporttiKommentit</code> { [viikonAlku]: teksti }</td><td>Jaetaan valmentajalle vain käyttäjän toimesta.</td></tr>
+        <tr><td><strong>Juoksurivi</strong></td><td>Treenin liikerivi { <code>liikeId: 'juoksu'</code>, <code>tyyppi: 'kesto'</code>, <code>kestoMin</code>, <code>matkaKm</code>?, kuvaus, tapahtuma: true } ilman sarjoja</td><td>Voi tulla myös terveysalustalta.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1636,6 +1988,19 @@ Toistot = haarukan alapää</div>
   <h3>Oivallusten tuotanto</h3>
   <p>Moottori valitsee oivallukset ja luvut säännöillä (kohta 5.7), ja kielimalli kirjoittaa tekstin. Tuotettu teksti tarkistetaan: luvut verrataan moottorin arvoihin, eikä tekstiä näytetä, jos tarkistus epäonnistuu. Silloin käytetään valmista mallipohjaa.</p>
 
+  <h3>Ohjelman tuonnin tekoäly</h3>
+  <ul>
+    <li>Tekoäly jäsentää kuvan, PDF:n tai taulukon ohjelmaksi: päivät, liikkeet, sarjat ja toistot. Jokaiselle riville tulee luottamustaso, ja liikkeet sovitetaan liikekirjastoon.</li>
+    <li>Tulos on aina ehdotus: käyttäjä tarkistaa ja vahvistaa sen ennen tallennusta, ja epävarmat rivit korostetaan.</li>
+    <li>PT:n sarjoja ja toistoja kunnioitetaan. Tekoäly ei muuta ohjelmaa, vaan progressio ehdottaa kuormat PT:n haarukassa.</li>
+  </ul>
+
+  <h3>Valmentajan tietoisuus tapahtumasta</h3>
+  <ul>
+    <li>Konteksti (<code>haeKonteksti</code>) sisältää tavoitetapahtuman, nykyisen jakson, kertoimen ja painopisteen.</li>
+    <li>Valmentaja ehdottaa tapahtuman asettamista, kun käyttäjä mainitsee kisan, ja ehdotus näytetään siruna, jonka käyttäjä hyväksyy. Muistit ja viikkosuunnitelmat sovitetaan jaksotukseen, esimerkiksi reissuviikko voi siirtää kevennysviikkoa.</li>
+  </ul>
+
   <h3>Laadunvarmistus</h3>
   <ul>
     <li>Arviointiaineisto: demon skenaariot (reissu ja laji, kipu, väsymys, kiire, muistikysymys, haaste) sekä reunatapaukset. Ajetaan jokaisen malli- tai ohjemuutoksen yhteydessä.</li>
@@ -1658,6 +2023,9 @@ Toistot = haarukan alapää</div>
         <tr><td><strong>Kumppanien etukoodit</strong></td><td>Haasteen määritys, palkinto, koodipooli.</td><td>Koodi luovutetaan haasteen suorittaneelle kerran. Lunastuksen raportointi kumppanille koottuna.</td></tr>
         <tr><td><strong>Videokirjasto</strong></td><td>Omat tai lisensoidut liikevideot.</td><td>Liikkeen näyttö. Mediamalli on lähteestä riippumaton.</td></tr>
         <tr><td><strong>Kielimalli</strong></td><td>Valmentajan keskustelu ja oivallusten teksti.</td><td>Palveluntarjoaja valitaan toteutusvaiheessa (EU-tietojenkäsittely, käsittelijäsopimus).</td></tr>
+        <tr><td><strong>Somejako</strong> (Web Share, natiivi jakovalikko)</td><td>Jakokortti (PNG) ja jakoteksti, kutsulinkki.</td><td>Käyttäjä jakaa itse. Demossa Web Share API, kun laite tukee tiedostojakoa, muuten tallennus ja kopiointi.</td></tr>
+        <tr><td><strong>Sähköposti</strong></td><td>Viikkoraportti valmentajalle.</td><td>Demossa <code>mailto:</code>-luonnos, jonka käyttäjä lähettää itse. Tuotteessa valinnainen automaattinen viikkolähetys.</td></tr>
+        <tr><td><strong>PT-järjestelmät</strong> (B2B)</td><td>Asiakkaat, ohjelmat ja viikkoraportit.</td><td>Valmentajan näkymä tai rajapinta valmennusjärjestelmiin: ohjelma asiakkaalle ja raportti takaisin.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1722,6 +2090,10 @@ Toistot = haarukan alapää</div>
         <tr><td>Kumppanit</td><td>Mitkä kumppanit ja millä ehdoilla etukoodit luovutetaan?</td><td>Kumppanimallin luonnos ja sopimuspohja.</td></tr>
         <tr><td>Tietosuoja</td><td>Mitkä tiedot ovat terveystietoja ja millä perusteella niitä käsitellään?</td><td>Tietosuoja-arvio ja tarvittaessa vaikutustenarviointi ennen toteutusta.</td></tr>
         <tr><td>Toteutuksen laajuus</td><td>Mitkä moduulit kuuluvat ensimmäiseen julkaisuun?</td><td>Priorisointi hyväksymiskriteerien pohjalta ja aikataulutus ohjelmistotalon kanssa.</td></tr>
+        <tr><td>Kutsupalkkio</td><td>Mitkä ovat Premium-kuukauden ehdot (enimmäismäärä, voimassaolo, maksullisuus) ja miten väärinkäyttö estetään (uudet tilit, uskottava treeni, tarkistus)?</td><td>Palkkioehdot ja väärinkäytön estosäännöt ennen julkaisua.</td></tr>
+        <tr><td>HYROX-nimi</td><td>Voiko nimeä käyttää kuvailevasti, tarvitaanko lisenssi tai kumppanuus, vai kuvataanko laji yleisnimellä?</td><td>Tavaramerkkiselvitys ja tarvittaessa yhteys oikeudenhaltijaan.</td></tr>
+        <tr><td>PT-näkymä</td><td>Miten valmentajan näkymä hinnoitellaan (per asiakas, per valmentaja, salin lisenssi)?</td><td>Haastattelut PT:iden ja salien kanssa sekä pilotti.</td></tr>
+        <tr><td>Ohjelman tuonti</td><td>Kuinka tarkka tunnistus on käsin kirjoitetuista ja eri muotoisista ohjelmista?</td><td>Testiaineisto oikeista PT-ohjelmista luvalla ja tarkkuuden mittaus.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1738,6 +2110,7 @@ Toistot = haarukan alapää</div>
         <tr><td>9.10.2026</td><td>Uusi värimaailma (sininen, viininpunainen ja kulta) ja valinnainen palautusajastin.</td></tr>
         <tr><td>9.10.2026</td><td>Vaalea teema oletukseksi ja palautuspalkin asettelu.</td></tr>
         <tr><td>19.10.2026</td><td>Yhteisö (haasteet, tasapainotus, merkit, pisteet, tasot, kaverit sekä sali- ja kumppanihaasteet), salin laitteet (19 laitetta, laitepohjat), liikkeen vaihto (pyyhkäisy, syyt, automaattinen vaihto, johdettu aloituspaino), liikekirjasto 46 liikkeeseen ja tämä ominaisuusdokumentti (linkki Profiilin Tietoa-osiosta).</td></tr>
+        <tr><td>26.10.2026</td><td>Treenin jakaminen (jakokortti, painot piiloon, Web Share), kaverikutsu kutsuhaasteena (linkki, vastaanotto, palkkio molemmille), tavoitetapahtuma ja jaksotus (HYROX-asemat ja divisioonat, juoksu, Kodin aikajana, jaksokerroin sarjatavoitteisiin), ohjelman tuonti esimerkkitiedostolla ja viikkoraportti valmentajalle. Liikekirjasto 54 liikkeeseen ja laitteet 23:een.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1888,6 +2261,42 @@ Toistot = haarukan alapää</div>
     var tyopainokerroin = 1 / (1 + (toistoMin + t.rirMax) / 30);
     var paino = Math.max(0, L.round25(kk / lk * o.voima * tyopainokerroin));
     return { paino: paino, toistot: toistoMin, suhde: kk / lk, tyopainokerroin: tyopainokerroin, rirMax: t.rirMax };
+  };
+
+  // Tapahtuman jaksotus (engine/event.js: eventPlan). Päivämäärät 'YYYY-MM-DD', käsitellään UTC-keskipäivänä.
+  function pvmD(p) { return new Date(p + 'T12:00:00Z'); }
+  L.addDays = function (p, n) { var d = pvmD(p); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  L.daysBetween = function (a, b) { return Math.round((pvmD(b) - pvmD(a)) / 86400000); };
+  L.weekStart = function (p, viikonAlku) {
+    var vp = pvmD(p).getUTCDay();
+    return L.addDays(p, -(viikonAlku === 'sunnuntai' ? vp : (vp + 6) % 7));
+  };
+  L.JAKSOT = {
+    perus: { nimi: 'Perusjakso', kerroin: 1.0 }, kovennus: { nimi: 'Kovennus', kerroin: 1.1 },
+    kevennys: { nimi: 'Kevennys', kerroin: 0.6 }, kisaviikko: { nimi: 'Kisaviikko', kerroin: 0.4 }
+  };
+  L.jaksota = function (n) {
+    if (n <= 1) return [{ jakso: 'kisaviikko', kevennysviikko: false }];
+    if (n === 2) return [{ jakso: 'kevennys', kevennysviikko: false }, { jakso: 'kisaviikko', kevennysviikko: false }];
+    var rakennus = n - 2, lyhyt = n - 1 < 4;
+    var perus = lyhyt ? 0 : Math.round(rakennus * 0.40 / 0.75);
+    var tulos = [];
+    for (var i = 0; i < rakennus; i++) {
+      tulos.push({ jakso: i < perus ? 'perus' : 'kovennus', kevennysviikko: !lyhyt && i % 4 === 3 && i !== rakennus - 1 });
+    }
+    tulos.push({ jakso: 'kevennys', kevennysviikko: false }, { jakso: 'kisaviikko', kevennysviikko: false });
+    return tulos;
+  };
+  // → { viikot: [{ indeksi, alku, jakso, jaksoNimi, kerroin, kevennysviikko }], viikkojaJaljella, paiviaJaljella } | null
+  L.jaksotus = function (pvm, tanaan, viikonAlku) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(pvm || '') || !/^\d{4}-\d{2}-\d{2}$/.test(tanaan || '') || pvm < tanaan) return null;
+    var eka = L.weekStart(tanaan, viikonAlku), kisa = L.weekStart(pvm, viikonAlku);
+    var n = Math.round(L.daysBetween(eka, kisa) / 7) + 1;
+    var viikot = L.jaksota(n).map(function (w, i) {
+      return { indeksi: i, alku: L.addDays(eka, 7 * i), jakso: w.jakso, jaksoNimi: L.JAKSOT[w.jakso].nimi,
+        kerroin: w.kevennysviikko ? 0.7 : L.JAKSOT[w.jakso].kerroin, kevennysviikko: w.kevennysviikko };
+    });
+    return { viikot: viikot, viikkojaJaljella: n - 1, paiviaJaljella: L.daysBetween(tanaan, pvm) };
   };
 
   juuri.PSPLaskurit = L;
@@ -2324,6 +2733,31 @@ Toistot = haarukan alapää</div>
       el('span', { class: 'tulos-iso' }, 'Aloituspaino: ' + fmt(r.paino) + ' kg × ' + r.toistot + perKasi),
       el('p', { style: 'margin:4px 0 0' }, 'Viitekertoimien suhde ' + fmt(r.suhde, 3) + ' × ' + fmt(o.voima) + ' kg × työpainokerroin ' +
         fmt(r.tyopainokerroin, 3) + ' (haarukan alapää ' + r.toistot + ' + RIR ' + r.rirMax + '), pyöristettynä 2,5 kg:aan.')
+    ];
+  });
+
+  lomake('f-jaksotus', function (e) {
+    var r = L.jaksotus(e.pvm.value, e.alku.value, e.viikonAlku.value);
+    if (!r) return [el('p', { style: 'margin:0' }, 'Valitse tapahtuman päivä, joka on aikaisintaan suunnitelman alkupäivä.')];
+    var VARI = { perus: 'var(--sininen)', kovennus: 'var(--viini)', kevennys: 'var(--kulta)', kisaviikko: 'var(--teksti)' };
+    var nauha = el('div', { class: 'jakso-nauha', role: 'img', 'aria-label': 'Jaksot viikoittain: ' + r.viikot.map(function (w) { return w.jaksoNimi + (w.kevennysviikko ? ' (kevennysviikko)' : ''); }).join(', ') });
+    r.viikot.forEach(function (w) {
+      var s = el('span', { title: w.jaksoNimi + (w.kevennysviikko ? ' (kevennysviikko)' : '') });
+      s.style.background = VARI[w.jakso];
+      if (w.kevennysviikko) s.style.opacity = '0.45';
+      nauha.appendChild(s);
+    });
+    function pv(p) { var o = p.split('-'); return Number(o[2]) + '.' + Number(o[1]) + '.'; }
+    var rivit = r.viikot.map(function (w) {
+      return el('tr', null, [el('td', { class: 'num' }, String(w.indeksi + 1)), el('td', null, pv(w.alku)),
+        el('td', null, w.jaksoNimi + (w.kevennysviikko ? ' · kevennysviikko' : '')), el('td', { class: 'num' }, '× ' + fmt(w.kerroin))]);
+    });
+    var taulu = el('div', { class: 'taulukko tiivis', style: 'margin:10px 0 0' }, el('table', null, [
+      el('thead', null, el('tr', null, [el('th', { class: 'num' }, 'Vk'), el('th', null, 'Alkaa'), el('th', null, 'Jakso'), el('th', { class: 'num' }, 'Kerroin')])),
+      el('tbody', null, rivit)]));
+    return [
+      el('span', { class: 'tulos-iso' }, r.viikot.length + (r.viikot.length === 1 ? ' viikko' : ' viikkoa') + ', ' + r.paiviaJaljella + ' päivää'),
+      nauha, taulu
     ];
   });
 

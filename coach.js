@@ -3,11 +3,12 @@
 // Puhdas moduuli: ei DOMia, ei windowia, ei localStoragea eikä Date.now()-kutsuja.
 // buildReply ei muuta tilaa, vaan palauttaa muutokset, jotka näkymä vie tilaan.
 
-import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=6612722';
-import { weeklyTargets, weeklyProgress } from './engine/targets.js?v=6612722';
-import { recovery } from './engine/recovery.js?v=6612722';
-import { addDays, daysBetween, weekStart } from './engine/util.js?v=6612722';
-import { challengeProgress, baseline } from './engine/challenges.js?v=6612722';
+import { LIIKKEET, OHJELMAT, RYHMAT, LIHASRYHMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=31a36ec';
+import { viikonTavoitteet, weeklyProgress } from './engine/targets.js?v=31a36ec';
+import { recovery } from './engine/recovery.js?v=31a36ec';
+import { addDays, daysBetween, weekStart } from './engine/util.js?v=31a36ec';
+import { challengeProgress, baseline } from './engine/challenges.js?v=31a36ec';
+import { eventPlan, tapahtumaTyyppi } from './engine/event.js?v=31a36ec';
 
 export const ESIMERKKISIRUT = [
   'Ensi viikolla olen reissussa ja pelaan 3 kertaa padelia',
@@ -123,6 +124,13 @@ const KIIRE_RE = /kiire|kiirei|vähän aikaa|aikaa vähän|nopea treeni|lyhyt tr
 const MUISTI_RE = /mitä.*tänään|tänään.*mitä|muistat|tällä viikolla|tämän viikon/;
 // Haaste (speksi 4i): haaste, kilpailla, kaveri, kisa. "Haasteellinen" ja "haastava" eivät ole haastepyyntöjä.
 const HAASTE_RE = /haast(?!eelli|av)|kilpail|kaver|kisa|kisoi|kisoj/;
+// Tavoitetapahtuma (speksi 4k): hyrox, maraton, turnaus ja tapahtuma tunnistetaan aina. Pelkkä "kisa"
+// on tapahtuma vain päivämäärän tai valmistautumisen kanssa ("kisa 14.12.", "valmistaudun kisaan");
+// muuten se on haastepyyntö ("Mikä kisa sopisi minulle?").
+const TAPAHTUMA_RE = /hyrox|marato|puolikas|turnau|tapahtum|juoksukis/;
+const KISA_RE = /kisa|kisoi|kisoj|kilpailu/;
+const VALMISTAUTUMINEN_RE = /valmista|tähtää|tähtäin|osallistun|ilmoittau|treenaan kohti/;
+const PVM_TEKSTISSA_RE = /(?<!\d)(\d{1,2})\.(\d{1,2})\.(?:(\d{4}|\d{2})(?!\d))?/;
 
 const LUKUSANAT = { yksi: 1, yhden: 1, kaksi: 2, kahdesti: 2, kolme: 3, kolmesti: 3, neljä: 4, neljästi: 4, viisi: 5, viidesti: 5, kuusi: 6, kuudesti: 6 };
 const KERRAT_OLETUS = 2;
@@ -233,10 +241,57 @@ function poimiMatkapaivat(t) {
   return null;
 }
 
+// Tapahtuman tyyppi tekstistä (TAPAHTUMATYYPIT-id) tai null. Täysi maraton → 'oma'.
+function poimiTapahtumaTyyppi(t) {
+  if (/hyrox/.test(t)) return 'hyrox';
+  if (/puolimarat|puolikas/.test(t)) return 'puolimaraton';
+  if (/(?<!\d)10\s*km|kymppi|kympin/.test(t)) return 'juoksu-10km';
+  if (/(?<!\d)5\s*km|vitonen|vitosen/.test(t)) return 'juoksu-5km';
+  if (/padel/.test(t) && /turnau/.test(t)) return 'padel-turnaus';
+  if (/salibandy|sähly|säbä/.test(t) && /turnau/.test(t)) return 'salibandyturnaus';
+  if (/marato/.test(t)) return 'oma';
+  return null;
+}
+
+function poimiDivisioona(t) {
+  if (/doubles|pari/.test(t)) return 'doubles';
+  if (/(?:^|[^a-zåäö])pro(?![a-zåäö])/.test(t)) return 'pro';
+  if (/(?:^|[^a-zåäö])open(?![a-zåäö])/.test(t)) return 'open';
+  return null;
+}
+
+// Päivämäärä tekstistä ("14.12.", "14.12.2026") → 'YYYY-MM-DD' tai null. Ilman vuotta valitaan
+// lähin tuleva päivä (tänään tai myöhemmin).
+function poimiTapahtumaPvm(t, tanaan) {
+  const m = String(t).match(PVM_TEKSTISSA_RE);
+  if (!m || !tanaan) return null;
+  const d = Number(m[1]);
+  const kk = Number(m[2]);
+  const kelpaa = (y) => {
+    const p = `${y}-${String(kk).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const pv = new Date(`${p}T12:00:00Z`);
+    return Number.isFinite(pv.getTime()) && pv.toISOString().slice(0, 10) === p ? p : null;
+  };
+  if (m[3]) return kelpaa(m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]));
+  const vuosi = Number(tanaan.slice(0, 4));
+  const tana = kelpaa(vuosi);
+  if (tana && tana >= tanaan) return tana;
+  return kelpaa(vuosi + 1);
+}
+
+function onTapahtumaTeksti(t) {
+  if (TAPAHTUMA_RE.test(t)) return true;
+  return KISA_RE.test(t) && (PVM_TEKSTISSA_RE.test(t) || VALMISTAUTUMINEN_RE.test(t));
+}
+
 /**
- * detectScenario(teksti) → { id: 'reissu-laji'|'reissu'|'kipu'|'vasymys'|'kiire'|'haaste'|'muisti'|'muu', laji?, kerrat?, lihas? }
- * Tunnistus pienaakkosiksi muutetusta tekstistä, ensimmäinen osuma voittaa. Haaste tarkistetaan
- * kiireen jälkeen ja ennen muistikysymystä, jotta esim. reissu kaverin kanssa pysyy reissuna.
+ * detectScenario(teksti) → { id: 'reissu-laji'|'reissu'|'kipu'|'vasymys'|'kiire'|'tapahtuma'|'haaste'|'muisti'|'muu',
+ *   laji?, kerrat?, lihas?, tyyppi? }
+ * Tunnistus pienaakkosiksi muutetusta tekstistä, ensimmäinen osuma voittaa. Järjestys: reissu, kipu,
+ * väsymys, kiire, tapahtuma, haaste, muistikysymys, muu. Tapahtuma tarkistetaan ennen haastetta,
+ * jotta "HYROX-kisa" tai "turnaus kaverin kanssa" ei muutu haasteeksi; kipu, väsymys ja kiire
+ * voittavat, jotta esim. "olen väsynyt kisan jälkeen" saa väsymysvastauksen. tyyppi = tunnistettu
+ * TAPAHTUMATYYPIT-id tai null.
  */
 export function detectScenario(teksti) {
   const t = String(teksti || '').toLowerCase();
@@ -256,6 +311,8 @@ export function detectScenario(teksti) {
 
   const min = poimiMinuutit(t);
   if ((min !== null && min > 0 && min <= 45) || KIIRE_RE.test(t)) return { id: 'kiire' };
+
+  if (onTapahtumaTeksti(t)) return { id: 'tapahtuma', tyyppi: poimiTapahtumaTyyppi(t) };
 
   if (HAASTE_RE.test(t)) return { id: 'haaste' };
 
@@ -414,13 +471,21 @@ function palautumisTeksti(k, paiva) {
   return teksti;
 }
 
+// Viikon sarjatavoitteet samalla laskennalla kuin Koti ja Tavoitteet (viikonTavoitteet): viikon
+// suunnitelma ja tavoitetapahtuman jakson kerroin (speksi 4d, 4k C). Tila tulee kontekstista.
+function kontekstinTavoitteet(k, viikonAlku, suunnitelma) {
+  return viikonTavoitteet({ profiili: k.profiili, viikkosuunnitelmat: k.viikkosuunnitelmat }, viikonAlku, { suunnitelma });
+}
+
 function viikkoTilanneTeksti(k) {
   const viikonAlku = weekStart(k.tanaan, k.profiili.viikonAlku);
   const suunnitelma = k.viikkosuunnitelmat.find((s) => s && s.viikonAlku === viikonAlku) || null;
-  const tavoitteet = weeklyTargets(k.profiili, suunnitelma);
+  const { tavoitteet, jakso } = kontekstinTavoitteet(k, viikonAlku, suunnitelma);
   const ed = weeklyProgress(k.historia, k.liikkeet, tavoitteet, viikonAlku);
-  const muokattu = suunnitelma && suunnitelma.sarjatavoiteKertoimet && Object.keys(suunnitelma.sarjatavoiteKertoimet).length
-    ? ' (muokattu viikko)' : '';
+  const osat = [];
+  if (suunnitelma && suunnitelma.sarjatavoiteKertoimet && Object.keys(suunnitelma.sarjatavoiteKertoimet).length) osat.push('muokattu viikko');
+  if (jakso) osat.push(`${jakso.jaksoNimi.toLowerCase()} × ${jakso.kerroin.toFixed(1).replace('.', ',')}`);
+  const muokattu = osat.length ? ` (${osat.join(', ')})` : '';
   const jaljessa = Object.entries(ed.ryhmat).sort((a, b) => b[1].jaljella - a[1].jaljella)[0];
   if (!jaljessa || jaljessa[1].jaljella === 0) {
     return `Tämän viikon sarjatavoitteet${muokattu} ovat täynnä. Hienoa työtä!`;
@@ -428,8 +493,8 @@ function viikkoTilanneTeksti(k) {
   return `Tämän viikon sarjatavoitteista${muokattu} on tehty ${ed.kokonaisPros} %. Eniten jäljellä: ${RYHMA_NIMI[jaljessa[0]]}, ${jaljessa[1].jaljella} sarjaa.`;
 }
 
-function jalkaSummat(profiili, suunnitelma) {
-  const t = weeklyTargets(profiili, suunnitelma);
+function jalkaSummat(k, viikonAlku, suunnitelma) {
+  const t = kontekstinTavoitteet(k, viikonAlku, suunnitelma).tavoitteet;
   return RYHMAT.jalat.reduce((s, l) => s + (t[l] || 0), 0);
 }
 
@@ -610,8 +675,8 @@ function vastausReissu(teksti, k, skenaario) {
   const perustelut = [];
   let perustelu;
   if (laji && kertoimet && kertoimet.jalat) {
-    const ennen = jalkaSummat(k.profiili, null);
-    const jalkeen = jalkaSummat(k.profiili, ehdotus);
+    const ennen = jalkaSummat(k, viikko.alku, null);
+    const jalkeen = jalkaSummat(k, viikko.alku, ehdotus);
     perustelut.push(`${isoAlku(laji.nimi)} kuormittaa ${laji.kuormaTeksti}, joten salilla painotetaan ylävartaloa ja keskivartaloa, ja jalkojen sarjatavoite on × ${desimaali(kertoimet.jalat)} (${ennen} → ${jalkeen} sarjaa viikossa).`);
     perustelut.push(`${isoAlku(laji.kerratMonikko)} ovat eri päivinä, jotta ${laji.palautuvat} ehtivät palautua niiden välissä.`);
     perustelu = `${isoAlku(laji.nimi)} kuormittaa ${laji.kuormaTeksti}, joten salilla painotetaan ylävartaloa ja keskivartaloa ja jalkojen sarjatavoite on × ${desimaali(kertoimet.jalat)}. Lajipäivien väliin jää palautumispäivä, ja matkalla treenataan ${viikkoRak.matkaTreeneja} × ${MATKATREENI_KESTO} min kehonpainolla ja käsipainoilla.`;
@@ -948,6 +1013,88 @@ function vastausHaaste(teksti, k) {
   };
 }
 
+// --- Tavoitetapahtuma (speksi 4k) --------------------------------------------------
+
+function viikkoaTeksti(n) {
+  return n === 1 ? '1 viikko' : `${n} viikkoa`;
+}
+
+function jaksoRivit(plan) {
+  return plan.jaksot.map((j) => `• ${j.nimi} ${valiTeksti(j.alku, j.loppu)} (${viikkoaTeksti(j.viikkoja)})`
+    + `, sarjatavoite × ${JAKSO_KERROIN_TEKSTI[j.jakso]}`);
+}
+
+const JAKSO_KERROIN_TEKSTI = { perus: '1,0', kovennus: '1,1', kevennys: '0,6', kisaviikko: '0,4' };
+const JAKSO_INESSIIVI = {
+  perus: 'perusjaksossa', kovennus: 'kovennusjaksossa', kevennys: 'kevennysjaksossa', kisaviikko: 'kisaviikolla',
+};
+
+function vastausTapahtuma(teksti, k, skenaario) {
+  const nimi = etunimi(k.profiili);
+  const asetettu = k.profiili.tapahtuma && typeof k.profiili.tapahtuma === 'object' ? k.profiili.tapahtuma : null;
+  const plan = asetettu ? eventPlan(asetettu, k.tanaan, { viikonAlku: k.profiili.viikonAlku || 'maanantai' }) : null;
+  const t = String(teksti || '').toLowerCase();
+
+  if (plan) {
+    const v = plan.nykyinen;
+    const kappaleet = [
+      valitse([
+        `Hyvä kysymys, ${nimi}! Katsotaan, missä mennään.`,
+        `Selvä, ${nimi}. Tässä tilanteesi tavoitetta kohti.`,
+        `Tavoite on hyvin tähtäimessä, ${nimi}.`,
+      ], teksti),
+      `${plan.otsikko} on ${plan.viikkojaJaljella === 0 ? 'tällä viikolla' : `${plan.viikkojaJaljella} viikon päässä`}. `
+        + `Olet nyt ${JAKSO_INESSIIVI[v.jakso]} (viikko ${v.indeksi + 1}/${plan.viikot.length})`
+        + `${v.kevennysviikko ? ', ja tämä on kevennysviikko' : ''}. Sarjatavoitteesi kerroin tällä viikolla on × ${v.kerroin.toFixed(1).replace('.', ',')}.`,
+      `Tämän viikon painopiste: ${v.painopiste}`,
+      ['Jaksotus:', ...jaksoRivit(plan)].join('\n'),
+      'Jos tulossa on reissu tai muu poikkeava viikko, kerro siitä, niin sovitetaan kevennys sen kohdalle.',
+    ];
+    return { teksti: kappaleet.join('\n\n'), muistit: [], poistettavat: [], ehdotus: null, sirut: [], toiminto: null };
+  }
+
+  const tyyppiId = skenaario.tyyppi || 'oma';
+  const tyyppi = tapahtumaTyyppi(tyyppiId);
+  const pvm = poimiTapahtumaPvm(t, k.tanaan);
+  const ehdotus = { tyyppi: tyyppi.id };
+  if (pvm) ehdotus.pvm = pvm;
+  const divisioona = tyyppi.id === 'hyrox' ? poimiDivisioona(t) : null;
+  if (divisioona) ehdotus.divisioona = divisioona;
+  const ehdotusPlan = pvm ? eventPlan({ ...ehdotus, asetettu: k.tanaan }, k.tanaan, { viikonAlku: k.profiili.viikonAlku || 'maanantai' }) : null;
+  const tyyppiTeksti = tyyppi.id === 'oma' && /marato/.test(t) ? 'Maraton' : tyyppi.nimi;
+
+  const kappaleet = [
+    valitse([
+      `Hienoa, ${nimi}! ${tyyppiTeksti} on mainio tavoite.`,
+      `Upea tavoite, ${nimi}!`,
+      `Selvä, ${nimi}! Tavoite antaa treenille suunnan.`,
+    ], teksti),
+  ];
+  if (asetettu && !plan) kappaleet.push('Aiemmin asettamasi tavoitetapahtuma on jo mennyt, joten asetetaan uusi.');
+  if (ehdotusPlan) {
+    kappaleet.push(`Ehdotan tavoitteeksi: ${tyyppiTeksti} ${pvmLyhyt(pvm)} Siihen on ${viikkoaTeksti(ehdotusPlan.viikkojaJaljella)}, ja jaksotan treenisi näin:`);
+    kappaleet.push(jaksoRivit(ehdotusPlan).join('\n'));
+    if (tyyppi.luokka === 'hyrox') {
+      kappaleet.push('Ohjelmapäiviin tulee jakson mukaan 1–3 HYROX-asemaa ja juoksuosuus, ja kovennusjaksossa on simulaatiopäivä.');
+    } else if (tyyppi.luokka === 'juoksu') {
+      kappaleet.push('Ohjelmapäiviin tulee jakson mukainen juoksuosuus, ja sarjatavoitteet seuraavat jaksotusta.');
+    } else {
+      kappaleet.push('Jaksotus säätää sarjatavoitteitasi: kovennuksessa enemmän, ennen tapahtumaa kevyemmin.');
+    }
+  } else {
+    kappaleet.push(`Kerro tapahtuman päivämäärä (esimerkiksi "${tyyppi.id === 'hyrox' ? 'HYROX' : tyyppiTeksti} 14.12."), niin jaksotan treenisi sen mukaan: perusjakso, kovennus, kevennys ja kisaviikko.`);
+  }
+  kappaleet.push('Aseta tapahtuma alla olevasta painikkeesta. Voit muuttaa sitä myöhemmin Profiilin kohdassa Tavoitetapahtuma.');
+  return {
+    teksti: kappaleet.join('\n\n'),
+    muistit: [],
+    poistettavat: [],
+    ehdotus: null,
+    sirut: ['Aseta tapahtuma'],
+    toiminto: { tyyppi: 'asetaTapahtuma', ehdotus },
+  };
+}
+
 function vastausMuu(teksti, k) {
   const nimi = etunimi(k.profiili);
   const seuraava = k.ohjelma.paivat[seuraavaPaivaIndeksi(k)];
@@ -965,7 +1112,9 @@ function vastausMuu(teksti, k) {
 
 /**
  * buildReply(teksti, konteksti) → { teksti, muistit: [uusiMuisti], poistettavat: [id], ehdotus: Viikkosuunnitelma|null, sirut: [],
- *   toiminto?: { tyyppi: 'liityHaasteeseen', haasteId }|null (vain haaste-skenaariossa) }
+ *   toiminto?: { tyyppi: 'liityHaasteeseen', haasteId }   (haaste-skenaario)
+ *            | { tyyppi: 'asetaTapahtuma', ehdotus: { tyyppi, pvm?, divisioona? } }   (tapahtuma, kun sitä ei ole asetettu)
+ *            | null }
  * konteksti = { tanaan, nyt, profiili, ohjelma, historia, liikkeet, muistit, viikkosuunnitelmat, yhteiso? }
  * Puhdas funktio: palauttaa muutokset, eikä muuta kontekstia.
  */
@@ -983,6 +1132,8 @@ export function buildReply(teksti, konteksti) {
       return vastausVasymys(syote, k);
     case 'kiire':
       return vastausKiire(syote, k);
+    case 'tapahtuma':
+      return vastausTapahtuma(syote, k, skenaario);
     case 'haaste':
       return vastausHaaste(syote, k);
     case 'muisti':

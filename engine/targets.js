@@ -1,7 +1,8 @@
 // Viikkotavoitteet eli sarjatavoitteet (speksi 4d, 4h). Puhdas moduuli: ei DOM-, window-,
 // localStorage- eikä Date.now()-kutsuja.
 
-import { addDays, onVoimatreeni, onTyosarja } from './util.js?v=6612722';
+import { addDays, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
+import { eventPlan, eventWeekMultiplier } from './event.js?v=31a36ec';
 
 export const LIHASRYHMAT_T = ['rinta', 'selkä', 'olkapäät', 'hauis', 'ojentajat', 'etureidet', 'takareidet', 'pakarat', 'pohkeet', 'vatsa'];
 export const RYHMAT_T = {
@@ -29,12 +30,20 @@ function ryhmaKertoimet(viikkosuunnitelma) {
   return kertoimet;
 }
 
+// Tapahtuman jakson kerroin (speksi 4k): luku tai { kerroin } (esim. eventPlan(...).nykyinen).
+// Puuttuva tai virheellinen arvo = 1.
+function jaksonKerroin(arvo) {
+  const k = arvo && typeof arvo === 'object' ? arvo.kerroin : arvo;
+  return typeof k === 'number' && Number.isFinite(k) && k >= 0 ? k : 1;
+}
+
 /**
- * weeklyTargets(profiili, viikkosuunnitelma = null) → { [lihas]: tavoiteSarjat }
+ * weeklyTargets(profiili, viikkosuunnitelma = null, jaksoKerroin = 1) → { [lihas]: tavoiteSarjat }
  * Perustaso × kokemuskerroin × pienten lihasten kerroin → aikakatto (skaalaus samassa suhteessa)
- * → viikkosuunnitelman ryhmäkerroin → pyöristys, vähintään 4.
+ * → viikkosuunnitelman ryhmäkerroin × tapahtuman jakson kerroin (kertolasku) → pyöristys, vähintään 4.
+ * jaksoKerroin: luku tai olio, jolla on kenttä `kerroin` (eventPlan-viikko); koskee kaikkia lihaksia.
  */
-export function weeklyTargets(profiili, viikkosuunnitelma = null) {
+export function weeklyTargets(profiili, viikkosuunnitelma = null, jaksoKerroin = 1) {
   const p = profiili || {};
   const perus = PERUSTASO[p.tavoite] ?? PERUSTASO.lihasmassa;
   const kokemus = KOKEMUSKERROIN[p.kokemus] ?? 1;
@@ -51,13 +60,62 @@ export function weeklyTargets(profiili, viikkosuunnitelma = null) {
     : Infinity;
   const skaala = summa > kapasiteetti ? kapasiteetti / summa : 1;
   const kertoimet = ryhmaKertoimet(viikkosuunnitelma);
+  const jakso = jaksonKerroin(jaksoKerroin);
 
   const tulos = {};
   for (const lihas of LIHASRYHMAT_T) {
-    const kerroin = kertoimet[lihas] ?? 1;
+    const kerroin = (kertoimet[lihas] ?? 1) * jakso;
     tulos[lihas] = Math.max(VAHIMMAISTAVOITE, Math.round(raaka[lihas] * skaala * kerroin));
   }
   return tulos;
+}
+
+/**
+ * jaksoViikolle(tapahtuma, viikonAlkuPvm, viikonAlku = 'maanantai')
+ *   → { kerroin, jakso, jaksoNimi, kevennysviikko } | null
+ * Tavoitetapahtuman jakso viikolle, joka alkaa viikonAlkuPvm (speksi 4k C ja 4d). Kerroin tulee
+ * eventWeekMultiplier-funktiosta. null: ei tapahtumaa, viikko on tapahtuman jälkeen tai päättyi ennen
+ * tapahtuman asettamista (`tapahtuma.asetettu`), jolloin kerroin on 1.
+ */
+export function jaksoViikolle(tapahtuma, viikonAlkuPvm, viikonAlku = 'maanantai') {
+  if (!tapahtuma || typeof tapahtuma !== 'object' || typeof viikonAlkuPvm !== 'string') return null;
+  if (typeof tapahtuma.asetettu === 'string' && addDays(viikonAlkuPvm, 6) < tapahtuma.asetettu.slice(0, 10)) return null;
+  const opts = { viikonAlku: viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai' };
+  const plan = eventPlan(tapahtuma, viikonAlkuPvm, opts);
+  if (!plan || !plan.nykyinen) return null;
+  return {
+    kerroin: eventWeekMultiplier(tapahtuma, viikonAlkuPvm, opts),
+    jakso: plan.nykyinen.jakso,
+    jaksoNimi: plan.nykyinen.jaksoNimi,
+    kevennysviikko: plan.nykyinen.kevennysviikko,
+  };
+}
+
+// Viikon suunnitelma: viikonAlku täsmää tai jokin suunnitelman päivä osuu viikkoon.
+function suunnitelmaViikolle(suunnitelmat, alku) {
+  const lista = Array.isArray(suunnitelmat) ? suunnitelmat : [];
+  const loppu = addDays(alku, 7);
+  return lista.find((s) => s && s.viikonAlku === alku)
+    || lista.find((s) => s && (s.paivat || []).some((p) => p && p.pvm >= alku && p.pvm < loppu))
+    || null;
+}
+
+/**
+ * viikonTavoitteet(tila, viikonAlkuPvm, { suunnitelma } = {}) → { tavoitteet, suunnitelma, jakso }
+ * Yhteinen viikkotavoitteiden laskenta näkymille: profiili, viikon suunnitelma (oletuksena
+ * tila.viikkosuunnitelmat-listasta; anna `suunnitelma` ohittaaksesi, myös null) ja tavoitetapahtuman
+ * jakson kerroin (jaksoViikolle). jakso = null, kun kerroin ei ole voimassa.
+ */
+export function viikonTavoitteet(tila, viikonAlkuPvm, opts = {}) {
+  const t = tila || {};
+  const profiili = t.profiili || {};
+  const suunnitelma = 'suunnitelma' in opts ? opts.suunnitelma : suunnitelmaViikolle(t.viikkosuunnitelmat, viikonAlkuPvm);
+  const jakso = jaksoViikolle(profiili.tapahtuma, viikonAlkuPvm, profiili.viikonAlku);
+  return {
+    tavoitteet: weeklyTargets(profiili, suunnitelma, jakso ? jakso.kerroin : 1),
+    suunnitelma,
+    jakso,
+  };
 }
 
 /**

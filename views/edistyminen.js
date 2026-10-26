@@ -1,14 +1,15 @@
 // Edistyminen (speksi 6.4, 4b ja 4b-2): välilehdet Tulokset ja Palautuminen.
 // Tulokset: Treeniscore-mittari, ryhmäkortit, vertailuliikkeet, kehonkoostumus ja ennätykset.
 // Palautuminen: käännettävä kehokartta ja lihaskohtainen palautumistieto.
-import { getState, update } from '../store.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { LIIKKEET, VERTAILULIIKKEET, RYHMAT, LIHASRYHMAT, liike as haeLiike } from '../data.js?v=6612722';
+import { getState, update } from '../store.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { LIIKKEET, VERTAILULIIKKEET, RYHMAT, LIHASRYHMAT, liike as haeLiike } from '../data.js?v=31a36ec';
 import {
   muscleStrength, treeniscore, scoreTrend, estimatedStrength, exerciseRecords, recovery, addDays,
-} from '../engine.js?v=6612722';
-import { el, svgEl, card, sectionTitle, sheet, whyButton, segmented, formatWeight } from './ui.js?v=6612722';
-import { bodyMap, PUOLET } from './bodymap.js?v=6612722';
+} from '../engine.js?v=31a36ec';
+import { el, svgEl, card, sectionTitle, sheet, whyButton, segmented, formatWeight } from './ui.js?v=31a36ec';
+import { bodyMap, PUOLET } from './bodymap.js?v=31a36ec';
+import { openShareSheet, jakoIkoni } from './jako.js?v=31a36ec';
 
 const KG_LB = 2.20462;
 
@@ -125,6 +126,15 @@ function scoreKortti(ts, trendi) {
   const otsake = el('div', { class: 'ts-head' }, el('span', { class: 'ts-label' }, 'Treeniscore'), info);
 
   if (ts.kokonais !== null) {
+    // Jakokortti (speksi 4k A): pieni Jaa-painike tietopainikkeen viereen.
+    const jaa = el('button', {
+      class: 'jk-mini-share',
+      type: 'button',
+      'aria-label': 'Jaa Treeniscore',
+      dataset: { kohdistus: 'jaa-treeniscore' },
+      onClick: () => openShareSheet({ tyyppi: 'treeniscore', tila: getState() }),
+    }, jakoIkoni(18), el('span', null, 'Jaa'));
+    otsake.replaceChildren(el('span', { class: 'ts-label' }, 'Treeniscore'), el('span', { class: 'jk-ts-actions' }, jaa, info));
     return el('div', { class: 'card ts-card' },
       otsake,
       el('div', { class: 'ts-value-row' },

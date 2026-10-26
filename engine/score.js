@@ -1,8 +1,8 @@
 // Treeniscore ja ennätykset: arvioitu voima, lihasvoima (mVoima), ryhmät,
 // kokonaisluku, trendi ja liikekohtaiset ennätykset. Puhdas moduuli.
 
-import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=6612722';
-import { e1rm } from './progression.js?v=6612722';
+import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
+import { e1rm } from './progression.js?v=31a36ec';
 
 const LIHASRYHMAT = ['rinta', 'selkä', 'olkapäät', 'hauis', 'ojentajat', 'etureidet', 'takareidet', 'pakarat', 'pohkeet', 'vatsa'];
 const RYHMAT = {
@@ -49,6 +49,17 @@ function onKehonpaino(liike) {
   return !!liike && liike.valine === 'kehonpaino';
 }
 
+/**
+ * onKestavyysliike(liike) → bool
+ * HYROX-kestävyysasemat (`kaava: 'kestavyys'` tai `tapahtuma: 'hyrox'`) ja juoksu (id 'juoksu' tai
+ * `tyyppi: 'kesto'`) eivät ole voimaliikkeitä: ne eivät vaikuta arvioituun voimaan, lihasvoimaan
+ * eivätkä Treeniscoreen (speksi 4k C).
+ */
+export function onKestavyysliike(liike) {
+  return !!liike && (liike.kaava === 'kestavyys' || liike.tapahtuma === 'hyrox'
+    || liike.id === 'juoksu' || liike.tyyppi === 'kesto');
+}
+
 function pyorista1(n) {
   return Math.round(n * 10) / 10;
 }
@@ -60,7 +71,7 @@ function keskiarvo(luvut) {
 // Laskee arvioidun voiman pyöristämättömänä. Ikkuna on 6 viikkoa viimeisimpään kertaan asti,
 // jotta tauon jälkeenkin arvio on olemassa ja taukovähennys näkyy.
 function arvioRaaka(liike, treenit, tanaan) {
-  if (!liike) return null;
+  if (!liike || onKestavyysliike(liike)) return null;
   const sarjat = liikkeenSarjat(liike.id, treenit, tanaan);
   if (sarjat.length === 0) return null;
   const viimeksi = sarjat[sarjat.length - 1].pvm;
@@ -84,6 +95,7 @@ function arvioRaaka(liike, treenit, tanaan) {
 
 // Liikkeen arvioitu voima: painoliikkeillä paras e1RM, kehonpainoliikkeillä paras toistomäärä.
 // Yli 14 päivän tauko vähentää 1 % jokaista alkavaa viikkoa kohden, enintään 10 %.
+// Kestävyysasemat ja juoksu (onKestavyysliike) → null.
 export function estimatedStrength(liike, treenit, tanaan) {
   const r = arvioRaaka(liike, treenit, tanaan);
   if (!r) return null;
@@ -91,9 +103,10 @@ export function estimatedStrength(liike, treenit, tanaan) {
 }
 
 // Lihasvoima 0–100 lihasryhmittäin (50 = viitetaso). Ryhmä on lukittu, kunnes sille on
-// kirjattu vähintään 6 päälihasryhmäsarjaa 6 viikon ikkunassa.
+// kirjattu vähintään 6 päälihasryhmäsarjaa 6 viikon ikkunassa. Kestävyysasemat ja juoksu
+// (onKestavyysliike) eivät kerrytä sarjoja eivätkä vaikuta arvoihin.
 export function muscleStrength(liikkeet, treenit, kehonpaino, tanaan) {
-  const lista = liikkeet || [];
+  const lista = (liikkeet || []).filter((l) => l && !onKestavyysliike(l));
   const liikeById = new Map(lista.map((l) => [l.id, l]));
   const ryhmat = [...LIHASRYHMAT];
   for (const l of lista) if (l.lihasryhma && !ryhmat.includes(l.lihasryhma)) ryhmat.push(l.lihasryhma);

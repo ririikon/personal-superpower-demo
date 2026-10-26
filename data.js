@@ -38,7 +38,15 @@ export const LAITTEET = [
   { id: 'leuanvetotanko', nimi: 'Leuanvetotanko', ryhma: 'kehonpaino' },
   { id: 'dippiteline', nimi: 'Dippiteline', ryhma: 'kehonpaino' },
   { id: 'vastuskuminauhat', nimi: 'Vastuskuminauhat', ryhma: 'kehonpaino' },
+  // HYROX-asemien laitteet (speksi 4k). Lisätty listan loppuun, jotta aiempien laitteiden järjestys säilyy.
+  { id: 'skierg', nimi: 'SkiErg', ryhma: 'laitteet' },
+  { id: 'kelkka', nimi: 'Kelkka (työntö ja veto)', ryhma: 'vapaat' },
+  { id: 'wall-ball-pallo', nimi: 'Wall ball -pallo', ryhma: 'vapaat' },
+  { id: 'hiekkasäkki', nimi: 'Hiekkasäkki', ryhma: 'vapaat' },
 ];
+
+// HYROX-laitteet, joilla ei ole vastinetta vanhassa välinemallissa (profiili.valineet).
+export const HYROX_LAITTEET = ['skierg', 'kelkka', 'wall-ball-pallo', 'hiekkasäkki'];
 
 const KAIKKI_LAITTEET = LAITTEET.map((l) => l.id);
 
@@ -54,6 +62,9 @@ export const LAITEPOHJAT = [
 export const KAAVAT = [
   'kyykky', 'lantiosarana', 'vaakatyonto', 'pystytyonto', 'vaakaveto', 'pystyveto',
   'eristava-ylä', 'eristava-ala', 'keskivartalo',
+  // Kestävyysasemat (HYROX, speksi 4k): oma liikemalli, jotta asemat eivät nouse voimaliikkeiden
+  // ensisijaisiksi korvaajiksi pelkän kaavan perusteella.
+  'kestavyys',
 ];
 export const KUORMITUSALUEET = ['polvi', 'alaselkä', 'olkapää', 'kyynärpää', 'ranne'];
 
@@ -61,7 +72,7 @@ export const KUORMITUSALUEET = ['polvi', 'alaselkä', 'olkapää', 'kyynärpää
 export const VALINE_LAITTEET = {
   levytanko: ['levytanko', 'kyykkyteline', 'penkki'],
   'käsipainot': ['käsipainot', 'penkki'],
-  laitteet: LAITTEET.filter((l) => l.ryhma === 'laitteet').map((l) => l.id),
+  laitteet: LAITTEET.filter((l) => l.ryhma === 'laitteet' && !HYROX_LAITTEET.includes(l.id)).map((l) => l.id),
   taljat: LAITTEET.filter((l) => l.ryhma === 'taljat').map((l) => l.id),
   kehonpaino: ['leuanvetotanko', 'dippiteline'],
 };
@@ -131,6 +142,15 @@ const VAIHTOTIEDOT = {
   'pike-punnerrus': [[], 'pystytyonto', ['olkapää', 'ranne']],
   pyyhehauis: [[], 'eristava-ylä', ['kyynärpää']],
   'liukuva-reiden-koukistus': [[], 'eristava-ala', ['polvi']],
+  // HYROX-asemat (speksi 4k).
+  skierg: [['skierg'], 'kestavyys', ['olkapää']],
+  kelkkatyonto: [['kelkka'], 'kestavyys', ['polvi']],
+  kelkkaveto: [['kelkka'], 'kestavyys', ['alaselkä', 'kyynärpää']],
+  'burpee-pituushyppy': [[], 'kestavyys', ['polvi', 'ranne']],
+  soutu: [['soutulaite'], 'kestavyys', ['alaselkä']],
+  farmarikavely: [['käsipainot'], 'kestavyys', ['ranne']],
+  hiekkasakkiaskelkyykky: [['hiekkasäkki'], 'kestavyys', ['polvi']],
+  'wall-ball': [['wall-ball-pallo'], 'kestavyys', ['polvi', 'olkapää']],
 };
 
 // Täydentää liikkeen oletuskentät. Painoliikkeillä annetaan viitekerroin ja aloituspaino (kg),
@@ -147,6 +167,24 @@ function maarita({
     tarvikkeet: [...tarvikkeet], kaava, kuormittaa: [...kuormittaa],
     media: { youtubeId: null, hakusana, animaatio },
   };
+}
+
+// HYROX-asemaliike (speksi 4k): tavallisen liikkeen kentät sekä
+// - tapahtuma: 'hyrox' (näkymä voi ryhmitellä asemat),
+// - toistoYksikko: mitä sarjan "toistot" tarkoittavat ('kcal' | 'osuutta' | 'toistoa'). Matka-asemat
+//   (kelkat, farmarikävely) kirjataan osuuksina (osuusM metriä), jotta volyymi (paino × toistot) pysyy
+//   järkevänä: metrit toistoina tuottaisivat tuhansien kilojen volyymeja yhdestä asemasta,
+// - osuusM (matka-asemat): yhden osuuden pituus metreinä,
+// - vaihtoehtoTarvikkeet (valinnainen): tarvikeyhdistelmät, joilla aseman voi tehdä ilman omaa laitetta.
+// Kestävyysasemat ilman ulkoista kuormaa (SkiErg, soutu, burpee) ovat valine 'kehonpaino', jolloin
+// painokenttää ei tarvita ja arvioitu voima on paras "toistomäärä" (kcal tai toistot).
+function asema({ toistoYksikko, osuusM = null, vaihtoehtoTarvikkeet = null, ...kentat }) {
+  const l = maarita(kentat);
+  l.tapahtuma = 'hyrox';
+  l.toistoYksikko = toistoYksikko;
+  if (osuusM) l.osuusM = osuusM;
+  if (vaihtoehtoTarvikkeet) l.vaihtoehtoTarvikkeet = vaihtoehtoTarvikkeet.map((t) => [...t]);
+  return l;
 }
 
 export const LIIKKEET = [
@@ -491,6 +529,134 @@ export const LIIKKEET = [
     hakusana: 'cable crunch form',
     ohje: 'Polvistu ylätaljan eteen ja pidä köyttä pään sivuilla. Rutista ylävartaloa alas pyöristämällä selkää vatsalihaksilla, kunnes kyynärpäät ovat lähellä reisiä. Palauta hitaasti ja pidä lantio paikallaan.',
   }),
+
+  // --- HYROX-asemat (speksi 4k) ---
+  asema({
+    id: 'skierg', nimi: 'SkiErg', lihasryhma: 'selkä',
+    toissijaiset: ['ojentajat', 'vatsa', 'olkapäät'], valine: 'kehonpaino', alue: 'ylä',
+    viitetoistot: 20, toistoYksikko: 'kcal',
+    hakusana: 'skierg technique form',
+    ohje: 'Seiso laitteen edessä jalat lantion leveydellä ja tartu kahvoihin kädet ylhäällä. Vedä kahvat alas ja taakse koko vartalolla niin, että lantio liikkuu taakse ja polvet koukistuvat hieman. Palauta kädet ylös rauhallisesti ennen seuraavaa vetoa. Pidä tahti tasaisena, sillä liian kova alku kostautuu kisassa myöhemmin.',
+  }),
+  asema({
+    id: 'kelkkatyonto', nimi: 'Kelkkatyöntö', lihasryhma: 'etureidet',
+    toissijaiset: ['pakarat', 'pohkeet', 'ojentajat'], valine: 'laitteet', alue: 'ala',
+    viitekerroin: 0.55, aloituspaino: 40, toistoYksikko: 'osuutta', osuusM: 12.5,
+    hakusana: 'sled push form',
+    ohje: 'Tartu kelkan pystykahvoihin kädet suorina tai hieman koukussa ja nojaa eteen niin, että vartalo on vinossa linjassa. Työnnä lyhyin, voimakkain askelin päkiöillä ja pidä lantio matalalla. Pidä katse eteenpäin ja selkä neutraalina koko matkan.',
+  }),
+  asema({
+    id: 'kelkkaveto', nimi: 'Kelkkaveto', lihasryhma: 'selkä',
+    toissijaiset: ['hauis', 'takareidet', 'pakarat'], valine: 'laitteet', alue: 'ylä',
+    viitekerroin: 0.4, aloituspaino: 30, toistoYksikko: 'osuutta', osuusM: 12.5,
+    hakusana: 'sled pull rope form',
+    ohje: 'Seiso tukevasti jalat leveällä ja polvet hieman koukussa köysi edessäsi. Vedä köyttä vuorokäsin kohti lantiota ja käytä jalkoja ja lantiota apuna vetojen välissä. Pidä selkä suorana äläkä nojaa liikaa taakse.',
+  }),
+  asema({
+    id: 'burpee-pituushyppy', nimi: 'Burpee-pituushyppy', lihasryhma: 'pakarat',
+    toissijaiset: ['etureidet', 'rinta', 'ojentajat'], valine: 'kehonpaino', alue: 'ala',
+    viitetoistot: 15, toistoYksikko: 'toistoa',
+    hakusana: 'burpee broad jump form',
+    ohje: 'Laskeudu burpeen ala-asentoon rinta lattiaan ja punnerra tai nouse takaisin kyykkyyn. Hyppää molemmilla jaloilla eteenpäin ja laskeudu pehmeästi polvet varpaiden suuntaisesti. Pidä tasainen rytmi, sillä hengitys tasaantuu helpommin kuin rynnistäen.',
+  }),
+  asema({
+    id: 'soutu', nimi: 'Soutu soutulaitteella', lihasryhma: 'selkä',
+    toissijaiset: ['etureidet', 'takareidet', 'hauis'], valine: 'kehonpaino', alue: 'ylä',
+    viitetoistot: 20, toistoYksikko: 'kcal',
+    hakusana: 'rowing machine technique form',
+    ohje: 'Aloita veto jaloilla, jatka nojaamalla hieman taakse ja vedä kahva lopuksi alarintaan. Palauta päinvastaisessa järjestyksessä: kädet, ylävartalo ja vasta sitten polvet. Pidä selkä suorana ja hartiat rentoina koko vedon ajan.',
+  }),
+  asema({
+    id: 'farmarikavely', nimi: 'Farmarikävely', lihasryhma: 'vatsa',
+    toissijaiset: ['selkä', 'olkapäät', 'pohkeet'], valine: 'käsipainot', alue: 'ylä',
+    viitekerroin: 0.2, aloituspaino: 15, toistoYksikko: 'osuutta', osuusM: 25,
+    vaihtoehtoTarvikkeet: [['kahvakuulat']],
+    hakusana: 'farmers carry form',
+    ohje: 'Nosta käsipainot tai kahvakuulat lattialta suoralla selällä ja seiso pystyssä hartiat alhaalla. Kävele lyhyin, nopein askelin niin, että vartalo pysyy pystysuorassa eikä heilu. Laske painot hallitusti, kun ote alkaa pettää.',
+  }),
+  asema({
+    id: 'hiekkasakkiaskelkyykky', nimi: 'Hiekkasäkkiaskelkyykky', lihasryhma: 'etureidet',
+    toissijaiset: ['pakarat', 'takareidet', 'vatsa'], valine: 'laitteet', alue: 'ala',
+    viitekerroin: 0.25, aloituspaino: 20, toistoYksikko: 'toistoa',
+    hakusana: 'sandbag walking lunge form',
+    ohje: 'Nosta hiekkasäkki hartioille niskan taakse ja pidä ylävartalo pystyssä. Astu pitkä askel eteen ja laske takapolvi kevyesti lattiaan. Nouse etujalan kantapäällä työntäen ja jatka seuraavaan askeleeseen toisella jalalla.',
+  }),
+  asema({
+    id: 'wall-ball', nimi: 'Wall ball', lihasryhma: 'etureidet',
+    toissijaiset: ['olkapäät', 'pakarat', 'ojentajat'], valine: 'laitteet', alue: 'ala',
+    viitekerroin: 0.1, aloituspaino: 5, toistoYksikko: 'toistoa',
+    vaihtoehtoTarvikkeet: [['kahvakuulat'], ['käsipainot']],
+    hakusana: 'wall ball shot form',
+    ohje: 'Pidä palloa rinnan edessä ja kyykkää vähintään reisien vaakatasoon. Nouse räjähtävästi ja heitä pallo jalkojen voimalla kohti seinän maalia. Ota pallo kiinni ja jatka suoraan seuraavaan kyykkyyn. Ilman palloa tee sama liike kahvakuulalla tai käsipainolla kyykky ja pystypunnerrus yhdistäen.',
+  }),
+];
+
+// Juoksu (speksi 4k) on kestoliike: se kirjataan kestona tai matkana ilman sarjoja. Juoksu ei ole
+// LIIKKEET-listassa, jotta se ei näy vaihtoehtohaussa, Treeniscoressa eikä sarjatavoitteissa.
+// Treenissä juoksu tallennetaan liikkeenä { liikeId: 'juoksu', tyyppi: 'kesto', kestoMin, matkaKm?,
+// sarjat: [] }, jolloin olemassa olevat laskennat (volyymi, ennätykset, sarjat) ohittavat sen.
+export const JUOKSU = {
+  id: 'juoksu',
+  nimi: 'Juoksu',
+  tyyppi: 'kesto',
+  lihasryhma: 'etureidet',
+  toissijaiset: ['takareidet', 'pohkeet', 'pakarat'],
+  alue: 'ala',
+  kirjaus: ['kestoMin', 'matkaKm'],
+  tarvikkeet: [],
+  kuormittaa: ['polvi'],
+  ohje: 'Juokse rennosti pystyasennossa ja anna käsien heilua vartalon vieressä. Pidä askel lyhyenä ja kevyenä niin, että jalka osuu maahan lähelle vartalon alle. Rauhallinen juoksu tehdään vauhdilla, jolla pystyt puhumaan.',
+  media: { youtubeId: null, hakusana: 'running technique form', animaatio: null },
+};
+
+// Liike tai juoksu tunnisteella (näkymille, jotka näyttävät myös tapahtuman juoksurivin).
+export function liikeTaiJuoksu(id) {
+  return id === JUOKSU.id ? JUOKSU : LIIKKEET.find((l) => l.id === id);
+}
+
+// HYROX-asemat kisajärjestyksessä (speksi 4k). harjoitus = asemaharjoituksen oletussarjat ohjelmapäivään;
+// toistot tulkitaan liikkeen toistoYksikko-kentän mukaan.
+export const HYROX_ASEMAT = [
+  { asema: 1, liikeId: 'skierg', kisamatka: '1000 m', harjoitus: { sarjat: 3, toistoMin: 12, toistoMax: 15, palautusS: 90 } },
+  { asema: 2, liikeId: 'kelkkatyonto', kisamatka: '50 m', harjoitus: { sarjat: 4, toistoMin: 2, toistoMax: 2, palautusS: 120 } },
+  { asema: 3, liikeId: 'kelkkaveto', kisamatka: '50 m', harjoitus: { sarjat: 4, toistoMin: 2, toistoMax: 2, palautusS: 120 } },
+  { asema: 4, liikeId: 'burpee-pituushyppy', kisamatka: '80 m', harjoitus: { sarjat: 3, toistoMin: 8, toistoMax: 10, palautusS: 90 } },
+  { asema: 5, liikeId: 'soutu', kisamatka: '1000 m', harjoitus: { sarjat: 3, toistoMin: 12, toistoMax: 15, palautusS: 90 } },
+  { asema: 6, liikeId: 'farmarikavely', kisamatka: '200 m', harjoitus: { sarjat: 3, toistoMin: 2, toistoMax: 2, palautusS: 90 } },
+  { asema: 7, liikeId: 'hiekkasakkiaskelkyykky', kisamatka: '100 m', harjoitus: { sarjat: 3, toistoMin: 10, toistoMax: 12, palautusS: 90 } },
+  { asema: 8, liikeId: 'wall-ball', kisamatka: '100 toistoa', harjoitus: { sarjat: 3, toistoMin: 15, toistoMax: 20, palautusS: 90 } },
+];
+
+// Tavoitetapahtumat (speksi 4k). luokka ohjaa ohjelmapäivän lisäyksiä: hyrox = asemat ja juoksu,
+// juoksu = juoksurivi, turnaus ja oma = vain jaksotuksen kertoimet.
+export const TAPAHTUMATYYPIT = [
+  { id: 'hyrox', nimi: 'HYROX', luokka: 'hyrox',
+    kuvaus: '8 × 1 km juoksua ja 8 toiminnallista asemaa vuorotellen.' },
+  { id: 'juoksu-5km', nimi: 'Juoksukisa 5 km', luokka: 'juoksu', matkaKm: 5,
+    kuvaus: 'Lyhyt kilpailumatka: vauhtikestävyys ja reipas kisavauhti.' },
+  { id: 'juoksu-10km', nimi: 'Juoksukisa 10 km', luokka: 'juoksu', matkaKm: 10,
+    kuvaus: 'Kymppi: peruskestävyys ja tasainen kisavauhti.' },
+  { id: 'puolimaraton', nimi: 'Puolimaraton', luokka: 'juoksu', matkaKm: 21.1,
+    kuvaus: '21,1 km: pitkät lenkit ja kestävyyspohja ratkaisevat.' },
+  { id: 'padel-turnaus', nimi: 'Padel-turnaus', luokka: 'turnaus',
+    kuvaus: 'Useita otteluita peräkkäin: nopeus, ketteryys ja palautuminen pelien välillä.' },
+  { id: 'salibandyturnaus', nimi: 'Salibandyturnaus', luokka: 'turnaus',
+    kuvaus: 'Lyhyitä, kovia vaihtoja: räjähtävyys, suunnanmuutokset ja toistuva sprinttikyky.' },
+  { id: 'oma', nimi: 'Oma tavoite', luokka: 'oma',
+    kuvaus: 'Oma päivämäärätavoite: jaksotus keventää treeniä ennen tavoitepäivää.' },
+];
+
+// HYROX-divisioonat (speksi 4k). Vaikuttavat painoihin tekstitasolla (painoOhje asemariveillä).
+export const HYROX_DIVISIOONAT = [
+  { id: 'open', nimi: 'Open',
+    kuvaus: 'Perussarja kevyemmillä kisapainoilla.',
+    painoOhje: 'Open: harjoittele asemat kisapainoa kevyemmällä kuormalla tekniikka edellä.' },
+  { id: 'pro', nimi: 'Pro',
+    kuvaus: 'Raskaammat kisapainot kelkoissa, hiekkasäkissä, farmarikävelyssä ja wall ballissa.',
+    painoOhje: 'Pro: kuormita kelkat, hiekkasäkki ja painot raskaammin, lähelle kisapainoa.' },
+  { id: 'doubles', nimi: 'Doubles',
+    kuvaus: 'Pareittain: juoksut yhdessä, asematyö jaetaan parin kanssa.',
+    painoOhje: 'Doubles: tee asemat lyhyinä, kovina pätkinä vuorotellen parin kanssa.' },
 ];
 
 export function liike(id) {
@@ -690,7 +856,34 @@ export const HAASTEMERKIT = [
   { id: 'eka-kaverihaaste', nimi: 'Ensimmäinen kaverihaaste', kuvake: 'users', ehto: 'Osallistu kaverihaasteeseen loppuun asti' },
   { id: 'voitettu-kaverihaaste', nimi: 'Voitettu kaverihaaste', kuvake: 'trophy', ehto: 'Voita kaverihaaste' },
   { id: 'kumppanihaaste', nimi: 'Kumppanihaaste', kuvake: 'gift', ehto: 'Suorita kumppanin haaste' },
+  // Kutsuhaaste (speksi 4k): ansaitaan, kun kutsuttu kaveri tekee ensimmäisen treeninsä (engine/invite.js).
+  { id: 'treenikaveri', nimi: 'Treenikaveri', kuvake: 'users', ehto: 'Kutsu kaveri, joka tekee ensimmäisen treeninsä' },
 ];
+
+// Esimerkkitiedosto ohjelman tuontiin (speksi 4k D). Demossa tunnistus näyttää aina tämän: raakarivit
+// ovat kuin tekstintunnistuksen tulos PT:n ohjelmatiedostosta. Rivi "Landmine press" puuttuu
+// liikekirjastosta, joten se näkyy rivinä "Valitse vastaava liike".
+export const ESIMERKKITUONTI = {
+  id: 'pt-ohjelma-esimerkki',
+  nimi: 'PT-ohjelma (esimerkki)',
+  tiedosto: 'PT-ohjelma_syksy.pdf',
+  ilmoitus: 'Demossa tunnistus näyttää esimerkin – tuotteessa tekoäly lukee tiedostosi.',
+  rivit: [
+    'Päivä 1 – Ylävartalo',
+    'Bench press 4x8',
+    'Lat pulldown 3x12',
+    'Pystypunnerrus 3 x 8',
+    'Face pull 3x15',
+    'Landmine press 3x10',
+    'Hammer curl 3×12',
+    'Päivä 2 – Alavartalo',
+    'Kyykky 3 x 10',
+    'Romanian DL 3x10',
+    'Leg press 3x12',
+    'Pohjenousut 4x15',
+    'Vatsarutistus 3x20',
+  ],
+};
 
 // Esimerkkiprofiili (speksin kohta 4c), jota käytetään, kun aloitusohjaus ohitetaan.
 export const OLETUSPROFIILI = {

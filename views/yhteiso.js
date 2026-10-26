@@ -7,11 +7,15 @@
 //
 // Muut näkymät käyttävät tämän moduulin apureita: palkki, mittariArvo, edistysTeksti, kisaNimi,
 // merkkiKuusikulmio (Koti, treenin yhteenveto).
-import { getState, update } from '../store.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { challengeProgress, leaderboard, pointsAndLevel, badges, feed } from '../engine/challenges.js?v=6612722';
-import { addDays } from '../engine/util.js?v=6612722';
-import { el, svgEl, sectionTitle, sheet, whyButton, segmented, toggle, hexRing } from './ui.js?v=6612722';
+import { getState, update } from '../store.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { challengeProgress, leaderboard, pointsAndLevel, badges, feed, PISTE_ERITTELY_NIMET } from '../engine/challenges.js?v=31a36ec';
+import { addDays } from '../engine/util.js?v=31a36ec';
+import {
+  createInvite, encodeInvite, simulateInviteStep, KUTSU_MITTARIT, KUTSU_PISTEET, KUTSU_TILAT,
+} from '../engine/invite.js?v=31a36ec';
+import { el, svgEl, sectionTitle, sheet, whyButton, segmented, toggle, hexRing } from './ui.js?v=31a36ec';
+import { kopioiLeikepoydalle } from './jako.js?v=31a36ec';
 
 const VKP = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
 const VALILEHDET = [
@@ -38,7 +42,8 @@ const TASAPAINOTUS_SELITYS = 'Raakana verrataan suoria lukuja, jolloin kokenut t
   + 'kilpailevat tasavertaisesti: kärjessä on se, joka ylittää oman tasonsa eniten.\n\n'
   + 'Demossa kavereiden lähtötasot ja tulokset ovat keksittyjä. Oma lähtötasosi lasketaan treenihistoriastasi.';
 const PISTE_SELITYS = 'Pisteitä kertyy jokaisesta voimatreenistä (10), tuodusta aktiviteetista (3), suoritetusta '
-  + 'haasteesta (haasteen palkinto, yleensä 50–100) ja ansaitusta merkistä (20).\n\n'
+  + 'haasteesta (haasteen palkinto, yleensä 50–100), ansaitusta merkistä (20) ja kaverikutsusta, '
+  + 'kun kaveri tekee ensimmäisen treeninsä (100).\n\n'
   + 'Taso n vaatii yhteensä 100 × n × (n + 1) / 2 pistettä, joten jokainen taso on hieman edellistä pidempi.';
 
 // Merkkien täyttövärit (kuten Historian merkkipaaluissa) ja kultaisten merkkien tumma ikoni.
@@ -54,12 +59,16 @@ const MERKKI_VARIT = {
   'eka-kaverihaaste': 'var(--cta)',
   'voitettu-kaverihaaste': 'var(--score)',
   kumppanihaaste: 'var(--ok)',
+  treenikaveri: 'var(--score)',
 };
 const MERKKI_MUSTE = {
   'treenit-100': 'var(--on-score)',
   'eka-ennatys': 'var(--on-score)',
   'voitettu-kaverihaaste': 'var(--on-score)',
+  treenikaveri: 'var(--on-score)',
 };
+const PREMIUM_TEKSTI = 'Tuotteessa: kuukausi Premiumia jokaisesta kaverista, joka tekee ensimmäisen treeninsä.';
+const KUTSU_TILA_NIMI = { lähetetty: 'Lähetetty', hyväksytty: 'Hyväksytty', treenannut: 'Treenannut' };
 
 const KUVAKKEET = {
   star: ['M12 4.5l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L4.8 9.7l5-.6z'],
@@ -414,7 +423,193 @@ function haasteetTab(state, nyt) {
     haasteOsio(`Salihaaste · ${sali}`, tyyppia('sali'), state, nyt),
     haasteOsio('Kumppanihaaste', tyyppia('kumppani'), state, nyt),
     el('button', { class: 'btn yh-create-btn', type: 'button', onClick: () => avaaLuonti() },
-      ikoni('users', 20), 'Luo kaverihaaste'));
+      ikoni('users', 20), 'Luo kaverihaaste'),
+    el('button', { class: 'btn yh-create-btn yk-invite-btn', type: 'button', dataset: { kohdistus: 'kutsu-haasteet' }, onClick: () => avaaKutsu() },
+      ikoni('invite', 20), 'Kutsu kaveri'));
+}
+
+// ---------------------------------------------------------------------------
+// Kaverikutsu on haaste (speksi 4k B)
+
+function kutsuOtsikko(k) {
+  return `${k.kesto === 7 ? '1 viikon' : '2 viikon'} ${String(KISA_NIMI[k.mittari] || 'kisa').toLowerCase()}`;
+}
+
+function kutsuLinkki(koodi) {
+  return `${location.origin}${location.pathname}#/kutsu?d=${koodi}`;
+}
+
+function kopioiLinkki(linkki) {
+  kopioiLeikepoydalle(linkki).then((ok) => ilmoitus(ok ? 'Kutsulinkki kopioitu ✓' : 'Kopiointi ei onnistunut – kopioi linkki kentästä'));
+}
+
+// Web Share käyttäjän eleessä; ilman tukea (tai virheessä) linkki kopioidaan.
+function jaaLinkki(linkki, teksti) {
+  try {
+    if (typeof navigator.share === 'function') {
+      navigator.share({ title: 'Personal SuperPower', text: teksti, url: linkki }).catch((err) => {
+        if (err && err.name === 'AbortError') return;
+        kopioiLinkki(linkki);
+      });
+      return;
+    }
+  } catch {
+    // ohitetaan, kopioidaan
+  }
+  kopioiLinkki(linkki);
+}
+
+function avaaKutsu() {
+  let mittari = 'volyymi';
+  let kesto = 14;
+  const mittarit = LUOTAVAT_MITTARIT.filter((m) => KUTSU_MITTARIT.includes(m.arvo));
+  const mittariNapit = mittarit.map((m) => el('button', {
+    class: 'chip', type: 'button', role: 'radio', 'aria-checked': String(m.arvo === mittari),
+    onClick: () => {
+      mittari = m.arvo;
+      mittariNapit.forEach((n, i) => n.setAttribute('aria-checked', String(mittarit[i].arvo === mittari)));
+    },
+  }, m.teksti));
+
+  const luo = el('button', { class: 'btn btn-primary yh-form-save yk-create', type: 'button' }, 'Luo kutsulinkki');
+  const runko = el('div', { class: 'yh-form yk-form' },
+    el('h2', { class: 'sheet-title' }, 'Haasta kaveri'),
+    el('p', { class: 'muted yk-lead' }, 'Kaverisi saa linkin, josta hän pääsee suoraan kaksintaisteluun kanssasi, vaikka hänellä ei vielä olisi sovellusta.'),
+    el('p', { class: 'yh-form-label', id: 'yk-mittari' }, 'Mittari'),
+    el('div', { class: 'chips', role: 'radiogroup', 'aria-labelledby': 'yk-mittari' }, ...mittariNapit),
+    el('p', { class: 'yh-form-label' }, 'Kesto'),
+    segmented({
+      vaihtoehdot: [{ arvo: 7, teksti: '1 viikko' }, { arvo: 14, teksti: '2 viikkoa' }],
+      arvo: kesto,
+      label: 'Kesto',
+      onChange: (v) => { kesto = v; },
+    }),
+    el('div', { class: 'row yh-form-toggle yk-balance' },
+      el('span', { class: 'row-title' }, 'Tasapainotus',
+        el('span', { class: 'yh-form-sub' }, 'Aina päällä kutsuhaasteessa')),
+      el('span', { class: 'yh-pill is-accent' }, 'Päällä')),
+    el('div', { class: 'yk-explain' },
+      el('p', null, 'Kumpaakin verrataan omaan lähtötasoonsa, joten aloittelijakin voi voittaa kokeneen kaverin.'),
+      whyButton(TASAPAINOTUS_SELITYS)),
+    el('div', { class: 'yk-reward-note' },
+      el('p', { class: 'yk-reward-title' }, `Palkkio: +${KUTSU_PISTEET} pistettä ja Treenikaveri-merkki`),
+      el('p', { class: 'muted small' }, 'Saatte molemmat palkkion, kun kaverisi tekee ensimmäisen treeninsä.'),
+      el('p', { class: 'yk-product-note' }, PREMIUM_TEKSTI)),
+    luo);
+
+  const laatikko = sheet(runko);
+
+  luo.addEventListener('click', () => {
+    const state = getState() || {};
+    const tulos = createInvite(state, { mittari, kesto }, nykyhetki());
+    if (!tulos) {
+      ilmoitus('Kutsun luonti ei onnistunut');
+      return;
+    }
+    const koodi = encodeInvite(tulos.data) || tulos.koodi;
+    const linkki = kutsuLinkki(koodi);
+    const otsikko = kutsuOtsikko(tulos.kutsu);
+    jaaLinkki(linkki, `${tulos.data.nimi} haastaa sinut: ${otsikko}, tasapainotettu. Hyväksy haaste:`);
+    update((s) => {
+      if (!s.yhteiso || typeof s.yhteiso !== 'object') s.yhteiso = {};
+      const lista = Array.isArray(s.yhteiso.kutsut) ? s.yhteiso.kutsut : [];
+      s.yhteiso.kutsut = [...lista, { ...tulos.kutsu, koodi }];
+    });
+
+    const kentta = el('input', { class: 'prof-input yk-link', type: 'text', readonly: true, value: linkki, 'aria-label': 'Kutsulinkki' });
+    kentta.addEventListener('focus', () => kentta.select());
+    runko.replaceChildren(
+      el('h2', { class: 'sheet-title' }, 'Kutsulinkki valmis'),
+      el('p', { class: 'muted yk-lead' }, `${otsikko[0].toUpperCase()}${otsikko.slice(1)}, tasapainotettu. Lähetä linkki kaverillesi. Kutsu näkyy Yhteisön Kaverit-välilehdellä kohdassa Kutsusi.`),
+      kentta,
+      el('div', { class: 'yk-link-actions' },
+        typeof navigator.share === 'function'
+          ? el('button', { class: 'btn btn-primary', type: 'button', onClick: () => jaaLinkki(linkki, `Haastan sinut: ${otsikko}. Hyväksy haaste:`) }, 'Jaa linkki')
+          : null,
+        el('button', { class: 'btn yk-copy', type: 'button', onClick: () => kopioiLinkki(linkki) }, ikoni('copy', 18), 'Kopioi linkki'),
+        el('button', { class: 'btn btn-ghost', type: 'button', onClick: () => laatikko.close() }, 'Valmis')),
+      el('p', { class: 'yk-product-note' }, PREMIUM_TEKSTI));
+  });
+}
+
+// Palkkiohetken juhlava ilmoitus (alalaatikko).
+function juhla(kutsu, palkkio) {
+  const otsikko = palkkio.merkki
+    ? `+${luku(palkkio.pisteet)} pistettä ja Treenikaveri-merkki`
+    : `+${luku(palkkio.pisteet)} pistettä`;
+  const konfetti = el('div', { class: 'yk-confetti', 'aria-hidden': 'true' },
+    ...Array.from({ length: 14 }, (_, i) => el('span', { style: `--i:${i}` })));
+  sheet(el('div', { class: 'yk-celebrate' },
+    konfetti,
+    merkkiKuusikulmio('treenikaveri', 'users', 96),
+    el('p', { class: 'yk-celebrate-kicker' }, 'Kutsupalkkio'),
+    el('h2', { class: 'sheet-title yk-celebrate-title' }, otsikko),
+    el('p', { class: 'yk-celebrate-text' }, `${kutsu.kaveriNimi || 'Kaverisi'} teki ensimmäisen treeninsä. Saatte molemmat palkkion.`),
+    el('p', { class: 'yk-product-note' }, PREMIUM_TEKSTI),
+    el('a', { class: 'btn btn-primary', href: '#/yhteiso?tab=merkit' }, 'Katso merkit ja pisteet')));
+}
+
+// Demo: kutsu etenee lähetetty → hyväksytty → treenannut. Viimeinen vaihe antaa palkkion
+// (simulateInviteStep → inviteReward).
+function simuloi(id) {
+  const state = getState() || {};
+  const kutsut = (state.yhteiso && Array.isArray(state.yhteiso.kutsut)) ? state.yhteiso.kutsut : [];
+  const k = kutsut.find((x) => x && x.id === id);
+  if (!k || k.tila === 'treenannut') return;
+  if (k.tila !== 'hyväksytty') {
+    update((s) => {
+      const x = s.yhteiso.kutsut.find((y) => y && y.id === id);
+      if (x) x.tila = 'hyväksytty';
+    });
+    ilmoitus('Demo: kaveri hyväksyi haasteen');
+    return;
+  }
+  const r = simulateInviteStep(state, id, nykyhetki());
+  if (!r.kutsu) return;
+  update(() => r.tila);
+  if (r.palkkio && r.palkkio.annettu) juhla(r.kutsu, r.palkkio);
+}
+
+function kutsuKortti(k) {
+  const vaihe = Math.max(0, KUTSU_TILAT.indexOf(k.tila));
+  const askeleet = el('ol', { class: 'yk-steps', 'aria-label': `Kutsun tila: ${KUTSU_TILA_NIMI[k.tila] || k.tila}` },
+    ...KUTSU_TILAT.map((t, i) => el('li', { class: `yk-step${i <= vaihe ? ' is-done' : ''}${i === vaihe ? ' is-current' : ''}` },
+      el('span', { class: 'yk-step-dot', 'aria-hidden': 'true' }),
+      el('span', { class: 'yk-step-name' }, KUTSU_TILA_NIMI[t]))));
+  const pilleri = k.tila === 'treenannut' ? 'is-gold' : k.tila === 'hyväksytty' ? 'is-accent' : '';
+  const meta = [`Luotu ${lyhytPvm(k.luotu)}`, k.kaveriNimi ? `Kaveri: ${k.kaveriNimi}` : null].filter(Boolean).join(' · ');
+  return el('article', { class: 'card yk-card' },
+    el('div', { class: 'yk-card-top' },
+      haasteIkoni({ tyyppi: 'kaveri', mittari: k.mittari }, 40),
+      el('div', { class: 'yk-card-main' },
+        el('div', { class: 'yk-card-title' }, kutsuOtsikko(k).replace(/^./, (c) => c.toUpperCase())),
+        el('div', { class: 'yh-card-meta' }, meta)),
+      el('span', { class: `yh-pill ${pilleri}` }, KUTSU_TILA_NIMI[k.tila] || k.tila)),
+    askeleet,
+    k.palkittu
+      ? el('p', { class: 'yk-reward is-done' }, `✓ Palkkio saatu: +${KUTSU_PISTEET} pistettä ja Treenikaveri-merkki`)
+      : el('p', { class: 'yk-reward muted small' }, `Palkkio, kun kaveri tekee ensimmäisen treeninsä: +${KUTSU_PISTEET} pistettä ja Treenikaveri-merkki`),
+    el('div', { class: 'yk-card-actions' },
+      k.tila !== 'treenannut'
+        ? el('button', { class: 'yh-btn is-join', type: 'button', dataset: { kohdistus: `simuloi-${k.id}` }, onClick: () => simuloi(k.id) }, 'Simuloi seuraava vaihe')
+        : null,
+      k.koodi
+        ? el('button', { class: 'yh-btn is-leave', type: 'button', onClick: () => kopioiLinkki(kutsuLinkki(k.koodi)) }, ikoni('copy', 16), 'Kopioi linkki')
+        : null));
+}
+
+function kutsuOsio(state) {
+  const kutsut = ((state.yhteiso && Array.isArray(state.yhteiso.kutsut)) ? state.yhteiso.kutsut : []).filter(Boolean);
+  return [
+    sectionTitle(`Kutsusi${kutsut.length ? ` · ${kutsut.length}` : ''}`),
+    kutsut.length
+      ? el('div', { class: 'yk-cards' }, ...kutsut.slice().reverse().map(kutsuKortti))
+      : el('p', { class: 'muted small yk-empty' }, `Et ole vielä kutsunut ketään. Haasta kaveri kaksintaisteluun: kun hän tekee ensimmäisen treeninsä, saatte molemmat +${KUTSU_PISTEET} pistettä.`),
+    el('button', { class: 'btn yh-invite', type: 'button', dataset: { kohdistus: 'kutsu-kaverit' }, onClick: () => avaaKutsu() },
+      ikoni('invite', 20), 'Kutsu kaveri'),
+    el('p', { class: 'yk-product-note' }, PREMIUM_TEKSTI),
+    el('p', { class: 'muted small yk-demo-note' }, 'Demo: kaverin vaiheet simuloidaan painikkeella.'),
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -761,7 +956,8 @@ function merkitTab(state, nyt) {
         el('span', null, `Treenit ${luku(e.treenit)}`),
         el('span', null, `Aktiviteetit ${luku(e.aktiviteetit)}`),
         el('span', null, `Haasteet ${luku(e.haasteet)}`),
-        el('span', null, `Merkit ${luku(e.merkit)}`)),
+        el('span', null, `Merkit ${luku(e.merkit)}`),
+        e.kutsut ? el('span', null, `${PISTE_ERITTELY_NIMET.kutsut} ${luku(e.kutsut)}`) : null),
       el('div', { class: 'yh-points-why' }, whyButton(PISTE_SELITYS))),
 
     sectionTitle(`Ansaitut merkit · ${m.ansaitut.length}`),
@@ -837,8 +1033,7 @@ function kaveritTab(state, nyt) {
       el('span', { class: 'row-title yh-friend-name' }, k.nimi,
         el('span', { class: 'yh-friend-sub' }, [`Taso ${k.taso}`, PROFIILI_NIMI[k.profiili]].filter(Boolean).join(' · '))),
       el('span', { class: 'row-value' }, `${luku(k.pisteet)} p`)))),
-    el('button', { class: 'btn yh-invite', type: 'button', onClick: () => ilmoitus('Kutsulinkki kopioitu (demo)') },
-      ikoni('invite', 20), 'Kutsu kaveri'),
+    ...kutsuOsio(state),
     el('p', { class: 'muted small yh-foot-note' }, 'Demo: kaverit ja heidän tapahtumansa ovat keksittyjä.'));
 }
 

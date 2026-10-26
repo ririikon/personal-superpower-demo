@@ -14,8 +14,8 @@
 // - Vanhemmat merkinnät ovat kevyitä voimamerkintöjä (kokonaismäärä ja merkkipaalut).
 // - Viimeisille 3 viikolle 7 tuotua kävelyä tai pyöräilyä, joista kaksi samana päivänä.
 
-import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=6612722';
-import { onVoimatreeni } from './engine/util.js?v=6612722';
+import { OHJELMAT, OLETUSPROFIILI, liike as haeLiike } from './data.js?v=31a36ec';
+import { onVoimatreeni } from './engine/util.js?v=31a36ec';
 
 export const SEED_OHJELMA_ID = 'koko-kroppa-3';
 
@@ -311,7 +311,7 @@ const KAVERIT = [
 ];
 
 /**
- * seedYhteiso(tanaan, historia) → { kaverit, haasteet, tsempit, ansaitutMerkit, lunastetutEdut }
+ * seedYhteiso(tanaan, historia) → { kaverit, haasteet, tsempit, ansaitutMerkit, lunastetutEdut, kutsut }
  * Haasteiden päivämäärät ja osa tavoitteista lasketaan `tanaan`-päivästä ja seed-historiasta:
  * - kuukauden treenihaaste on melkein valmis (tavoite = kuun treenit + 1, vähintään 4),
  * - kumppanihaasteessa on 5/7 treeniä tehty (~70 %) ja aikaa jäljellä 2 treenille,
@@ -399,6 +399,7 @@ function seedYhteiso(tanaan, historia) {
     tsempit: [],
     ansaitutMerkit: [],
     lunastetutEdut: [],
+    kutsut: [], // kaverikutsut (speksi 4k): [{ id, luotu, mittari, kesto, tila, kaveriNimi? }]
   };
 }
 
@@ -522,5 +523,9 @@ export function seedState(nyt) {
     paivanVaihdot: {}, // { [pvm]: { [alkuperainenId]: korvaavaId | null } } (speksi 4j)
     asetukset: { teema: 'vaalea' }, // vaalea | tumma | auto (auto = laitteen asetus)
     yhteiso: seedYhteiso(tanaanPvm(nyt), historia),
+    // Speksi 4k: tuodut ohjelmat (OHJELMAT-muoto) ja käyttäjän kommentit viikkoraporttiin
+    // ({ [viikonAlku]: teksti }). profiili.tapahtuma ja profiili.valmentaja puuttuvat oletuksena.
+    omatOhjelmat: [],
+    raporttiKommentit: {},
   };
 }

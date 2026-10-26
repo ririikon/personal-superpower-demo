@@ -1,12 +1,12 @@
 // Liikkeet (speksi 6.5, 4f): haku, lihasryhmäsirut ja lista. Liikkeen sivu #/liike/<id>:
 // media ylimpänä, lihasryhmät, paras arvioitu voima, ennätykset, oma historia ja ohje.
-import { getState } from '../store.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { LIIKKEET, LIHASRYHMAT, RYHMAT, liike as haeLiike } from '../data.js?v=6612722';
-import { el, svgEl, card, sectionTitle, whyButton, formatWeight } from './ui.js?v=6612722';
-import { estimatedStrength, exerciseRecords } from '../engine/score.js?v=6612722';
-import { e1rm } from '../engine/progression.js?v=6612722';
-import { openExerciseSheet, exerciseMedia, youtubeLinkki } from './media.js?v=6612722';
+import { getState } from '../store.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { LIIKKEET, LIHASRYHMAT, RYHMAT, LAITTEET, liike as haeLiike } from '../data.js?v=31a36ec';
+import { el, svgEl, card, sectionTitle, whyButton, formatWeight } from './ui.js?v=31a36ec';
+import { estimatedStrength, exerciseRecords, onKestavyysliike } from '../engine/score.js?v=31a36ec';
+import { e1rm } from '../engine/progression.js?v=31a36ec';
+import { openExerciseSheet, exerciseMedia, youtubeLinkki } from './media.js?v=31a36ec';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {
@@ -43,6 +43,16 @@ function playIkoni(koko = 16) {
     svgEl('path', { d: 'M8 5.5v13l10.5-6.5z', fill: 'currentColor' }));
 }
 
+// Liikkeen laitteet `tarvikkeet`-kentästä laitteiden niminä (speksi 4j); tyhjä lista = kehonpaino.
+// Vanha `valine`-kenttä näyttäisi esim. SkiErgin kehonpainona.
+function laiteNimet(l) {
+  const nimet = (l.tarvikkeet || []).map((id) => {
+    const laite = LAITTEET.find((x) => x.id === id);
+    return laite ? laite.nimi : id;
+  });
+  return nimet.length ? nimet : ['Kehonpaino'];
+}
+
 function arvoTeksti(arvio, yksikko) {
   if (!arvio) return null;
   return arvio.yksikko === 'toistoa' ? `${arvio.arvo} toistoa` : formatWeight(arvio.arvo, yksikko);
@@ -67,10 +77,10 @@ function lista(root, state) {
       el('span', { class: 't8-lib-body' },
         el('span', { class: 't8-lib-name' }, l.nimi,
           l.media && l.media.animaatio ? el('span', { class: 't8-lib-anim', title: 'Animaatio' }, playIkoni(10)) : null),
-        el('span', { class: 't8-lib-sub' }, `${iso(l.lihasryhma)} · ${l.valine}`)),
+        el('span', { class: 't8-lib-sub' }, `${iso(l.lihasryhma)} · ${laiteNimet(l).join(', ')}`)),
       arvio ? el('span', { class: 't8-lib-val' }, arvoTeksti(arvio, yksikko)) : null,
       chevron());
-    return { l, rivi, haettava: normalisoi(`${l.nimi} ${l.lihasryhma} ${(l.toissijaiset || []).join(' ')} ${l.valine}`) };
+    return { l, rivi, haettava: normalisoi(`${l.nimi} ${l.lihasryhma} ${(l.toissijaiset || []).join(' ')} ${laiteNimet(l).join(' ')}`) };
   });
 
   const listaEl = el('div', { class: 'list t8-lib-list' }, rivit.map((r) => r.rivi));
@@ -206,7 +216,9 @@ function liikeSivu(root, state, liike) {
           ? String(arvio.arvo)
           : formatWeight(arvio.arvo, yksikko).replace(/\s(kg|lb)$/, '')),
         el('span', { class: 't8-strength-unit' }, arvio.yksikko === 'toistoa' ? 'toistoa' : yksikko))
-      : el('div', { class: 't8-strength-empty' }, 'Ei vielä tuloksia. Tee liike treenissä, niin arvio näkyy tässä.'),
+      : el('div', { class: 't8-strength-empty' }, onKestavyysliike(liike)
+        ? 'Kestävyysasema: ei vaikuta arvioituun voimaan eikä Treeniscoreen. Tulokset näkyvät ennätyksissä ja historiassa.'
+        : 'Ei vielä tuloksia. Tee liike treenissä, niin arvio näkyy tässä.'),
     arvio
       ? el('div', { class: 't8-strength-sub' },
         `Viimeksi ${pv(arvio.viimeksi)}`,
@@ -240,7 +252,7 @@ function liikeSivu(root, state, liike) {
     el('div', { class: 'chips t8-ex-tags' },
       el('span', { class: 'chip is-active t8-chip-static' }, iso(liike.lihasryhma)),
       toissijaiset.map((t) => el('span', { class: 'chip t8-chip-static' }, iso(t))),
-      el('span', { class: 'chip t8-chip-static t8-chip-equip' }, iso(liike.valine))),
+      laiteNimet(liike).map((n) => el('span', { class: 'chip t8-chip-static t8-chip-equip' }, n))),
     exerciseMedia(liike),
     el('div', { class: 't8-media-actions t8-media-actions-2' },
       el('button', { class: 'btn t8-show-btn', type: 'button', onClick: () => openExerciseSheet(liike) }, playIkoni(16), 'Näytä liike'),

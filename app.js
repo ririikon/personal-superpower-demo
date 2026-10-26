@@ -19,19 +19,21 @@
 // 6. Ilman lippua näkymä piirretään statechange-tapahtumasta uudelleen (siivous ensin),
 //    ja vierityskohta säilyy. Useat peräkkäiset update()-kutsut yhdistetään yhdeksi piirroksi.
 // 7. Reitin vaihtuessa root saa kohdistuksen (preventScroll) ja sivu vieritetään alkuun.
-import { getState } from './store.js?v=6612722';
-import { el, svgEl, card } from './views/ui.js?v=6612722';
-import * as koti from './views/koti.js?v=6612722';
-import * as valmentaja from './views/valmentaja.js?v=6612722';
-import * as yhteiso from './views/yhteiso.js?v=6612722';
-import * as edistyminen from './views/edistyminen.js?v=6612722';
-import * as historia from './views/historia.js?v=6612722';
-import * as liikkeet from './views/liikkeet.js?v=6612722';
-import * as tavoitteet from './views/tavoitteet.js?v=6612722';
-import * as ohjelmat from './views/ohjelmat.js?v=6612722';
-import * as profiili from './views/profiili.js?v=6612722';
-import * as aloitus from './views/aloitus.js?v=6612722';
-import * as treeni from './views/treeni.js?v=6612722';
+import { getState } from './store.js?v=31a36ec';
+import { el, svgEl, card } from './views/ui.js?v=31a36ec';
+import * as koti from './views/koti.js?v=31a36ec';
+import * as valmentaja from './views/valmentaja.js?v=31a36ec';
+import * as yhteiso from './views/yhteiso.js?v=31a36ec';
+import * as edistyminen from './views/edistyminen.js?v=31a36ec';
+import * as historia from './views/historia.js?v=31a36ec';
+import * as liikkeet from './views/liikkeet.js?v=31a36ec';
+import * as tavoitteet from './views/tavoitteet.js?v=31a36ec';
+import * as ohjelmat from './views/ohjelmat.js?v=31a36ec';
+import * as profiili from './views/profiili.js?v=31a36ec';
+import * as aloitus from './views/aloitus.js?v=31a36ec';
+import * as treeni from './views/treeni.js?v=31a36ec';
+import * as kutsu from './views/kutsu.js?v=31a36ec';
+import * as raportti from './views/raportti.js?v=31a36ec';
 
 // tab: korostettava alanavigaation kohta; fab: näytetäänkö "Aloita treeni".
 // Kodissa ei ole kelluvaa Aloita-painiketta: treenikortissa on oma painike, ja kelluva
@@ -52,7 +54,13 @@ const ROUTES = [
   { name: 'profiili', re: /^profiili$/, view: profiili, tab: 'koti' },
   { name: 'aloitus', re: /^aloitus$/, view: aloitus, tab: null, hideNav: true },
   { name: 'treeni', re: /^treeni$/, view: treeni, tab: null },
+  // Kutsulinkin vastaanotto (speksi 4k B) ja PT:n viikkoraportti (4k E).
+  { name: 'kutsu', re: /^kutsu$/, view: kutsu, tab: null },
+  { name: 'raportti', re: /^raportti$/, view: raportti, tab: 'koti' },
 ];
+
+// Reitit, jotka näytetään ennen aloitusohjausta: kutsulinkki avautuu uudelle käyttäjälle suoraan.
+const ILMAN_ALOITUSTA = new Set(['aloitus', 'kutsu']);
 
 const root = document.getElementById('view');
 const tabbar = document.getElementById('tabbar');
@@ -252,9 +260,18 @@ function navigate() {
     location.replace('#/koti');
     return;
   }
-  if (state && !state.onboardattu && hit.route.name !== 'aloitus') {
+  if (state && !state.onboardattu && !ILMAN_ALOITUSTA.has(hit.route.name)) {
     location.replace('#/aloitus');
     return;
+  }
+  // Kutsulinkistä hyväksytty haaste odottaa aloitusohjauksen loppua (speksi 4k B):
+  // lisätään haasteisiin ja avataan haaste.
+  if (state && state.onboardattu) {
+    const kohde = kutsu.kasitteleOdottavaKutsu();
+    if (kohde) {
+      location.replace(kohde);
+      return;
+    }
   }
   // Aloitusohjaus on jo tehty (esim. Takaisin-painike): ei avata sitä uudelleen.
   // Nollaa demo asettaa onboardattu = false, joten ohjaus toimii silti.
@@ -275,7 +292,7 @@ function onStateChange() {
   if (!current) return;
   const state = getState();
   applyTheme(state);
-  if (state && !state.onboardattu && current.route.name !== 'aloitus') {
+  if (state && !state.onboardattu && !ILMAN_ALOITUSTA.has(current.route.name)) {
     location.replace('#/aloitus');
     return;
   }

@@ -5,13 +5,23 @@
 // Kaikki sosiaalinen data on mockup: kavereiden edistyminen ja syöte generoidaan deterministisesti
 // (mulberry32) haasteesta, kaverista ja päivämäärästä. Oma edistyminen lasketaan historiasta.
 
-import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=6612722';
-import { workoutSummary, streakWeeks, milestones } from './history.js?v=6612722';
-import { LIIKKEET, MERKKIPAALUT, HAASTEMERKIT } from '../data.js?v=6612722';
-import { mulberry32, tanaanPvm } from '../seed.js?v=6612722';
+import { addDays, daysBetween, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
+import { workoutSummary, streakWeeks, milestones } from './history.js?v=31a36ec';
+import { LIIKKEET, MERKKIPAALUT, HAASTEMERKIT } from '../data.js?v=31a36ec';
+import { mulberry32, tanaanPvm } from '../seed.js?v=31a36ec';
+// Kehäviittaus invite.js ↔ challenges.js on turvallinen: molemmat käyttävät toisiaan vain funktiokutsuissa.
+import { inviteBonusPoints } from './invite.js?v=31a36ec';
 
 const LAHTOTASO_PV = 28;            // lähtötaso: 4 edellistä viikkoa
 const PISTEET = { voimatreeni: 10, aktiviteetti: 3, haaste: 50, merkki: 20 };
+// Demon katto kutsupisteille (speksi 4k): enintään 5 palkittua kutsua eli 500 pistettä.
+export const KUTSUPISTEET_ENINTAAN_KUTSUJA = 5;
+const KUTSUPISTEET_KATTO = KUTSUPISTEET_ENINTAAN_KUTSUJA * 100;
+// Pisteerittelyn rivien nimet näkymille.
+export const PISTE_ERITTELY_NIMET = {
+  treenit: 'Treenit', aktiviteetit: 'Aktiviteetit', haasteet: 'Haasteet', merkit: 'Merkit',
+  kutsut: `Kutsut (enintään ${KUTSUPISTEET_ENINTAAN_KUTSUJA})`,
+};
 const TASOPISTEET = 100;            // taso n vaatii 100 × n × (n + 1) / 2 pistettä
 
 // Kaverin suoritus suhteessa omaan lähtötasoonsa profiilin mukaan (demon oletus):
@@ -363,9 +373,10 @@ export function badges(tila, nyt) {
 }
 
 /**
- * pointsAndLevel(tila, nyt) → { pisteet, taso, seuraavaan, pros, erittely: { treenit, aktiviteetit, haasteet, merkit } }
+ * pointsAndLevel(tila, nyt) → { pisteet, taso, seuraavaan, pros, erittely: { treenit, aktiviteetit, haasteet, merkit, kutsut } }
  * Pisteet: voimatreeni 10, tuotu aktiviteetti 3, suoritettu liitetty haaste palkinto.pisteet (oletus 50),
- * ansaittu merkki 20. Taso n vaatii kumulatiivisesti 100 × n × (n + 1) / 2 pistettä (taso 0 alussa).
+ * ansaittu merkki 20, palkittu kaverikutsu 100 (inviteBonusPoints, speksi 4k), kutsuista enintään 5 eli 500 pistettä
+ * (erittelyn nimi PISTE_ERITTELY_NIMET.kutsut = 'Kutsut (enintään 5)'). Taso n vaatii kumulatiivisesti 100 × n × (n + 1) / 2 pistettä (taso 0 alussa).
  * seuraavaan = pisteet, jotka puuttuvat tasosta n + 1; pros = edistyminen nykyiseltä tasolta seuraavalle.
  */
 export function pointsAndLevel(tila, nyt) {
@@ -380,8 +391,10 @@ export function pointsAndLevel(tila, nyt) {
       .filter((h) => h && h.liittynyt && challengeProgress(h, tila, nyt).suoritettu)
       .reduce((s, h) => s + ((h.palkinto && Number.isFinite(h.palkinto.pisteet)) ? h.palkinto.pisteet : PISTEET.haaste), 0),
     merkit: badges(tila, nyt).ansaitut.length * PISTEET.merkki,
+    // Kutsupalkkiot (speksi 4k): +100 per palkittu kutsu, näkymässä rivi "Kutsut".
+    kutsut: Math.min(inviteBonusPoints(tila), KUTSUPISTEET_KATTO),
   };
-  const pisteet = erittely.treenit + erittely.aktiviteetit + erittely.haasteet + erittely.merkit;
+  const pisteet = erittely.treenit + erittely.aktiviteetit + erittely.haasteet + erittely.merkit + erittely.kutsut;
   let taso = 0;
   while (tasonKynnys(taso + 1) <= pisteet) taso += 1;
   const ala = tasonKynnys(taso);

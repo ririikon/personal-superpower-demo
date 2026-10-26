@@ -5,12 +5,15 @@
 // Rajapinta: getState(), update(fn), resetDemo(). createStore(tallennus, nytFn) on testejä
 // varten; moduulin oletusinstanssi käyttää window.localStorage-oliota, jos se on saatavilla.
 
-import { seedState, tanaanPvm, kuukausiGen } from './seed.js?v=6612722';
-import { valineetLaitteiksi } from './data.js?v=6612722';
-import { addDays } from './engine/util.js?v=6612722';
+import { seedState, tanaanPvm, kuukausiGen } from './seed.js?v=31a36ec';
+import { valineetLaitteiksi, LAITTEET, HYROX_LAITTEET } from './data.js?v=31a36ec';
+import { addDays } from './engine/util.js?v=31a36ec';
 
 export const TALLENNUSAVAIN = 'psp-poc-v1';
 export const TILAN_VERSIO = 1;
+
+// Täysi kuntosali ennen HYROX-laitteita (speksi 4j: 19 laitetta).
+const VANHA_TAYSI_SALI = LAITTEET.map((l) => l.id).filter((id) => !HYROX_LAITTEET.includes(id));
 
 // --- Demon haasteiden uusiminen (speksi 4i) ------------------------------------
 
@@ -162,6 +165,32 @@ export function createStore(tallennus, nytFn = oletusNyt) {
     }
     if (!tila.paivanVaihdot || typeof tila.paivanVaihdot !== 'object') {
       tila.paivanVaihdot = {};
+      muuttui = true;
+    }
+    // Speksi 4k: HYROX-laitteet lisätään vanhaan täyden salin listaan (kaikki 19 aiempaa laitetta).
+    // Vain 4k:ta edeltävälle tilalle (ei vielä omatOhjelmat-kenttää), jotta käyttäjän myöhemmin
+    // poistamat HYROX-laitteet eivät palaa seuraavalla latauksella. Muuten laitteita ei lisätä.
+    const laitteet = tila.profiili && typeof tila.profiili === 'object' ? tila.profiili.laitteet : null;
+    if (!Array.isArray(tila.omatOhjelmat) && Array.isArray(laitteet)
+      && VANHA_TAYSI_SALI.every((id) => laitteet.includes(id))) {
+      const puuttuvat = HYROX_LAITTEET.filter((id) => !laitteet.includes(id));
+      if (puuttuvat.length) {
+        tila.profiili = { ...tila.profiili, laitteet: [...laitteet, ...puuttuvat] };
+        muuttui = true;
+      }
+    }
+    // Speksi 4k: puuttuvat `omatOhjelmat` ([]), `raporttiKommentit` ({}) ja `yhteiso.kutsut` ([])
+    // lisätään. profiili.tapahtuma ja profiili.valmentaja jäävät puuttumaan. Muita kenttiä ei kosketa.
+    if (!Array.isArray(tila.omatOhjelmat)) {
+      tila.omatOhjelmat = [];
+      muuttui = true;
+    }
+    if (!tila.raporttiKommentit || typeof tila.raporttiKommentit !== 'object' || Array.isArray(tila.raporttiKommentit)) {
+      tila.raporttiKommentit = {};
+      muuttui = true;
+    }
+    if (tila.yhteiso && typeof tila.yhteiso === 'object' && !Array.isArray(tila.yhteiso.kutsut)) {
+      tila.yhteiso = { ...tila.yhteiso, kutsut: [] };
       muuttui = true;
     }
     // Yhteisö: seedin tallentamat merkit pois ja päättyneet demohaasteet uudelle jaksolle.

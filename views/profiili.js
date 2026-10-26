@@ -1,18 +1,24 @@
 // Profiili ja oma suunnitelma (speksi 4c ja 6.6). Rakenne: korostettu Tavoite-rivi, jonka
-// takana on oma valintanäkymä, ja sen alla ryhmitellyt osiot SALIN LAITTEET (speksi 4j),
+// takana on oma valintanäkymä, ja sen alla ryhmitellyt osiot TAVOITETAPAHTUMA ja VALMENTAJANI
+// (speksi 4k C ja E), SALIN LAITTEET (speksi 4j),
 // TREENIPROFIILI, TREENIN MUOTO, VALMENTAJAN MUISTI, TIETOA ja ASETUKSET. Jokainen muutos tallentuu heti update()-
 // kutsulla, ja reititin piirtää näkymän uudelleen statechange-tapahtumasta.
 //
 // Vie myös apurit, joita aloitusohjaus ja valmentaja käyttävät (tavoitteet, kokemustasot,
 // ohjelmasuositus, valintalaatikko ja Valmentajan muisti).
 
-import { getState, update, resetDemo } from '../store.js?v=6612722';
-import { OHJELMAT, OLETUSPROFIILI, LAITTEET, LAITERYHMAT, LAITEPOHJAT } from '../data.js?v=6612722';
-import { goalParams } from '../engine/progression.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=6612722';
-import { PALAUTUS_KESTOT } from './treeni-input.js?v=6612722';
-import { ohjelmanLaiteVaihdot } from './vaihto.js?v=6612722';
+import { getState, update, resetDemo } from '../store.js?v=31a36ec';
+import {
+  OHJELMAT, OLETUSPROFIILI, LAITTEET, LAITERYHMAT, LAITEPOHJAT, TAPAHTUMATYYPIT, HYROX_DIVISIOONAT,
+} from '../data.js?v=31a36ec';
+import { goalParams } from '../engine/progression.js?v=31a36ec';
+import { eventPlan } from '../engine/event.js?v=31a36ec';
+import { addDays } from '../engine/util.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { el, svgEl, sectionTitle, listRow, sheet, toggle, segmented, formatWeight } from './ui.js?v=31a36ec';
+import { PALAUTUS_KESTOT } from './treeni-input.js?v=31a36ec';
+import { ohjelmanLaiteVaihdot } from './vaihto.js?v=31a36ec';
+import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
 
 const KG_LB = 2.20462;
 
@@ -152,8 +158,9 @@ export function suosituksenPerustelu(treenitViikossa) {
   return `Treenaat ${n} kertaa viikossa, joten koko kehon ohjelma on paras: jokainen lihasryhmä saa ärsykkeen jokaisessa treenissä, ja palautumiselle jää aikaa treenien väliin.`;
 }
 
+// Valmiit ja tuodut ohjelmat (speksi 4k D): tuotu aktiivinen ohjelma näkyy omalla nimellään.
 function ohjelma(id) {
-  return OHJELMAT.find((o) => o.id === id) || OHJELMAT[0];
+  return kaikkiOhjelmat(getState()).find((o) => o.id === id) || OHJELMAT[0];
 }
 
 function profiili() {
@@ -272,11 +279,11 @@ function avaaOhjelmaValinta() {
     otsikko: 'Ohjelma',
     selite: 'Seuraava treeni otetaan aktiivisesta ohjelmasta. Historia säilyy, kun vaihdat ohjelmaa.',
     osiot: [{
-      vaihtoehdot: OHJELMAT.map((o) => ({
+      vaihtoehdot: kaikkiOhjelmat(s).map((o) => ({
         arvo: o.id,
         otsikko: o.nimi,
         kuvaus: `${o.paivat.length} treenipäivää kierrossa.`,
-        merkki: o.id === suositus ? 'Suositeltu' : null,
+        merkki: o.tuotu ? 'Tuotu' : o.id === suositus ? 'Suositeltu' : null,
       })),
     }],
     arvo: s.aktiivinenOhjelmaId,
@@ -289,9 +296,10 @@ function avaaTekstiSyote({ otsikko, label, arvo, tyyppi = 'text', yksikko, ohje,
   const syote = el('input', {
     class: 'input prof-input',
     type: 'text',
-    inputmode: tyyppi === 'luku' ? 'decimal' : null,
+    inputmode: tyyppi === 'luku' ? 'decimal' : tyyppi === 'email' ? 'email' : null,
     autocomplete: 'off',
-    maxlength: tyyppi === 'luku' ? 6 : 40,
+    autocapitalize: tyyppi === 'email' ? 'off' : null,
+    maxlength: tyyppi === 'luku' ? 6 : tyyppi === 'email' ? 80 : 40,
     value: arvo,
     'aria-label': label,
   });
@@ -382,6 +390,229 @@ export function avaaMuistit() {
 }
 
 // ---------------------------------------------------------------------------
+// Tavoitetapahtuma (speksi 4k C) ja Valmentajani (4k E)
+
+const PVM_RE = /^\d{4}-\d{2}-\d{2}$/;
+const OLETUS_VIIKKOJA = 8; // uuden tapahtuman oletuspäivä: 8 viikon päässä
+
+function tamaPaiva() {
+  return tanaanPvm(new Date().toISOString());
+}
+
+function viikonAlkuAsetus(p) {
+  return p.viikonAlku === 'sunnuntai' ? 'sunnuntai' : 'maanantai';
+}
+
+/**
+ * tapahtumaTeksti(tapahtuma, tanaan, viikonAlku) → { teksti: 'HYROX 21.12. · 8 vk', plan } | null
+ * Mennyt tai virheellinen tapahtuma → teksti "… · mennyt" ja plan null.
+ */
+export function tapahtumaTeksti(tapahtuma, tanaan, viikonAlku = 'maanantai') {
+  if (!tapahtuma || typeof tapahtuma !== 'object' || typeof tapahtuma.pvm !== 'string') return null;
+  const plan = eventPlan(tapahtuma, tanaan, { viikonAlku });
+  if (!plan) {
+    const tyyppi = TAPAHTUMATYYPIT.find((t) => t.id === tapahtuma.tyyppi);
+    return { teksti: `${tyyppi ? tyyppi.nimi : 'Tapahtuma'} ${pvmLyhyt(tapahtuma.pvm)} · mennyt`, plan: null };
+  }
+  const vk = plan.viikkojaJaljella === 0 ? 'tällä viikolla' : `${plan.viikkojaJaljella} vk`;
+  return { teksti: `${plan.otsikko} · ${vk}`, plan };
+}
+
+/**
+ * tallennaTapahtuma({ tyyppi, pvm, divisioona? }) → tallentaa profiili.tapahtuma-kenttään.
+ * `asetettu` (tämä päivä) kiinnittää jaksojen rajat; se säilyy, jos tyyppi ja päivä eivät muutu.
+ * Virheellinen tyyppi tai päivä (ei vähintään huomenna) → false.
+ */
+export function tallennaTapahtuma(uusi) {
+  const tanaan = tamaPaiva();
+  if (!uusi || !TAPAHTUMATYYPIT.some((t) => t.id === uusi.tyyppi)) return false;
+  if (typeof uusi.pvm !== 'string' || !PVM_RE.test(uusi.pvm) || uusi.pvm <= tanaan) return false;
+  update((s) => {
+    const p = { ...OLETUSPROFIILI, ...(s.profiili || {}) };
+    const vanha = p.tapahtuma && typeof p.tapahtuma === 'object' ? p.tapahtuma : null;
+    const sama = vanha && vanha.tyyppi === uusi.tyyppi && vanha.pvm === uusi.pvm && typeof vanha.asetettu === 'string';
+    const tapahtuma = { tyyppi: uusi.tyyppi, pvm: uusi.pvm, asetettu: sama ? vanha.asetettu : tanaan };
+    if (uusi.tyyppi === 'hyrox') {
+      tapahtuma.divisioona = HYROX_DIVISIOONAT.some((d) => d.id === uusi.divisioona) ? uusi.divisioona : 'open';
+    }
+    s.profiili = { ...p, tapahtuma };
+  });
+  return true;
+}
+
+export function poistaTapahtuma() {
+  update((s) => {
+    const p = { ...OLETUSPROFIILI, ...(s.profiili || {}) };
+    delete p.tapahtuma;
+    s.profiili = p;
+  });
+}
+
+function jaksoYhteenveto(plan) {
+  if (!plan) return '';
+  return plan.jaksot.map((j) => `${j.nimi} ${j.viikkoja} vk`).join(' · ');
+}
+
+// Alalaatikko: tyyppi (TAPAHTUMATYYPIT), päivämäärä (vähintään huomenna) ja HYROX-divisioona.
+// ehdotus: { tyyppi?, pvm?, divisioona? } esitäyttää valinnat (esim. valmentajan ehdotus).
+export function avaaTapahtumaValinta({ ehdotus } = {}) {
+  const p = profiili();
+  const tanaan = tamaPaiva();
+  const huomenna = addDays(tanaan, 1);
+  const nyky = p.tapahtuma && typeof p.tapahtuma === 'object' ? p.tapahtuma : null;
+  const pohja = { ...(nyky || {}), ...(ehdotus || {}) };
+  let tyyppi = TAPAHTUMATYYPIT.some((t) => t.id === pohja.tyyppi) ? pohja.tyyppi : 'hyrox';
+  let divisioona = HYROX_DIVISIOONAT.some((d) => d.id === pohja.divisioona) ? pohja.divisioona : 'open';
+  const alkuPvm = typeof pohja.pvm === 'string' && PVM_RE.test(pohja.pvm) && pohja.pvm >= huomenna
+    ? pohja.pvm : addDays(tanaan, OLETUS_VIIKKOJA * 7);
+
+  const napit = [];
+  const tyyppiLista = el('div', { class: 'list pick-list', role: 'radiogroup', 'aria-label': 'Tapahtuman tyyppi' },
+    ...TAPAHTUMATYYPIT.map((t) => {
+      const nappi = el('button', {
+        class: 'row pick-row', type: 'button', role: 'radio', 'aria-checked': String(t.id === tyyppi),
+        onClick: () => {
+          tyyppi = t.id;
+          napit.forEach((n) => n.nappi.setAttribute('aria-checked', String(n.id === tyyppi)));
+          paivita();
+        },
+      },
+      el('span', { class: 'pick-text' },
+        el('span', { class: 'pick-title' }, t.nimi),
+        el('span', { class: 'pick-desc' }, t.kuvaus)),
+      el('span', { class: 'pick-radio', 'aria-hidden': 'true' }));
+      napit.push({ nappi, id: t.id });
+      return nappi;
+    }));
+
+  const pvmSyote = el('input', {
+    class: 'input prof-input ev-date', type: 'date', min: huomenna, value: alkuPvm,
+    'aria-label': 'Tapahtuman päivämäärä', onInput: () => paivita(), onChange: () => paivita(),
+  });
+  const virhe = el('p', { class: 'prof-input-error', hidden: true }, 'Valitse päivä huomisesta alkaen.');
+  const divisioonaOsa = el('div', { class: 'ev-division' },
+    el('span', { class: 'prof-input-label' }, 'HYROX-divisioona'),
+    segmented({
+      vaihtoehdot: HYROX_DIVISIOONAT.map((d) => ({ arvo: d.id, teksti: d.nimi })),
+      arvo: divisioona,
+      label: 'HYROX-divisioona',
+      onChange: (arvo) => { divisioona = arvo; paivita(); },
+    }),
+    el('p', { class: 'muted small ev-division-desc' }));
+  const esikatselu = el('div', { class: 'note ev-preview', 'aria-live': 'polite' });
+
+  function paivita() {
+    const pvm = pvmSyote.value;
+    const ok = PVM_RE.test(pvm) && pvm >= huomenna;
+    if (ok) pvmSyote.removeAttribute('aria-invalid');
+    else pvmSyote.setAttribute('aria-invalid', 'true');
+    virhe.hidden = ok;
+    divisioonaOsa.hidden = tyyppi !== 'hyrox';
+    const div = HYROX_DIVISIOONAT.find((d) => d.id === divisioona);
+    divisioonaOsa.querySelector('.ev-division-desc').textContent = div ? div.kuvaus : '';
+    const plan = ok ? eventPlan({ tyyppi, pvm, asetettu: tanaan }, tanaan, { viikonAlku: viikonAlkuAsetus(p) }) : null;
+    esikatselu.hidden = !plan;
+    esikatselu.replaceChildren(...(plan ? [
+      el('p', { class: 'ev-preview-title' }, `${plan.otsikko} · ${plan.paiviaJaljella} päivää`),
+      el('p', { class: 'small' }, jaksoYhteenveto(plan)),
+    ] : []));
+  }
+
+  let kahva = null;
+  const tallennaNappi = el('button', {
+    class: 'btn btn-primary', type: 'button',
+    onClick: () => {
+      paivita();
+      if (!virhe.hidden) {
+        pvmSyote.focus({ preventScroll: true });
+        return;
+      }
+      if (tallennaTapahtuma({ tyyppi, pvm: pvmSyote.value, divisioona })) kahva.close();
+    },
+  }, 'Tallenna tavoitetapahtuma');
+
+  const sisalto = el('div', { class: 'pick-sheet ev-sheet' },
+    el('h2', { class: 'sheet-title' }, 'Tavoitetapahtuma'),
+    el('div', { class: 'note pick-note' }, 'Treenit jaksotetaan tapahtumaa kohti: perusjakso, kovennus, kevennys ja kisaviikko. HYROXissa ohjelmapäiviin tulee asemia ja juoksua.'),
+    sectionTitle('Tyyppi'),
+    tyyppiLista,
+    sectionTitle('Päivämäärä'),
+    pvmSyote,
+    virhe,
+    divisioonaOsa,
+    esikatselu,
+    el('div', { class: 'prof-confirm' }, tallennaNappi));
+  paivita();
+  kahva = sheet(sisalto);
+  return kahva;
+}
+
+function tapahtumaOsio(p) {
+  const tieto = tapahtumaTeksti(p.tapahtuma, tamaPaiva(), viikonAlkuAsetus(p));
+  if (!tieto) {
+    return lista(listRow({ otsikko: 'Tavoitetapahtuma', arvo: 'Ei asetettu', onClick: () => avaaTapahtumaValinta() }));
+  }
+  const div = p.tapahtuma.tyyppi === 'hyrox' ? HYROX_DIVISIOONAT.find((d) => d.id === p.tapahtuma.divisioona) : null;
+  return lista(
+    listRow({ otsikko: 'Tavoitetapahtuma', arvo: tieto.teksti, onClick: () => avaaTapahtumaValinta() }),
+    tieto.plan ? el('div', { class: 'row prof-row' },
+      el('span', { class: 'row-title' }, 'Tämä viikko',
+        el('span', { class: 'row-sub' }, `${tieto.plan.nykyinen.jaksoNimi}${tieto.plan.nykyinen.kevennysviikko ? ' · kevennysviikko' : ''}${div ? ` · ${div.nimi}` : ''}`))) : null,
+    el('button', { class: 'row prof-danger', type: 'button', onClick: () => poistaTapahtuma() },
+      el('span', { class: 'row-title' }, 'Poista tavoitetapahtuma')));
+}
+
+function tallennaValmentaja(muutos) {
+  update((s) => {
+    const p = { ...OLETUSPROFIILI, ...(s.profiili || {}) };
+    const vanha = p.valmentaja && typeof p.valmentaja === 'object' ? p.valmentaja : { nimi: '', email: '' };
+    const uusi = { nimi: '', email: '', ...vanha, ...muutos };
+    if (!uusi.nimi && !uusi.email) delete p.valmentaja;
+    else p.valmentaja = { nimi: uusi.nimi, email: uusi.email };
+    s.profiili = p;
+  });
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function valmentajaOsio(p) {
+  const v = p.valmentaja && typeof p.valmentaja === 'object' ? p.valmentaja : { nimi: '', email: '' };
+  return lista(
+    listRow({
+      otsikko: 'Valmentajan nimi',
+      arvo: v.nimi || 'Ei asetettu',
+      onClick: () => avaaTekstiSyote({
+        otsikko: 'Valmentajani', label: 'Valmentajan nimi', arvo: String(v.nimi || ''),
+        ohje: 'Näkyy viikkoraportissa. Demossa valinnainen.',
+        onTallenna: (arvo) => tallennaValmentaja({ nimi: arvo }),
+      }),
+    }),
+    listRow({
+      otsikko: 'Sähköposti',
+      arvo: v.email || 'Valinnainen',
+      onClick: () => avaaTekstiSyote({
+        otsikko: 'Valmentajani', label: 'Valmentajan sähköposti', arvo: String(v.email || ''), tyyppi: 'email',
+        ohje: 'Viikkoraportin sähköpostiluonnos osoitetaan tähän. Voit jättää tyhjäksi.',
+        tarkista: (raaka) => {
+          const arvo = String(raaka).trim();
+          if (arvo && !EMAIL_RE.test(arvo)) return { ok: false, viesti: 'Tarkista sähköpostiosoite.' };
+          return { ok: true, arvo };
+        },
+        onTallenna: (arvo) => tallennaValmentaja({ email: arvo }),
+      }),
+    }),
+    listRow({ otsikko: 'Viikkoraportti', arvo: 'Valmentajalle', href: '#/raportti' }));
+}
+
+// Kodin kortti ja valmentajan siru avaavat tapahtumavalinnan osoitteella #/profiili?tapahtuma=1
+// (valinnainen &tyyppi=…). Laatikko avataan kerran reitille tultaessa, ei tilan muutoksen
+// uudelleenpiirrossa; reitin vaihto nollaa merkinnän.
+let tapahtumaAvattu = false;
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => { tapahtumaAvattu = false; });
+}
+
+// ---------------------------------------------------------------------------
 // Rivit
 
 function toggleRivi(otsikko, arvo, onChange, { kuvaus, disabled } = {}) {
@@ -412,7 +643,25 @@ function lista(...rivit) {
 // ---------------------------------------------------------------------------
 // Näkymä
 
-export function render(root) {
+export function render(root, params = {}) {
+  let avausAjastin = null;
+  if (params.tapahtuma === '1' && !tapahtumaAvattu) {
+    tapahtumaAvattu = true;
+    const tyyppi = TAPAHTUMATYYPIT.some((t) => t.id === params.tyyppi) ? params.tyyppi : undefined;
+    // Avataan piirron jälkeen, jotta reitittimen kohdistus ja vieritys eivät osu laatikkoon.
+    avausAjastin = setTimeout(() => {
+      avausAjastin = null;
+      if (!root.isConnected) return;
+      const osio = root.querySelector('[data-osio="tapahtuma"]');
+      if (osio) osio.scrollIntoView({ block: 'center' });
+      avaaTapahtumaValinta({ ehdotus: tyyppi ? { tyyppi } : undefined });
+    }, 0);
+  }
+  piirraProfiili(root);
+  return () => { if (avausAjastin) clearTimeout(avausAjastin); };
+}
+
+function piirraProfiili(root) {
   const s = getState();
   const p = profiili();
   const aktiivinen = ohjelma(s.aktiivinenOhjelmaId);
@@ -435,6 +684,13 @@ export function render(root) {
     el('div', { class: 'list prof-goal' },
       listRow({ otsikko: 'Tavoite', arvo: nimiArvolle(TAVOITTEET, p.tavoite), onClick: () => avaaTavoiteValinta() })),
     el('p', { class: 'muted small prof-goal-hint' }, `Ohjaa treenejäsi: ${tavoiteHaarukka(p.tavoite)} (demon oletus).`),
+
+    el('h2', { class: 'section-title', dataset: { osio: 'tapahtuma' } }, 'Tavoitetapahtuma'),
+    tapahtumaOsio(p),
+
+    sectionTitle('Valmentajani'),
+    valmentajaOsio(p),
+    el('p', { class: 'muted small memory-note' }, 'Tuotteessa valmentaja näkee asiakkaidensa raportit omassa näkymässään.'),
 
     sectionTitle('Salin laitteet'),
     lista(

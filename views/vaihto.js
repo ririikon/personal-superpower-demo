@@ -9,14 +9,14 @@
 // tallennetaan rinnakkain kenttään `paivanVaihtoSyyt: { [pvm]: { [alkuperainenId]: { syy, kipualue? } } }`,
 // jotta rivin merkintä osaa kertoa syyn ("Vaihdettu · ei kyykkytelinettä"). Kenttä voi puuttua.
 
-import { getState, update } from '../store.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { LAITTEET, KUORMITUSALUEET, liike as haeLiike } from '../data.js?v=6612722';
-import { alternatives, autoSwap, valtettavatMuisteista } from '../engine/alternatives.js?v=6612722';
-import { addDays } from '../engine/util.js?v=6612722';
-import { el, sheet } from './ui.js?v=6612722';
-import { vaihdaPaivanLiike } from './paiva.js?v=6612722';
-import { ilmoitus } from './yhteiso.js?v=6612722';
+import { getState, update } from '../store.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { LAITTEET, KUORMITUSALUEET, liike as haeLiike } from '../data.js?v=31a36ec';
+import { alternatives, autoSwap, valtettavatMuisteista } from '../engine/alternatives.js?v=31a36ec';
+import { addDays } from '../engine/util.js?v=31a36ec';
+import { el, sheet } from './ui.js?v=31a36ec';
+import { vaihdaPaivanLiike } from './paiva.js?v=31a36ec';
+import { ilmoitus } from './yhteiso.js?v=31a36ec';
 
 export const VAIHTOSYYT = [
   { arvo: 'laite-puuttuu', otsikko: 'Laite puuttuu', kuvaus: 'Salilta ei löydy tarvittavaa laitetta.' },
@@ -324,7 +324,7 @@ export function ohitetutTanaan(state, pvm) {
 // Käyttöliittymän osat
 
 function avaaLiike(liike) {
-  import('./media.js?v=6612722')
+  import('./media.js?v=31a36ec')
     .then((m) => { if (m && typeof m.openExerciseSheet === 'function') m.openExerciseSheet(liike); })
     .catch(() => {});
 }

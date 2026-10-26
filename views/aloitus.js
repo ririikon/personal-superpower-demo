@@ -6,12 +6,12 @@
 // Keskeneräiset vastaukset pidetään moduulin muuttujassa, jotta ne säilyvät, jos reititin
 // piirtää näkymän uudelleen statechange-tapahtumasta.
 
-import { getState, update } from '../store.js?v=6612722';
-import { OHJELMAT, OLETUSPROFIILI } from '../data.js?v=6612722';
-import { el, svgEl } from './ui.js?v=6612722';
+import { getState, update } from '../store.js?v=31a36ec';
+import { OHJELMAT, OLETUSPROFIILI } from '../data.js?v=31a36ec';
+import { el, svgEl } from './ui.js?v=31a36ec';
 import {
   TAVOITTEET, KOKEMUKSET, nimiArvolle, tavoiteHaarukka, suositeltuOhjelmaId, suosituksenPerustelu,
-} from './profiili.js?v=6612722';
+} from './profiili.js?v=31a36ec';
 
 const VAIHEITA = 5; // 4 kysymystä + suositus
 const PAINO_MIN = 30;

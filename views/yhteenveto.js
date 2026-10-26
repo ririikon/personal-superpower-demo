@@ -3,14 +3,16 @@
 //
 // Rajapinta: renderSummary(treeni, { uusi = false } = {}) → HTMLElement. Laskee kaiken
 // tarvitsemansa getState()-kutsulla (aiemmat treenit, profiili, ohjelma, muistit, viikkosuunnitelma).
-import { getState } from '../store.js?v=6612722';
-import { LIIKKEET, OHJELMAT } from '../data.js?v=6612722';
+import { getState } from '../store.js?v=31a36ec';
+import { LIIKKEET, OHJELMAT } from '../data.js?v=31a36ec';
 import {
-  workoutSummary, workoutInsights, weeklyTargets, weeklyProgress, weekStart, addDays, onVoimatreeni,
-  challengeProgress, badges, pointsAndLevel,
-} from '../engine.js?v=6612722';
-import { el, card, sectionTitle, whyButton, hexRing } from './ui.js?v=6612722';
-import { palkki, merkkiKuusikulmio } from './yhteiso.js?v=6612722';
+  workoutSummary, workoutInsights, viikonTavoitteet, weeklyProgress, weekStart, addDays, onVoimatreeni,
+  challengeProgress, badges, pointsAndLevel, PISTE_ERITTELY_NIMET,
+} from '../engine.js?v=31a36ec';
+import { el, card, sectionTitle, whyButton, hexRing } from './ui.js?v=31a36ec';
+import { palkki, merkkiKuusikulmio } from './yhteiso.js?v=31a36ec';
+import { openShareSheet, jakoIkoni } from './jako.js?v=31a36ec';
+import { kaikkiOhjelmat } from './paiva.js?v=31a36ec';
 
 const KUUKAUDET = ['tammikuuta', 'helmikuuta', 'maaliskuuta', 'huhtikuuta', 'toukokuuta', 'kesäkuuta',
   'heinäkuuta', 'elokuuta', 'syyskuuta', 'lokakuuta', 'marraskuuta', 'joulukuuta'];
@@ -94,7 +96,8 @@ function viikkoMuutos(treeni, aiemmat, state) {
   const vAlku = weekStart(treeni.pvm, profiili.viikonAlku || 'maanantai');
   const suunnitelma = (state.viikkosuunnitelmat || []).find((s) => s && s.viikonAlku
     && s.viikonAlku <= treeni.pvm && treeni.pvm < addDays(s.viikonAlku, 7)) || null;
-  const tavoitteet = weeklyTargets(profiili, suunnitelma);
+  // Viikon suunnitelma ja tavoitetapahtuman jakson kerroin (speksi 4d, 4k C).
+  const { tavoitteet } = viikonTavoitteet(state, vAlku, { suunnitelma });
   const ennen = weeklyProgress(aiemmat, LIIKKEET, tavoitteet, vAlku);
   const jalkeen = weeklyProgress([...aiemmat, treeni], LIIKKEET, tavoitteet, vAlku);
   let lisays = 0;
@@ -132,11 +135,36 @@ function haasteMuutokset(treeni, state) {
     ...state,
     historia: (state.historia || []).filter((t) => t && t !== treeni && (treeni.id == null || t.id !== treeni.id)),
   };
+  // Tämän treenin antama kutsupalkkio (speksi 4k B) ei kuulu "ennen"-tilaan: pisteet ja merkki näkyvät muutoksena.
+  const palkitut = yhteiso.haasteet.filter((h) => h && h.kutsu && h.kutsu.palkittuTreeni != null && h.kutsu.palkittuTreeni === treeni.id);
+  if (palkitut.length) {
+    const merkkiNyt = palkitut.some((h) => h.kutsu.palkkioMerkki);
+    ilman.yhteiso = {
+      ...yhteiso,
+      haasteet: yhteiso.haasteet.map((h) => {
+        if (!palkitut.includes(h)) return h;
+        const { palkittu: _p, palkittuTreeni: _t, palkkioMerkki: _m, ...kutsu } = h.kutsu;
+        return { ...h, kutsu };
+      }),
+      ansaitutMerkit: merkkiNyt
+        ? (yhteiso.ansaitutMerkit || []).filter((m) => !(m && m.id === 'treenikaveri'))
+        : yhteiso.ansaitutMerkit,
+    };
+  }
   const jalkeenTila = ilman.historia.length === (state.historia || []).length
     ? { ...state, historia: [...ilman.historia, treeni] }
     : state;
 
   const rivit = [];
+  // Kutsuhaasteen palkkio (speksi 4k B): tämä treeni oli ensimmäinen kutsun hyväksymisen jälkeen.
+  const palkittu = yhteiso.haasteet.find((h) => h && h.kutsu && h.kutsu.palkittuTreeni != null && h.kutsu.palkittuTreeni === treeni.id);
+  if (palkittu) {
+    rivit.push(el('div', { class: 'yh-sum-row is-done' },
+      el('div', { class: 'yh-sum-line' },
+        el('span', { class: 'yh-sum-done' }, palkittu.kutsu.palkkioMerkki === false
+          ? 'Kutsuhaaste aloitettu! +100 pistettä'
+          : 'Kutsuhaaste aloitettu! +100 pistettä ja Treenikaveri-merkki'))));
+  }
   for (const h of yhteiso.haasteet) {
     if (!h || !h.liittynyt || !(h.alku <= treeni.pvm && treeni.pvm <= h.loppu)) continue;
     const e = challengeProgress(h, ilman, nyt);
@@ -160,6 +188,7 @@ function haasteMuutokset(treeni, state) {
   const osat = [
     ['Treeni', ero('treenit') + ero('aktiviteetit')],
     ['Haasteet', ero('haasteet')],
+    [PISTE_ERITTELY_NIMET.kutsut, ero('kutsut')],
     ['Merkit', ero('merkit')],
   ].filter(([, n]) => n > 0);
   const yhteensa = pj.pisteet - pe.pisteet;
@@ -180,6 +209,16 @@ function haasteMuutokset(treeni, state) {
         pj.taso > pe.taso ? el('span', { class: 'yh-sum-level' }, `Nousit tasolle ${pj.taso}!`) : null)
       : null,
     el('a', { class: 'yh-sum-link', href: '#/yhteiso' }, 'Avaa Yhteisö ›'));
+}
+
+// Jakokortin avaus (speksi 4k A). Sama painike ylhäällä ja alhaalla; molemmat avaavat saman laatikon.
+function jakoPainike(treeni, sijainti) {
+  return el('button', {
+    class: `btn jk-share-btn is-${sijainti}`,
+    type: 'button',
+    dataset: { kohdistus: `jaa-treeni-${sijainti}` },
+    onClick: () => openShareSheet({ tyyppi: 'treeni', treeni, tila: getState() }),
+  }, jakoIkoni(20), 'Jaa treeni');
 }
 
 function tuotuYhteenveto(treeni, uusi) {
@@ -208,8 +247,10 @@ export function renderSummary(treeni, { uusi = false } = {}) {
   const historia = Array.isArray(state.historia) ? state.historia : [];
   const aiemmat = historia.filter((t) => t && t !== treeni && (treeni.id == null || t.id !== treeni.id)
     && typeof t.pvm === 'string' && vertaaAika(t, treeni) < 0);
-  const ohjelma = OHJELMAT.find((o) => o.id === treeni.ohjelmaId)
-    || OHJELMAT.find((o) => o.id === state.aktiivinenOhjelmaId) || OHJELMAT[0];
+  // Myös tuodut ohjelmat (omatOhjelmat), jotta Seuraavaksi-kortti ehdottaa tuodun ohjelman päivää.
+  const ohjelmat = kaikkiOhjelmat(state);
+  const ohjelma = ohjelmat.find((o) => o.id === treeni.ohjelmaId)
+    || ohjelmat.find((o) => o.id === state.aktiivinenOhjelmaId) || OHJELMAT[0];
 
   const yhteenveto = workoutSummary(treeni, LIIKKEET, aiemmat, profiili.kehonpaino);
   const oivallukset = workoutInsights({
@@ -235,7 +276,11 @@ export function renderSummary(treeni, { uusi = false } = {}) {
       ['Liikkeitä', String(yhteenveto.liikkeita)],
       ['Volyymi', `${lukuTeksti(yksikko === 'lb' ? yhteenveto.volyymi * KG_LB : yhteenveto.volyymi)} ${yksikko}`],
       ['Kalorit', yhteenveto.kcal === null ? '–' : `${yhteenveto.kcalArvio ? '~' : ''}${lukuTeksti(yhteenveto.kcal)} kcal`],
+      // Tavoitetapahtuman juoksu (speksi 4k C): { liikeId: 'juoksu', tyyppi: 'kesto', kestoMin, matkaKm?, sarjat: [] }.
+      ...(treeni.liikkeet || []).filter((tl) => tl && tl.tyyppi === 'kesto' && Number.isFinite(tl.kestoMin))
+        .map((tl) => ['Juoksu', `${String(tl.kestoMin).replace('.', ',')} min${Number.isFinite(tl.matkaKm) && tl.matkaKm > 0 ? ` · ${String(tl.matkaKm).replace('.', ',')} km` : ''}`]),
     ]),
+    jakoPainike(treeni, 'ylla'),
   ];
 
   if (edistys.length) {
@@ -260,6 +305,7 @@ export function renderSummary(treeni, { uusi = false } = {}) {
     if (haasteet) osat.push(sectionTitle('Haasteet'), haasteet);
   }
   osat.push(el('p', { class: 'yv-ai-note' }, 'Tuotteessa tekoäly kirjoittaa nämä oivallukset sinun datastasi.'));
+  osat.push(jakoPainike(treeni, 'alla'));
   if (uusi) osat.push(el('a', { class: 'btn btn-primary yv-done', href: '#/koti' }, 'Valmis'));
 
   return el('div', { class: `yv${uusi ? ' is-new' : ''}` }, ...osat);

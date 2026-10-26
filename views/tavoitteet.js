@@ -1,11 +1,12 @@
 // Viikon sarjatavoitteet (speksi 4d, 4h): kuusikulmiorengas, ryhmäkortit, jotka avautuvat
 // lihasriveiksi, ja "Muokattu viikko" -merkintä, kun hyväksytty viikkosuunnitelma on voimassa.
-import { getState } from '../store.js?v=6612722';
-import { tanaanPvm } from '../seed.js?v=6612722';
-import { LIIKKEET, RYHMAT } from '../data.js?v=6612722';
-import { el, svgEl, hexRing, whyButton, segmented } from './ui.js?v=6612722';
-import { weeklyTargets, weeklyProgress } from '../engine/targets.js?v=6612722';
-import { weekStart, addDays } from '../engine/util.js?v=6612722';
+// Tavoitetapahtuman jakso (speksi 4k C) kertoo tavoitteet: merkintä "Jakso: Kovennus · × 1,1".
+import { getState } from '../store.js?v=31a36ec';
+import { tanaanPvm } from '../seed.js?v=31a36ec';
+import { LIIKKEET, RYHMAT } from '../data.js?v=31a36ec';
+import { el, svgEl, hexRing, whyButton, segmented } from './ui.js?v=31a36ec';
+import { viikonTavoitteet, weeklyProgress } from '../engine/targets.js?v=31a36ec';
+import { weekStart, addDays } from '../engine/util.js?v=31a36ec';
 
 // Natiivi append ei litistä taulukoita eikä ohita null-arvoja, joten ne käsitellään tässä.
 function lisaa(root, ...osat) {
@@ -83,9 +84,14 @@ function ryhmaKortti(avain, ryhma, lihakset) {
   return kortti;
 }
 
+// Tavoitetapahtuman jakso (speksi 4k C): "Jakso: Kovennus · × 1,1".
+function jaksoTeksti(jakso) {
+  return `Jakso: ${jakso.jaksoNimi}${jakso.kevennysviikko ? ' (kevennysviikko)' : ''} · × ${jakso.kerroin.toFixed(1).replace('.', ',')}`;
+}
+
 function sisalto(state, tanaan, alku, suunnitelma) {
   const historia = (state.historia || []).filter(Boolean);
-  const tavoitteet = weeklyTargets(state.profiili || {}, suunnitelma);
+  const { tavoitteet, jakso } = viikonTavoitteet(state, alku, { suunnitelma });
   const edistys = weeklyProgress(historia, LIIKKEET, tavoitteet, alku);
   const kertoimet = (suunnitelma && suunnitelma.sarjatavoiteKertoimet) || {};
   const muutokset = Object.entries(kertoimet)
@@ -113,6 +119,11 @@ function sisalto(state, tanaan, alku, suunnitelma) {
         muutokset.length ? `Valmentajan suunnitelma: ${muutokset.join(', ')}. ` : 'Valmentajan suunnitelma on voimassa. ',
         suunnitelma.perustelu ? suunnitelma.perustelu : '')
       : null,
+    jakso
+      ? el('div', { class: 'note t8-plan-note' },
+        el('strong', null, `${jaksoTeksti(jakso)}. `),
+        'Tavoitetapahtuman jakso kertoo viikon sarjatavoitteet.')
+      : null,
     el('div', { class: 't8-groups' },
       ['tyonnot', 'vedot', 'jalat'].map((k) => ryhmaKortti(k, edistys.ryhmat[k], edistys.lihakset))),
   ];
@@ -134,6 +145,7 @@ export function render(root) {
   const alue = el('div', { class: 't8-goals-body' });
   const otsikkoVali = el('span', null);
   const merkinta = el('span', { class: 't8-pill t8-pill-accent', hidden: true }, 'Muokattu viikko');
+  const jaksoMerkinta = el('span', { class: 't8-pill t8-pill-accent', hidden: true });
 
   function piirra() {
     const ensi = valittuViikko === 'ensi';
@@ -141,13 +153,16 @@ export function render(root) {
     const suunnitelma = ensi ? ensiSuunnitelma : tamaSuunnitelma;
     otsikkoVali.textContent = `${pv(alku)}–${pv(addDays(alku, 6))}`;
     merkinta.hidden = !suunnitelma;
+    const { jakso } = viikonTavoitteet(state, alku, { suunnitelma });
+    jaksoMerkinta.hidden = !jakso;
+    jaksoMerkinta.textContent = jakso ? jaksoTeksti(jakso) : '';
     alue.replaceChildren(...sisalto(state, tanaan, alku, suunnitelma).filter(Boolean));
   }
 
   lisaa(root, 
     el('a', { class: 't8-back', href: '#/koti' }, '‹ Koti'),
     el('h1', { class: 'page-title t8-page-title-tight' }, 'Viikon sarjatavoitteet'),
-    el('div', { class: 't8-subhead' }, otsikkoVali, merkinta),
+    el('div', { class: 't8-subhead' }, otsikkoVali, merkinta, jaksoMerkinta),
     naytaValitsin
       ? el('div', { class: 't8-week-switch' }, segmented({
         vaihtoehdot: [{ arvo: 'tama', teksti: 'Tämä viikko' }, { arvo: 'ensi', teksti: 'Ensi viikko' }],

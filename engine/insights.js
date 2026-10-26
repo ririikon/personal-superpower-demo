@@ -1,11 +1,11 @@
 // Treenin jälkeiset oivallukset (speksi 4g, muistit ja viikkosuunnitelma 4h).
 // Puhdas moduuli: ei DOM-, window-, localStorage- eikä Date.now()-kutsuja.
 
-import { addDays, daysBetween, weekStart, hoursBetween, onVoimatreeni, onTyosarja } from './util.js?v=6612722';
-import { e1rm, detectStall } from './progression.js?v=6612722';
-import { recovery } from './recovery.js?v=6612722';
-import { weeklyTargets, weeklyProgress, RYHMAT_T } from './targets.js?v=6612722';
-import { workoutSummary } from './history.js?v=6612722';
+import { addDays, daysBetween, weekStart, hoursBetween, onVoimatreeni, onTyosarja } from './util.js?v=31a36ec';
+import { e1rm, detectStall } from './progression.js?v=31a36ec';
+import { recovery } from './recovery.js?v=31a36ec';
+import { weeklyTargets, weeklyProgress, jaksoViikolle, RYHMAT_T } from './targets.js?v=31a36ec';
+import { workoutSummary } from './history.js?v=31a36ec';
 
 const MAX_EDISTYS = 3;
 const MAX_HUOMIO = 2;
@@ -464,7 +464,9 @@ export function workoutInsights({
     return hoursBetween(aika, nyt) <= 24 * 5;
   });
   const jalkeen = recovery(liikkeet, tuoreet, nyt, kuormat);
-  const tavoitteet = weeklyTargets(p, suunnitelma);
+  // Tavoitetapahtuman jakson kerroin (speksi 4k C) koskee myös oivallusten viikkotavoitteita.
+  const jakso = jaksoViikolle(p.tapahtuma, viikonAlkuPvm, p.viikonAlku);
+  const tavoitteet = weeklyTargets(p, suunnitelma, jakso ? jakso.kerroin : 1);
   const edistyminen = weeklyProgress(treenitJalkeen, liikkeet, tavoitteet, viikonAlkuPvm);
   const seuraava = seuraavaPaiva(ohjelma, treeni, hist);
   const konteksti = {
